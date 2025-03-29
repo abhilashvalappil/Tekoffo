@@ -1,0 +1,24 @@
+
+import mongoose, { Schema, Document } from 'mongoose';
+import { IUser } from '../interfaces/IUser';
+
+const UserSchema: Schema = new Schema({
+  username: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String },
+  role: { type: String, enum: ['freelancer', 'client', 'admin'], required: true },
+  fullName: { type: String, default: '' }, 
+  companyName: { type: String, default: '' },
+  description: { type: String, default: '' },
+  profilePicture: { type: String, default: '' },
+  country: { type: String, default: '' }, 
+  skills: { type: [String], default: [] },
+  total_Earnings: { type: Number, default: 0 },
+  total_Spent: { type: Number, default: 0 },
+  googleId: { type: String, unique: true, sparse: true },
+  isGoogleAuth: { type: Boolean, default: false },
+  created_At: { type: Date, default: Date.now },
+  isBlocked: { type: Boolean, default: false },
+});
+
+export default mongoose.model<IUser>('User', UserSchema);

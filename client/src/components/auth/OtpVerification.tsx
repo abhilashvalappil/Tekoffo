@@ -1,0 +1,214 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { KeyRound } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import API from '../../redux/services/api/baseUrl';
+import { commonENDPOINTS } from '../../redux/services/api/endpointUrl';
+
+const VerifyOtp = () => {
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(''));
+  const [isLoading, setIsLoading] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const location = useLocation();
+  const navigate = useNavigate();
+  const email = location.state?.email;
+
+  const handleInput = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^0-9]/g, '');  
+    if (value.length > 1) return;  
+
+    const newOtpValues = [...otpValues];
+    newOtpValues[index] = value;
+    setOtpValues(newOtpValues);
+
+    
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otpValues[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  // useEffect(() => {
+  //   if (email) {
+  //     setValue("email", email);
+  //   }
+  // }, [email, setValue]);
+
+  const storedEmail = localStorage.getItem("otpEmail");
+  const storedTimer = localStorage.getItem("otpTimer");
+
+  const initialTimer = storedEmail === email && storedTimer ? parseInt(storedTimer) : 30;
+
+
+  const [timer, setTimer] = useState(initialTimer);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (email !== storedEmail) {
+      localStorage.setItem("otpEmail", email);
+      localStorage.setItem("otpTimer", "300");
+      setTimer(30);
+    }
+
+    if (timer > 0) {
+      intervalRef.current = setInterval(() => {
+        setTimer((prev) => {
+          const newTime = prev - 1;
+          localStorage.setItem("otpTimer", newTime.toString());
+          return newTime;
+        });
+      }, 1000);
+    } 
+    // else {
+    //   setCanResend(true);
+    //   if (intervalRef.current) {
+    //     clearInterval(intervalRef.current);
+    //     intervalRef.current = null;
+    //   }
+    // }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [timer, email, storedEmail ]);
+
+
+
+
+  const handleResendOtp = async() => {
+    setIsLoading(true);
+    setServerError(null);
+    try {
+    const response = await API.post(commonENDPOINTS.RESEND_OTP,{email})
+    if (response.data.success) {
+      setTimer(30);  
+    }else {
+      setServerError(response.data.message || "Failed to resend OTP");
+    }
+  }catch (error: any) {
+    setServerError(error.response?.data?.message || "Error resending OTP");
+    console.log("Error:", error.response);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const otp = otpValues.join('');
+    if (otp.length !== 6) {
+      setServerError('Please enter a 6-digit OTP');
+      return;
+    }
+
+    setIsLoading(true);
+    setServerError(null);
+
+    try {
+      const response = await API.post(commonENDPOINTS.VERIFY_OTP, {
+        email,
+        otp,
+      });
+      if (response.data.success) {
+        navigate('/home');
+      }
+    } catch (error: any) {
+      setServerError(error.response?.data?.message );
+      console.log("neewww response gotttttttttt",error.response)
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Redirect to signup if no email is provided
+//   if (!email) {
+//     navigate('/signup');
+//     return null;
+//   }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+        <div className="flex justify-center mb-8">
+          <div className="bg-indigo-100 p-3 rounded-full">
+            <KeyRound className="w-8 h-8 text-indigo-600" />
+          </div>
+        </div>
+
+        <h1 className="text-2xl font-bold text-center text-gray-800 mb-2">
+          Verification Required
+        </h1>
+        <p className="text-center text-gray-600 mb-8">
+          We've sent a verification code to {email}
+        </p>
+
+        <form onSubmit={handleSubmit}>
+          <div className="flex gap-2 mb-8 justify-center">
+            {Array(6).fill(null).map((_, index) => (
+              <input
+                key={index}
+                ref={(el) => (inputRefs.current[index] = el)}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={otpValues[index]}  
+                onChange={(e) => handleInput(index, e)}
+                onKeyDown={(e) => handleKeyDown(index, e)}
+                className="w-12 h-12 border-2 rounded-lg text-center text-xl font-semibold text-gray-800 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all"
+              />
+            ))}
+          </div>
+
+          {serverError && (
+            <div className="text-sm text-red-600 text-center mb-4">{serverError}</div>
+          )}
+           
+           <div>
+        {timer > 0 ? (
+          <>
+            <h5>OTP Timer:</h5>
+            <span>{timer} sec</span>
+          </>
+        ) : (
+          <button
+            type="submit"
+            onClick={handleResendOtp}
+            disabled={isLoading}
+            className="ml-4 text-blue-600 hover:underline"
+          >
+            Resend OTP
+          </button>
+        )}
+      </div>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-indigo-600 text-white rounded-lg py-3 font-semibold hover:bg-indigo-700 transition-colors disabled:bg-indigo-300"
+          >
+            {isLoading ? 'Verifying...' : 'Verify Code'}
+          </button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <p className="text-gray-600">
+            Didn't receive the code?{' '}
+            <button className="text-indigo-600 font-semibold hover:text-indigo-700">
+              Resend
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default VerifyOtp;
