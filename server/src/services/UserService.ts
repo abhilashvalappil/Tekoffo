@@ -1,264 +1,235 @@
 import bcrypt from "bcrypt";
-import { transporter } from '../config/nodemailer.config';
-import { OAuth2Client } from 'google-auth-library';
-import jwt from 'jsonwebtoken';
-import { IUser,UserRole,IUserResponse,SignUpData } from "../interfaces/IUser";
-import { IUserService } from "../interfaces/IUserService";
-import { IUserRepository } from "../interfaces/IUserRepository";
-import { otpGenerator } from "../utils/OtpGenerator";
-import { redisClient } from "../config/redis";
-import { IJwtService } from "../interfaces/IJwtService";
-import { ICookieHandlerService } from "../interfaces/ICookieService";
-import { MESSAGES } from '../constants/messages';
-import { CustomError,ValidationError,ConflictError,NotFoundError,UnauthorizedError } from "../utils/customErrors";
-
-
+import { IUserService,IUserRepository,ProfileFormData,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository } from "../interfaces";
+import {MESSAGES} from '../constants/messages'
+import { CustomError, NotFoundError, UnauthorizedError } from "../errors/customErrors";
+import { FreelancerData, JobDataType, JobInputData, JobUpdateData } from '../interfaces/entities/IJob';
  
 
 export class UserService implements IUserService {
     private userRepository: IUserRepository;
-    private jwtService : IJwtService;
-    private client = new OAuth2Client(process.env.CLIENT_ID);
-     
+    private categoryRepository:ICategoryRepository;
+    private jobRepository: IJobRepository;
 
-   constructor(userRepository: IUserRepository, jwtService: IJwtService,client: OAuth2Client){
+    constructor(userRepository: IUserRepository, categoryRepository:ICategoryRepository, jobRepository: IJobRepository){
         this.userRepository = userRepository;
-        this.jwtService = jwtService;
-        this.client = client;
-         
-    }
-   
-        async signUp(data: SignUpData): Promise<{message: string, email: string}> {
-
-            const userNameExist = await this.userRepository.findByUserName(data.username);
-            if(userNameExist){
-                throw new ConflictError(MESSAGES.USERNAME_ALREADY_EXISTS)
-            }
-
-            const emailExist = await this.userRepository.findByEmail(data.email);
-            if(emailExist){
-                throw new ConflictError(MESSAGES.EMAIL_ALREADY_EXISTS)
-            }
-
-            data.password = await bcrypt.hash(data.password,10)
-
-            const otp = otpGenerator();
-            console.log("the ottttttttppppppppppp",otp)
-
-            const mailOptions = {
-                from: process.env.USER_EMAIL,
-                to: data.email,
-                subject: 'Welcome to Tekoffo',
-                text: `Your OTP is: ${otp}`, 
-              };
-
-              try {
-                await transporter.sendMail(mailOptions)
-                console.log("OTP sent successfully");
-              } catch (error) {
-                console.error("Error sending email:", error);
-              }
-
-              await redisClient.set(`otp:${data.email}`, otp, { EX: 30 });
-              await redisClient.set(`signup:${data.email}`, JSON.stringify(data), { EX: 300 });
-
-            return {message:MESSAGES.REGISTRATION_OTP_SENT, email: data.email };
+        this.categoryRepository = categoryRepository;
+        this.jobRepository = jobRepository;
     }
 
-    async verifyOtp(email: string, otp: string): Promise<{user: IUser, accessToken: string}> {
-        try {
-          const storedOtp = await redisClient.get(`otp:${email}`);
-          const storedUserData = await redisClient.get(`signup:${email}`);
-          if (!storedOtp || !storedUserData) {
-              throw new NotFoundError(MESSAGES.OTP_EXPIRED_OR_INVALID);
-            }
-          if (storedOtp !== otp) {
-              throw new ValidationError(MESSAGES.INVALID_OTP);
-            }
-
-          const userData = JSON.parse(storedUserData);
-          const saveUser = await this.userRepository.createUser(userData);
-          await redisClient.del(`otp:${email}`);
-          await redisClient.del(`signup:${email}`);
-
-          const accessToken = this.jwtService.generateAccessToken(saveUser._id, saveUser.role, saveUser.email);
-          const refreshToken = this.jwtService.generateRefreshToken(saveUser._id, saveUser.role, saveUser.email);
-    
-          await redisClient.set(saveUser._id.toString(), refreshToken);
-          return { user: saveUser, accessToken };  
-      } catch (error: any) {
-          if (error instanceof CustomError) throw error;  
-          throw new CustomError(`Internal error: ${error.message}`);  
-      }     
-    }
-
-    async resendOtp(email: string): Promise<{message: string, email: string}> {
-      try {
-
-        const storedUserData = await redisClient.get(`signup:${email}`);
-        if (!storedUserData) {
-          throw new NotFoundError(MESSAGES.SIGNUP_EXPIRED);
-      }
-        const userData = JSON.parse(storedUserData);
-        const otp = otpGenerator();
-        console.log("Resentttttttttttt OTP:", otp);
-
-        const mailOptions = {
-            from: process.env.USER_EMAIL,
-            to: email,
-            subject: 'Welcome to Tekoffo',
-            text: `Your new OTP is: ${otp}`,
-          };
-        
-          await transporter.sendMail(mailOptions)
-          console.log("OTP resent successfully");
-
-          await redisClient.set(`otp:${email}`, otp, { EX: 30 });
-          await redisClient.expire(`signup:${email}`, 300);
-
-        return {message:MESSAGES.REGISTRATION_OTP_SENT,email}
-      } catch (error:any) {
-        if (error instanceof CustomError) throw error;  
-        throw new CustomError(`Internal error: ${error.message}`); 
-      }
-    }
-
-    async verifyUser(identifier:string, password:string): Promise<{user:IUserResponse,message:string, accessToken:string}> {
-        try {
+    async createUserProfile(userId:string, ProfileData:ProfileFormData): Promise<{message:string,userProfile:UserProfileResponse}> {
+       
+            const user = await this.userRepository.findUserById(userId)
              
-            const user = await this.userRepository.findByEmailOrUsername(identifier);
             if(!user){
                 throw new NotFoundError(MESSAGES.INVALID_USER)
             }
 
-            const isValidPassword = await bcrypt.compare(password, user.password);
+            const isFreelancer = user.role === 'freelancer';
+
+            if (isFreelancer && (!ProfileData.skills || !ProfileData.preferredJobFields)) {
+                throw new CustomError('Skills and preferred job fields are required for freelancers');
+              }
+
+            const skills = typeof ProfileData.skills === 'string' ? JSON.parse(ProfileData.skills) : ProfileData.skills;
+            const preferredJobFields =
+            typeof ProfileData.preferredJobFields === 'string'
+                ? JSON.parse(ProfileData.preferredJobFields)
+                : ProfileData.preferredJobFields;
+
+            const createProfile = {
+                fullName: ProfileData.fullName,
+                companyName: isFreelancer ? undefined : ProfileData.companyName,
+                description: ProfileData.description,
+                country: ProfileData.country,
+                skills: isFreelancer ? ProfileData.skills : undefined,
+                preferredJobFields: isFreelancer ? ProfileData.preferredJobFields : undefined,
+                linkedinUrl: isFreelancer ? ProfileData.linkedinUrl : undefined,
+                githubUrl: isFreelancer ? ProfileData.githubUrl : undefined,
+                portfolioUrl: isFreelancer ? ProfileData.portfolioUrl : undefined,
+                profilePicture: ProfileData.profilePicture ? ProfileData.profilePicture.path : '', // Use Cloudinary URL
+              };
+
+            const saveProfile = await this.userRepository.createUserProfile(userId,createProfile)
+            if (!saveProfile) {
+                throw new CustomError(MESSAGES.PROFILE_UPDATE_FAILED);  
+            }
+            console.log("user profile savedddddddd",saveProfile)
+            return {message:MESSAGES.PROFILE_CREATED,
+                userProfile:{
+                    _id: saveProfile._id,
+                    username: saveProfile.username,
+                    role:saveProfile.role,
+                    email: saveProfile.email,
+                    fullName: saveProfile.fullName,
+                    companyName: saveProfile.companyName,
+                    description: saveProfile.description,
+                    country: saveProfile.country,
+                    profilePicture: saveProfile.profilePicture,
+                    skills: saveProfile.skills,
+                    preferredJobFields: saveProfile.preferredJobFields,
+                    linkedinUrl: saveProfile.linkedinUrl,
+                    githubUrl: saveProfile.githubUrl,
+                    portfolioUrl: saveProfile.portfolioUrl,
+                }
+            }
+    }
+
+    async updateUserProfile(userId:string,updateProfileData:ProfileFormData): Promise<{message:string,userProfile:UserProfileResponse}>{
+        
+            const user = await this.userRepository.findUserById(userId)
+            if(!user){
+                throw new NotFoundError(MESSAGES.INVALID_USER)
+            }
+
+            const isFreelancer = user.role === 'freelancer';
+
+            if (isFreelancer && (!updateProfileData.skills || !updateProfileData.preferredJobFields)) {
+                throw new CustomError('Skills and preferred job fields are required for freelancers');
+              }
+
+              const skills = typeof updateProfileData.skills === 'string' ? JSON.parse(updateProfileData.skills) : updateProfileData.skills;
+                const preferredJobFields =
+                    typeof updateProfileData.preferredJobFields === 'string'
+                    ? JSON.parse(updateProfileData.preferredJobFields)
+                    : updateProfileData.preferredJobFields;
+
+            const updateProfile = {
+                fullName: updateProfileData.fullName,
+                description: updateProfileData.description,
+                companyName:updateProfileData.companyName,
+                country: updateProfileData.country,
+                skills: updateProfileData.skills,
+                preferredJobFields: updateProfileData.preferredJobFields,
+                linkedinUrl: updateProfileData.linkedinUrl,
+                githubUrl: updateProfileData.githubUrl,
+                portfolioUrl: updateProfileData.portfolioUrl,
+                profilePicture: updateProfileData.profilePicture ? updateProfileData.profilePicture.path : '',
+            }
+             
+            const saveProfile = await this.userRepository.updateUserProfile(userId,updateProfile)
+
+            if (!saveProfile) {
+                throw new CustomError(MESSAGES.PROFILE_UPDATE_FAILED);  
+            }
+            console.log("user profile updateddddddd",saveProfile)
+
+            return{message:MESSAGES.PROFILE_CREATED,
+                userProfile:{
+                    _id: saveProfile._id,
+                    username: saveProfile.username,
+                    role:saveProfile.role,
+                    email: saveProfile.email,
+                    fullName: saveProfile.fullName,
+                    companyName: saveProfile.companyName,
+                    description: saveProfile.description,
+                    country: saveProfile.country,
+                    profilePicture: saveProfile.profilePicture,
+                    skills: saveProfile.skills,
+                    preferredJobFields: saveProfile.preferredJobFields,
+                    linkedinUrl: saveProfile.linkedinUrl,
+                    githubUrl: saveProfile.githubUrl,
+                    portfolioUrl: saveProfile.portfolioUrl,
+                }
+            }                   
+    }
+
+    async changePassword(userId:string, currentPassword:string, newPassword:string): Promise<{message:string}> {
+
+            const user = await this.userRepository.findUserById(userId);
+
+            if (!user) {
+                throw new NotFoundError(MESSAGES.INVALID_USER);
+            }
+            const email = user.email
+
+            const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+
             if(!isValidPassword){
-                throw new UnauthorizedError(MESSAGES.INVALID_PASSWORD)
+                throw new UnauthorizedError(MESSAGES.INVALID_CURRENT_PASSWORD)
             }
 
-            const accessToken = this.jwtService.generateAccessToken(user._id,user.role,user.email);
-            const refreshToken = this.jwtService.generateRefreshToken(user._id,user.role,user.email);
-            await redisClient.set(user._id.toString(),refreshToken)
+            newPassword = await bcrypt.hash(newPassword,10);
+            await this.userRepository.findByEmailAndUpdate(email,{password:newPassword})
 
-            return{message:MESSAGES.SIGNIN_SUCCESS,
-                user:{
-                    _id:user._id.toString(),
-                    email:user.email,
-                    username: user.username,
-                    role: user.role,
-                },
-                accessToken,
+            return {message:MESSAGES.PASSWORD_CHANGED}
+    }
+
+    async fetchCategories(): Promise<{categories: ICategory[]}> {
+            const categories = await this.categoryRepository.getListedCategories()
+            return {categories}
+    }
+
+    async postJob(clientId:string, jobData:JobInputData): Promise<{message:string}> {
+            const user = await this.userRepository.findUserById(clientId)
+            if(!user){
+                throw new NotFoundError(MESSAGES.INVALID_USER)
             }
-        } catch (error:any) {
-            if (error instanceof CustomError) throw error;  
-            throw new CustomError(`Internal error: ${error.message}`);  
-        }
+            const savedJob = await this.jobRepository.createJobPost(clientId,jobData)
+            return {message:MESSAGES.JOB_CREATED_SUCCESSFULLY}
     }
 
-    async forgotPassword(email:string): Promise<{message:string,email:string}> {
-      try {
-        const userExist = await this.userRepository.findByEmail(email);
-        if(!userExist){
-          throw new NotFoundError(MESSAGES.EMAIL_NOT_FOUND)
+    async updateJobPost(clientId:string, jobData:JobUpdateData): Promise<{message:string}> {
+  
+            const user = await this.userRepository.findUserById(clientId)
+
+            if(!user){
+                throw new NotFoundError(MESSAGES.INVALID_USER)
+            }
+
+            const existingJob = await this.jobRepository.findJobById(jobData.id);
+        if (!existingJob || existingJob.clientId.toString() !== clientId) {
+            throw new NotFoundError(MESSAGES.INVALID_JOB);
         }
 
-        const otp = otpGenerator();
-        console.log("Fogot password OTP:", otp);
-
-        const mailOptions = {
-            from: process.env.USER_EMAIL,
-            to: email,
-            subject: 'Reset Your Password',
-            text: `Your OTP is: ${otp}`,
-          };
-        
-          await transporter.sendMail(mailOptions)
-          console.log("Fogot password OTP sent successfully");
-
-          await redisClient.set(`otp:${email}`, otp, { EX: 30 });
-          await redisClient.set(`forgot:${email}`,JSON.stringify(email), {EX:300});
-          return {message:MESSAGES.FORGOT_PASS_OTP, email:email}
-      } catch (error:any) {
-        if (error instanceof CustomError) throw error;  
-            throw new CustomError(`Internal error: ${error.message}`);  
-      }
-    }
-
-    async verifyForgotPassOtp(email:string, otp:string): Promise<{message:string,email:string}> {
-      try {
-        
-        const storedOtp = await redisClient.get(`otp:${email}`);
-        const storedEmail = await redisClient.get(`forgot:${email}`)
-
-        if(!storedOtp || !storedEmail){
-          throw new NotFoundError(MESSAGES.OTP_EXPIRED)
-        }
-
-        if(storedOtp !== otp){
-          throw new ValidationError(MESSAGES.INVALID_OTP)
-        }
-        return {message:MESSAGES.OTP_VERIFIED,email:email}
-      } catch (error:any) {
-        if (error instanceof CustomError) throw error;  
-            throw new CustomError(`Internal error: ${error.message}`);  
-      }
-    }
-
-    async resetPassword(password:string, email:string): Promise<{message:string}> {
-      try {
-        const user = await this.userRepository.findByEmail(email);
-        if(!user){
-          throw new NotFoundError(MESSAGES.EMAIL_NOT_FOUND)
-        }
-          const hashedPassword = await bcrypt.hash(password,10)
-          await this.userRepository.findByEmailAndUpdate(email, {password: hashedPassword})
-          return {message:MESSAGES.PASSWORD_RESET_SUCCESS}
-      } catch (error:any) {
-        if (error instanceof CustomError) throw error;  
-            throw new CustomError(`Internal error: ${error.message}`); 
-      }
-    }
-
-    async googleSignIn(credential: string): Promise<{ user: IUserResponse; accessToken: string }> {
-        try {
-         
-          const ticket = await this.client.verifyIdToken({
-            idToken: credential,
-            audience: process.env.CLIENT_ID,
-          });
-          const payload = ticket.getPayload();
-          if (!payload || !payload.email) {
-            throw new Error('Invalid Google token payload');
-          }
-    
-          const { email, sub: googleId, name } = payload;
- 
-          let user = await this.userRepository.findByEmail(email);
-          if (!user) {
-            user = await this.userRepository.createUser({
-              email,
-              username: name || email.split('@')[0],
-              googleId,
-              role: 'client' as UserRole,  
+            // const savedJob = await this.jobRepository.updateJobPost(clientId,jobData)
+            const savedJob = await this.jobRepository.updateJobPost(jobData.id!, {
+                title: jobData.title,
+                category: jobData.category,
+                subCategory: jobData.subCategory,
+                requirements:jobData.requirements,  
+                description: jobData.description,
+                budget: jobData.budget,
+                duration: jobData.duration,
+                updated_At: new Date()
             });
-          }
-    
-          const userResponse: IUserResponse = {
-            _id: user._id,
-            username: user.username,
-            email: user.email,
-            role: user.role,
-          };
-    
-          const accessToken = jwt.sign(
-            { id: user._id, email: user.email, role: user.role },
-            process.env.JWT_SECRET as string,
-            { expiresIn: '1h' }
-          );
-    
-          return { user: userResponse, accessToken };
-        } catch (error: any) {
-          throw new Error(error.message || 'Google Sign-In failed');
-        }
+            return {message:MESSAGES.JOB_UPDATED_SUCCESSFULLY}
+    }
+
+    async deleteJobPost(clientId:string,id:string): Promise<{message:string}>{
+       
+            const user = await this.userRepository.findUserById(clientId)
+
+            if(!user){
+                throw new NotFoundError(MESSAGES.INVALID_USER)
+            } 
+
+            const existingJob = await this.jobRepository.findJobById(id);
+            if (!existingJob || existingJob.clientId.toString() !== clientId) {
+                throw new NotFoundError(MESSAGES.INVALID_JOB);
+            }
+            const deletePost = await this.jobRepository.findJobAndDelete(id);
+            return {message:MESSAGES.JOB_DELETED_SUCCESSFULLY}
+    }
+
+    async fetchMyJobPosts(clientId:string): Promise<{jobs:JobDataType[]}> {
+     
+            const user = await this.userRepository.findUserById(clientId)
+            if(!user){
+                throw new NotFoundError(MESSAGES.INVALID_USER)
+            }
+            const jobs = await this.jobRepository.findJobsByClientId(clientId);
+            return {jobs} ;
       }
+
+
+    async getAllJobs(): Promise<{jobs:JobDataType[]}> {
+   
+        const jobs = await this.jobRepository.getAllJobs();
+            return {jobs}
+    }
+
+    async getAllFreelancers(): Promise<{freelancers:FreelancerData[]}> {
+            const freelancers = await this.userRepository.findFreelancers();
+            return {freelancers}
+    }
 }

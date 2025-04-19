@@ -1,47 +1,43 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import axios, { AxiosError } from "axios";
-import { User } from "../types/authTypes";
-import { SignInCredentials, GoogleSignUpCredentials } from "../types/authTypes";
-import API from "./api/baseUrl";
-import { commonENDPOINTS } from "./api/endpointUrl";
+import { AxiosError } from "axios";
+import { RegisterPayload } from "../types/authTypes";
+import { SignInCredentials,SignInResponse, GoogleSignUpCredentials } from "../types/authTypes";
+import API from "../../services/api"
+import { commonENDPOINTS } from "../../constants/endpointUrl";
 
-export const signUp = createAsyncThunk(
-  "auth/signUp",
-  async (UserData: User, { rejectWithValue }) => {
+
+ 
+export const register = createAsyncThunk(
+  "auth/register",
+  async(payload: RegisterPayload,{rejectWithValue}) => {
     try {
-      const response = await API.post(commonENDPOINTS.SIGNUP, UserData, {
-        withCredentials: true,
-      });
+      const response = await API.post(commonENDPOINTS.VERIFY_OTP,payload)
       return response.data;
-    } catch (error: any) {
-      // console.log("authserviceeeeeeeeeeeee",error)
-      if (error.response && error.response.data) {
-        return rejectWithValue(error.response.data);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(
+          error.response?.data?.message || "registration failed"
+        );
       }
-      return rejectWithValue({ message: "An unknown error occurred" });
+      return rejectWithValue("An unknown error occurred");
     }
   }
-);
+)
+ 
 
-export const signIn = createAsyncThunk(
+export const signIn = createAsyncThunk <SignInResponse, SignInCredentials>(
   "auth/signin",
   async (
-    credentials: SignInCredentials | { googleCredential: string | undefined },
+    credentials: SignInCredentials | { googleCredential: string | null },
     { rejectWithValue }
   ) => {
     try {
       if ("googleCredential" in credentials && credentials.googleCredential) {
-        const response = await API.post(
-          commonENDPOINTS.GOOGLE_SIGNIN,
-          { credential: credentials.googleCredential },
-          { withCredentials: true }
-        );
+        const response = await API.post(commonENDPOINTS.GOOGLE_SIGNIN,
+          { credential: credentials.googleCredential });
         return response.data;
       } else {
-        const response = await API.post(commonENDPOINTS.LOGIN, credentials, {
-          withCredentials: true,
-        });
-        console.log("my responseeeeeeeeeeeeeeee",response)
+        const response = await API.post(commonENDPOINTS.LOGIN, credentials)
         return response.data;
       }
     } catch (error) {
@@ -54,3 +50,22 @@ export const signIn = createAsyncThunk(
     }
   }
 );
+
+export const logout = createAsyncThunk(
+  "auth/logout",
+  async(userId:string, {rejectWithValue}) => {
+    try {
+      const response = await API.post(commonENDPOINTS.LOGOUT,{userId})
+      return response.data;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        return rejectWithValue(
+          error.response?.data?.message || "Logout failed"
+        );
+      }
+      return rejectWithValue("Logout failed");
+    }
+    
+  }
+)
+

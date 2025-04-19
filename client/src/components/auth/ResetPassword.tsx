@@ -92,7 +92,7 @@ const ResetPassword = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   placeholder="Enter new password"
-                  minLength={8}
+                  minLength={6}
                 />
 
                 <button

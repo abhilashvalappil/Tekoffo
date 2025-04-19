@@ -8,7 +8,8 @@ export class CookieHandlerService {
         res.cookie("accessToken", accessToken, {
             httpOnly: true,
             secure: true,
-            sameSite: "strict",
+            // sameSite: "strict",
+            sameSite: 'lax',
             maxAge: 59 * 60 * 1000
         });
     }
@@ -19,7 +20,8 @@ export class CookieHandlerService {
         res.clearCookie("accessToken", {
             httpOnly: true,
             secure: true,
-            sameSite: "strict",
+            // sameSite: "strict",
+            sameSite: 'lax',
             path: "/"
         });
     }

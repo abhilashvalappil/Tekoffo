@@ -1,0 +1,452 @@
+import React, { useState, useEffect } from 'react';
+import { Plus, Pencil, MoreVertical } from 'lucide-react';
+import Sidebar from './Sidebar';
+import { addCategory, fetchCategories, updateCategoryStatus, updateCategory } from '../../api/admin';
+import { Toaster, toast } from 'react-hot-toast';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useNavigate } from 'react-router-dom';
+import { categorySchema,CategoryFormData } from '../../utils/validations/CategoryValidation';
+
+interface Category {
+  _id?: string;
+  catId: string;
+  name: string;
+  subCategories: string[];
+  isListed: boolean;
+}
+
+interface CategoryModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (categoryData: Partial<Category>) => void;
+  category?: Category;
+  mode: 'add' | 'edit';
+}
+
+const CategoryModal: React.FC<CategoryModalProps> = ({
+  isOpen,
+  onClose,
+  onSave,
+  category,
+  mode,
+}) => {
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<CategoryFormData>({
+    resolver: zodResolver(categorySchema),
+    defaultValues: {
+      name: '',
+      subcategories: '',
+    },
+  });
+
+  const [serverError, setServerError] = useState('');
+
+  useEffect(() => {
+    if (category && mode === 'edit') {
+      reset({
+        name: category.name,
+        subcategories: category.subCategories.join(', '),
+      });
+    } else {
+      reset({
+        name: '',
+        subcategories: '',
+      });
+    }
+  }, [category, mode, isOpen, reset]);
+
+  const onSubmit = async (data: CategoryFormData) => {
+    setServerError('');
+    const categoryData: Partial<Category> = {
+      _id: mode === 'edit' ? category?._id : undefined,
+      // _id: mode === 'add' ? category?._id : undefined,
+      catId: mode === 'edit' ? category?.catId : Date.now().toString(),
+      name: data.name,
+      _id: data._id,
+      subCategories: data.subcategories, // already transformed to array by zod
+    };
+
+    const toastId = toast.loading(mode === 'add' ? 'Adding category...' : 'Updating category...');
+    try {
+      if (mode === 'add') {
+        await addCategory(categoryData);
+        toast.success('Category added successfully', { id: toastId });
+      } else {
+        await updateCategory(categoryData);
+        toast.success('Category updated successfully', { id: toastId });
+      }
+      onSave(categoryData);
+      onClose();
+    } catch (error: any) {
+      const errorMessage = error.message || 'Failed to save category';
+      toast.error(errorMessage, { id: toastId });
+      setServerError(errorMessage);
+      console.error('Error saving category:', error);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="absolute inset-0 z-50 flex items-center justify-center">
+      <Toaster position="top-center" />
+      <div className="p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+        <div className="mt-3">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            {mode === 'add' ? 'Add New Category' : 'Edit Category'}
+          </h3>
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category Name
+              </label>
+              <input
+                type="text"
+                {...register('name')}
+                className={`w-full px-3 py-2 border ${
+                  errors.name ? 'border-red-500' : 'border-gray-300'
+                } rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500`}
+              />
+              {errors.name && (
+                <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+              )}
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Subcategories (comma-separated)
+              </label>
+              <input
+                type="text"
+                {...register('subcategories')}
+                placeholder="e.g., Frontend, Backend, Full Stack"
+                className={`w-full px-3 py-2 border ${
+                  errors.subcategories ? 'border-red-500' : 'border-gray-300'
+                } rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500`}
+              />
+              {errors.subcategories && (
+                <p className="text-red-500 text-sm mt-1">{errors.subcategories.message}</p>
+              )}
+            </div>
+            {serverError && <p className="text-red-500 text-sm mb-4">{serverError}</p>}
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                {mode === 'add' ? 'Add' : 'Save'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CategoryManagement = () => {
+  const [selectedItem, setSelectedItem] = useState('users');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | undefined>();
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    pages: 1,
+    limit: 8,
+  });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOption, setSortOption] = useState<'name-asc' | 'name-desc' | 'status-asc' | 'status-desc'>('name-asc');
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const fetchedData = await fetchCategories(pagination.page, pagination.limit);
+        setCategories(fetchedData.data);
+        setPagination((prev) => ({
+          ...prev,
+          total: fetchedData.meta.total,
+          pages: fetchedData.meta.pages,
+        }));
+      } catch (error: any) {
+        setError(error.message);
+        toast.error(error.message || 'Failed to fetch categories');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCategories();
+  }, [pagination.page, pagination.limit]);
+
+  const handleAddCategory = () => {
+    setModalMode('add');
+    setSelectedCategory(undefined);
+    setIsModalOpen(true);
+  };
+
+  const handleEditCategory = (category: Category) => {
+    setModalMode('edit');
+    setSelectedCategory(category);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveCategory = (categoryData: Partial<Category>) => {
+    if (modalMode === 'add') {
+      const newCategory: Category = {
+        _id: categoryData._id,
+        catId: Date.now().toString(),
+        name: categoryData.name!,
+        subCategories: categoryData.subCategories!,
+        isListed: true,
+      };
+      setCategories([...categories, newCategory]);
+    } else {
+      setCategories(
+        categories.map((cat) =>
+          cat._id === categoryData._id
+            ? { ...cat, name: categoryData.name!, subCategories: categoryData.subCategories! }
+            : cat
+        )
+      );
+    }
+    setIsModalOpen(false);
+  };
+
+  const toggleCategoryStatus = async (categoryId: string) => {
+    try {
+      const currentCategory = categories.find((cat) => cat._id === categoryId);
+      if (!currentCategory) throw new Error('Category not found');
+
+      const newStatus = !currentCategory.isListed;
+
+      setCategories((prevCategories) =>
+        prevCategories.map((cat) =>
+          cat._id === categoryId ? { ...cat, isListed: newStatus } : cat
+        )
+      );
+
+      const updatedStatus = await updateCategoryStatus(categoryId, newStatus);
+
+      setCategories((prevCategories) =>
+        prevCategories.map((cat) =>
+          cat._id === categoryId ? { ...cat, isListed: updatedStatus.isListed } : cat
+        )
+      );
+
+      toast.success(`Category ${newStatus ? 'listed' : 'unlisted'} successfully`);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update category status');
+      console.error('Error toggling category status:', error);
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= pagination.pages) {
+      setPagination((prev) => ({
+        ...prev,
+        page: newPage,
+      }));
+    }
+  };
+
+  const filteredAndSortedCategories = categories
+    .filter((category) =>
+      category.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .sort((a, b) => {
+      switch (sortOption) {
+        case 'name-asc':
+          return a.name.localeCompare(b.name);
+        case 'name-desc':
+          return b.name.localeCompare(a.name);
+        case 'status-asc':
+          return a.isListed === b.isListed ? 0 : a.isListed ? -1 : 1;
+        case 'status-desc':
+          return a.isListed === b.isListed ? 0 : a.isListed ? 1 : -1;
+        default:
+          return 0;
+      }
+    });
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p>Loading categories...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex">
+      <Sidebar
+        selectedItem={selectedItem}
+        setSelectedItem={setSelectedItem}
+        isMobileMenuOpen={isMobileMenuOpen}
+        setIsMobileMenuOpen={setIsMobileMenuOpen}
+      />
+
+      <div className="flex-1 min-h-screen bg-gray-50">
+        <Toaster position="top-center" reverseOrder={false} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-900">Category Management</h1>
+                <button
+                  onClick={handleAddCategory}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  <Plus size={20} />
+                  Add Category
+                </button>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <input
+                  type="text"
+                  placeholder="Search by category name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 sm:w-1/2"
+                />
+                <select
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value as any)}
+                  className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="name-asc">Name (A-Z)</option>
+                  <option value="name-desc">Name (Z-A)</option>
+                  <option value="status-asc">Status (Listed First)</option>
+                  <option value="status-desc">Status (Unlisted First)</option>
+                </select>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Category Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Subcategories
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredAndSortedCategories.map((category) => (
+                      <tr key={category.catId}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-gray-900">
+                            {category.name}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap gap-2">
+                            {category.subCategories.map((sub, index) => (
+                              <span
+                                key={index}
+                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                              >
+                                {sub}
+                              </span>
+                            )) || 'No subcategories'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <button
+                            onClick={() => toggleCategoryStatus(category._id)}
+                            className={`px-4 py-1.5 rounded-full text-white text-sm font-medium transition-colors ${
+                              category.isListed
+                                ? 'bg-red-500 hover:bg-red-600'
+                                : 'bg-green-500 hover:bg-green-600'
+                            }`}
+                          >
+                            {category.isListed ? 'Listed' : 'Unlisted'}
+                          </button>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <button
+                            onClick={() => handleEditCategory(category)}
+                            className="text-blue-600 hover:text-blue-900 mr-4"
+                          >
+                            <Pencil size={20} />
+                          </button>
+                          <button className="text-gray-400 hover:text-gray-600">
+                            <MoreVertical size={20} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="flex justify-between items-center mt-4">
+                <button
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page === 1}
+                  className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span>
+                  Page {pagination.page} of {pagination.pages}
+                </span>
+                <button
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page === pagination.pages}
+                  className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <CategoryModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSaveCategory}
+          category={selectedCategory}
+          mode={modalMode}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default CategoryManagement;

@@ -1,10 +1,15 @@
-import express from "express";
+// import express from "express";
+import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import userRouter from './routes/user.router';
+import adminRouter from './routes/admin.router';
 import { OAuth2Client } from 'google-auth-library';
 import cookieParser from 'cookie-parser'
+import morganMiddleware from './middlewares/morgan.middleware';
+import { errorHandler } from './errors/errorHandler';
+ 
 
 dotenv.config();
 
@@ -13,14 +18,19 @@ const client = new OAuth2Client(process.env.CLIENT_ID);
 
 app.use(cors({
   origin: 'http://localhost:5173',
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({extended:true}))
-app.use('/', userRouter);
+app.use(morganMiddleware);
 
+app.use('/', userRouter);
+app.use('/admin',adminRouter)
+
+ 
 mongoose
   .connect("mongodb://localhost:27017/Tekoffo" )
   .then(() => console.log("MongoDB connected"))
@@ -29,6 +39,8 @@ mongoose
 app.get("/", (req, res) => {
   res.send("Hello, TypeScript!");
 });
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port http://localhost:${PORT}`));

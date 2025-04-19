@@ -12,7 +12,16 @@ const ForgotPasswordOtp =()=> {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const email = location.state?.email;
+  // const email = location.state?.email;
+
+  const otpTimer = localStorage.getItem('otpTimer');
+  const email = localStorage.getItem('forgotEmail');
+
+  useEffect(() => {
+    if(!otpTimer){
+      navigate('/signin')
+    }
+  },[otpTimer,navigate])
 
   const handleInput = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9]/g, '');  
@@ -40,40 +49,30 @@ const ForgotPasswordOtp =()=> {
   //   }
   // }, [email, setValue]);
 
-  const storedEmail = localStorage.getItem("otpEmail");
-  const storedTimer = localStorage.getItem("otpTimer");
-
-  const initialTimer = storedEmail === email && storedTimer ? parseInt(storedTimer) : 30;
-
-
+  
+  const initialTimer = parseInt(otpTimer);
   const [timer, setTimer] = useState(initialTimer);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
  
 
   useEffect(() => {
-    if (email !== storedEmail) {
-      localStorage.setItem("otpEmail", email);
-      localStorage.setItem("otpTimer", "300");
-      setTimer(30);
-    }
-
-    if (timer > 0) {
-      intervalRef.current = setInterval(() => {
-        setTimer((prev) => {
-          const newTime = prev - 1;
-          localStorage.setItem("otpTimer", newTime.toString());
-          return newTime;
-        });
-      }, 1000);
-    } 
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [timer, email, storedEmail ]);
+     if (email) {
+       localStorage.setItem("otpTimer", initialTimer.toString());
+     }
+       intervalRef.current = setInterval(() => {
+         setTimer((prev) => {
+           const newTime = prev - 1;
+           localStorage.setItem("otpTimer", newTime.toString());
+           return newTime  > 0 ? newTime : 0;
+         });
+       }, 1000); 
+     return () => {
+       if (intervalRef.current) {
+         clearInterval(intervalRef.current);
+         intervalRef.current = null;
+       }
+     };
+   }, [email, initialTimer ]);
 
 
 
@@ -84,7 +83,7 @@ const ForgotPasswordOtp =()=> {
     try {
     const response = await API.post(commonENDPOINTS.RESEND_OTP,{email})
     if (response.data.success) {
-      setTimer(30); 
+      setTimer(initialTimer); 
     }else {
       setServerError(response.data.message || "Failed to resend OTP");
     }
@@ -159,7 +158,7 @@ const ForgotPasswordOtp =()=> {
             <div className="text-sm text-red-600 text-center mb-4">{serverError}</div>
           )}
            
-           <div>
+           <div className='text-center'>
         {timer > 0 ? (
           <>
             <h5>OTP Timer:</h5>
@@ -170,7 +169,7 @@ const ForgotPasswordOtp =()=> {
             type="submit"
             onClick={handleResendOtp}
             disabled={isLoading}
-            className="ml-4 text-blue-600 hover:underline"
+            className="text-blue-600 hover:underline mb-2"
           >
             Resend OTP
           </button>

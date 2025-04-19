@@ -3,16 +3,34 @@ import { KeyRound } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import API from '../../redux/services/api/baseUrl';
 import { commonENDPOINTS } from '../../redux/services/api/endpointUrl';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../../redux/store';
+import {register} from '../../redux/services/authService'
+
+ 
 
 const VerifyOtp = () => {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(''));
   const [isLoading, setIsLoading] = useState(false);
+  const [inputError, setInputError] = useState('');
   const [serverError, setServerError] = useState<string | null>(null);
 
+  const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
   const navigate = useNavigate();
-  const email = location.state?.email;
+  const { email, role } = location.state || {}; 
+  
+  const storedEmail = localStorage.getItem('otpEmail');
+  const otpTimer = localStorage.getItem('otpTimer')
+  // console.log("console from otpveificationnnnnnnnn",otpTimer)
+
+  useEffect(() => {
+    if(!otpTimer){
+      navigate('/signin')
+    }
+  },[ otpTimer,navigate])
+   
 
   const handleInput = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9]/g, '');  
@@ -22,11 +40,10 @@ const VerifyOtp = () => {
     newOtpValues[index] = value;
     setOtpValues(newOtpValues);
 
-    
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
-    }
-  };
+      }
+    };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace' && !otpValues[index] && index > 0) {
@@ -34,56 +51,37 @@ const VerifyOtp = () => {
     }
   };
 
-  // useEffect(() => {
-  //   if (email) {
-  //     setValue("email", email);
-  //   }
-  // }, [email, setValue]);
+  // const initialTimer = storedEmail === email && storedTimer ? parseInt(storedTimer) : 30;
 
-  const storedEmail = localStorage.getItem("otpEmail");
-  const storedTimer = localStorage.getItem("otpTimer");
-
-  const initialTimer = storedEmail === email && storedTimer ? parseInt(storedTimer) : 30;
-
-
+  const initialTimer = parseInt(otpTimer);
   const [timer, setTimer] = useState(initialTimer);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (email !== storedEmail) {
-      localStorage.setItem("otpEmail", email);
-      localStorage.setItem("otpTimer", "300");
-      setTimer(30);
+    if (email) {
+      localStorage.setItem("otpTimer", initialTimer.toString());
     }
 
-    if (timer > 0) {
+    // if (timer > 0) {
       intervalRef.current = setInterval(() => {
         setTimer((prev) => {
           const newTime = prev - 1;
           localStorage.setItem("otpTimer", newTime.toString());
-          return newTime;
+          return newTime  > 0 ? newTime : 0;
         });
       }, 1000);
-    } 
-    // else {
-    //   setCanResend(true);
-    //   if (intervalRef.current) {
-    //     clearInterval(intervalRef.current);
-    //     intervalRef.current = null;
-    //   }
-    // }
-
+    // } 
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
     };
-  }, [timer, email, storedEmail ]);
+  }, [email, initialTimer ]);
 
 
 
-
+//*** resend otp 
   const handleResendOtp = async() => {
     setIsLoading(true);
     setServerError(null);
@@ -91,39 +89,47 @@ const VerifyOtp = () => {
     const response = await API.post(commonENDPOINTS.RESEND_OTP,{email})
     if (response.data.success) {
       setTimer(30);  
-    }else {
-      setServerError(response.data.message || "Failed to resend OTP");
+      }else {
+        setServerError(response.data.message || "Failed to resend OTP");
+      }
+    }catch (error: any) {
+     setServerError(error.response?.data?.message || "Error resending OTP");
+      console.log("Error:", error.response);
+   } finally {
+     setIsLoading(false);
     }
-  }catch (error: any) {
-    setServerError(error.response?.data?.message || "Error resending OTP");
-    console.log("Error:", error.response);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
+  //***** submiting otp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const otp = otpValues.join('');
     if (otp.length !== 6) {
-      setServerError('Please enter a 6-digit OTP');
+      setInputError('Please enter a 6-digit OTP');
       return;
     }
-
     setIsLoading(true);
     setServerError(null);
+    setInputError('');
+    
 
-    try {
-      const response = await API.post(commonENDPOINTS.VERIFY_OTP, {
-        email,
-        otp,
-      });
-      if (response.data.success) {
-        navigate('/home');
+    try{
+      const result = await dispatch(register({email,otp}));
+
+      if (register.fulfilled.match(result)) {
+        const role = result.payload.user.role;
+        if(role == 'freelancer'){
+          navigate('/freelancer-dashboard')
+          // navigate('/freelancer/createprofile')
+        }else if(role == 'client'){
+          navigate('/client-dashboard')
+          // navigate('/client/createprofile')
+        }
+      }else if(register.rejected.match(result)){
+        setServerError(result.payload as string)
       }
     } catch (error: any) {
       setServerError(error.response?.data?.message );
-      console.log("neewww response gotttttttttt",error.response)
     } finally {
       setIsLoading(false);
     }
@@ -167,12 +173,14 @@ const VerifyOtp = () => {
               />
             ))}
           </div>
-
+          {inputError && (
+            <div className="text-sm text-red-600 text-center mb-4">{inputError}</div>
+          )}
           {serverError && (
             <div className="text-sm text-red-600 text-center mb-4">{serverError}</div>
           )}
            
-           <div>
+           <div className='text-center'>
         {timer > 0 ? (
           <>
             <h5>OTP Timer:</h5>
@@ -183,7 +191,7 @@ const VerifyOtp = () => {
             type="submit"
             onClick={handleResendOtp}
             disabled={isLoading}
-            className="ml-4 text-blue-600 hover:underline"
+            className="text-blue-600 hover:underline mb-2"
           >
             Resend OTP
           </button>

@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { Mail, ArrowLeft, Loader2 } from 'lucide-react';
-import API from '../../redux/services/api/baseUrl';
-import { commonENDPOINTS } from '../../redux/services/api/endpointUrl';
 import { useNavigate } from 'react-router-dom';
+import {resetPassword} from '../../api/common'
 
 const ForgotPasswod = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [serverError, setServerError] = useState(null);
+  const [isSuccess, setIsSuccess] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -16,12 +15,17 @@ const ForgotPasswod = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-        const response = await API.post(commonENDPOINTS.FORGOT_PASS,{email});
-        if(response.data.success){
-            navigate('/forgot-password-otp',{ state: { email:response.data.email } })
+          const result = await resetPassword((email))
+          console.log("console from forgotpass.tsxxxxxxxxx",result.message)
+        // const response = await API.post(commonENDPOINTS.FORGOT_PASS,{email});
+        if(result.success){
+          setIsSuccess(result.message)
+          localStorage.setItem('otpTimer',result.expiresIn.toString());
+          localStorage.setItem('forgotEmail',result.email)
+            navigate('/forgot-password-otp')
         }else{
-            setServerError(response.data.message || "Error sending otp")
-        }
+          setServerError(result.message)
+        } 
     } catch (error:any) {
         setServerError(error.response?.data?.message || "Error sending OTP");
     }
@@ -40,7 +44,7 @@ const ForgotPasswod = () => {
           </p>
         </div>
 
-        {!isSuccess ? (
+        {/* {!isSuccess ? ( */}
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
             <div className="relative">
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -87,7 +91,7 @@ const ForgotPasswod = () => {
               </a>
             </div>
           </form>
-        ) : (
+        {/* ) : (
           <div className="text-center py-8">
             <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
               <svg
@@ -116,7 +120,7 @@ const ForgotPasswod = () => {
               Back to forgot password
             </button>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

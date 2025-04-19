@@ -19,7 +19,7 @@ interface FormErrors {
   password?: string;
 }
 
-function SignIn() {
+const SignIn = () => {
 
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
@@ -62,13 +62,19 @@ const validateForm = (): boolean => {
       try {
         const result = await dispatch(signIn({ identifier: formData.identifier, password: formData.password }));
         if (signIn.fulfilled.match(result)) {
-            // console.log('Sign in successful');
-            navigate('/dashboard')
+          const userRole = result.payload.user.role;
+        if (userRole === 'freelancer') {
+          navigate('/freelancer-dashboard');
+        } else if (userRole === 'client') {
+          navigate('/client-dashboard');
+        } else {
+          navigate('/admin/dashboard');
+        }
         }else if(signIn.rejected.match(result)){
           setServerError(result.payload as string)
         }
         
-      } catch (error:any) {
+      } catch (error) {
         console.error('Sign in failed:', error);
         
       }
@@ -96,7 +102,7 @@ const validateForm = (): boolean => {
     try {
       const result = await dispatch(signIn({ googleCredential: credentialResponse.credential }));
       if (signIn.fulfilled.match(result)) {
-        navigate('/dashboard');
+        navigate('/freelancer-dashboard');
       } else {
         setServerError(result.payload as string || 'Google Sign-In failed');
       }
@@ -134,6 +140,7 @@ const validateForm = (): boolean => {
               name="identifier"
               value={formData.identifier}
               onChange={handleChange}
+               autoComplete="username"
               className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                 errors.identifier ? 'border-red-500' : 'border-gray-300'
               }`}
@@ -155,6 +162,7 @@ const validateForm = (): boolean => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
+                autoComplete="current-password"
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                   errors.password ? 'border-red-500' : 'border-gray-300'
                 }`}
@@ -178,7 +186,7 @@ const validateForm = (): boolean => {
               <input type="checkbox" className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
               <span className="ml-2 text-gray-600">Remember me</span>
             </label>
-            <a href="/fogot-password" className="text-blue-600 hover:text-blue-800 transition-colors">
+            <a href="/forgot-password" className="text-blue-600 hover:text-blue-800 transition-colors">
               Forgot password?
             </a>
           </div>

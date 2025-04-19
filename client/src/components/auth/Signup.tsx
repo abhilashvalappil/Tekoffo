@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FcGoogle } from 'react-icons/fc';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector,useDispatch } from 'react-redux';
-import { signUp } from '../../redux/services/authService';
+// import { signUp } from '../../redux/services/authService';
+import {signUp} from '../../api/common';
 import {RootState,AppDispatch} from '../../redux/store'
 import { clearMessages } from '../../redux/slices/authSlice'
 import { useForm } from "react-hook-form";
@@ -15,6 +16,7 @@ const SignupPage: React.FC = () => {
   const location = useLocation();
   const role = location.state.role;
 
+  //*zod
   const {
     register,
     handleSubmit,
@@ -29,21 +31,27 @@ const SignupPage: React.FC = () => {
     },
   });
 
-  // const [serverMessage, setServerMessage] = useState<string | null>(null);
+  
+
+  
   const [serverError, setServerError] = useState<string | null>(null);
-  // const [isLoading, setIsLoading] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
+  // const [otpSent, setOtpSent] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { loading,error,successMessage } = useSelector((state: RootState) => state.auth);
 
 
+  useEffect(() => {
+    dispatch(clearMessages());
+    localStorage.clear()
+  }, [dispatch])
+
   const handleSignup = async (data: SignUpFormData) => {
     try {
-      dispatch(clearMessages());
         setServerError(null);
-        setOtpSent(false)
+        // setOtpSent(false)
+        localStorage.setItem('otpEmail',data.email)
 
       const { confirmPassword:_, ...userData } = data;
 
@@ -52,17 +60,17 @@ const SignupPage: React.FC = () => {
         role: role,
       };
 
-      const result = await dispatch(signUp(signupData)).unwrap();
+      // const result = await dispatch(signUp(signupData)).unwrap();
 
+      const result = await signUp((signupData))
       if (result.success) {
-        setOtpSent(true);
-        // setServerMessage(result.message)
+        localStorage.setItem('otpTimer', result.expiresIn.toString());
         setTimeout(() => {
-          navigate('/verify-otp', { state: { email: result.email } });
+          navigate('/verify-otp', { state: { email: result.email, role:result.role, otpTimer:result.expiresIn } });
         }, 1000);
       }
     } catch (err: any) {
-      // setServerError(error || 'An error occurred during signup');
+      setServerError(err.message);
       console.error('Signup failed:', err);
     }
   };
@@ -99,6 +107,7 @@ const SignupPage: React.FC = () => {
                   id="username"
                   type="text"
                   placeholder="username"
+                  autoComplete="username"
                   {...register("username", { required: true })}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
@@ -116,6 +125,7 @@ const SignupPage: React.FC = () => {
                   id="email"
                   type="email"
                   placeholder="Email address"
+                  autoComplete="email"
                   {...register("email", { required: true })}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
@@ -133,6 +143,7 @@ const SignupPage: React.FC = () => {
                   id="password"
                   type="password"
                   placeholder="Password"
+                  autoComplete="password"
                   {...register("password", { required: true, minLength: 6 })}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
@@ -150,6 +161,7 @@ const SignupPage: React.FC = () => {
                   id="confirmPassword"
                   type="password"
                   placeholder="Confirm Password"
+                  autoComplete="confirmPassword"
                   {...register("confirmPassword", { required: true })}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
@@ -166,6 +178,7 @@ const SignupPage: React.FC = () => {
 
             {successMessage && <p className="text-green-500 text-sm text-center">{successMessage}</p>}
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+            {serverError && <p style={{ color: 'red' }}>{serverError}</p>} {/* Display error */}
 
             {/* Submit Button */}
             <div>

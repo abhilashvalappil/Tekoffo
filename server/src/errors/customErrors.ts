@@ -19,14 +19,14 @@ export class ConflictError extends CustomError {
     }
 }
 
-export class NotFoundError extends ConflictError {
+export class NotFoundError extends CustomError {
     constructor(message: string){
         super(message);
         this.name = 'NotFoundError';
     }
 }
 
-export class UnauthorizedError extends NotFoundError {
+export class UnauthorizedError extends CustomError {
     constructor(message: string) {
         super(message);
         this.name = "UnauthorizedError";
