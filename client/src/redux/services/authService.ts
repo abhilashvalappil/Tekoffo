@@ -1,7 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { AxiosError } from "axios";
 import { RegisterPayload } from "../types/authTypes";
-import { SignInCredentials,SignInResponse, GoogleSignUpCredentials } from "../types/authTypes";
+import { SignInCredentials,SignInResponse } from "../types/authTypes";
 import API from "../../services/api"
 import { commonENDPOINTS } from "../../constants/endpointUrl";
 

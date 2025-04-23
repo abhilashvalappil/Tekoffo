@@ -16,3 +16,4 @@ export * from './repositoryInterfaces/IBaseRepository';
 export * from './repositoryInterfaces/IUserRepository';
 export * from './repositoryInterfaces/ICategoryRepository'
 export * from './repositoryInterfaces/IJobRepository';
+export * from './repositoryInterfaces/IProposalRepository';

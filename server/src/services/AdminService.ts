@@ -2,7 +2,8 @@
 import {IUserResponse,IAdminService,IUserRepository,ICategoryRepository,ICategory } from '../interfaces';
 import { MESSAGES } from '../constants/messages';
 import { CustomError,ValidationError,ConflictError,NotFoundError,UnauthorizedError } from "../errors/customErrors";
-
+import { onlineUsers } from '../utils/socketManager';
+import { getIO } from '../config/socket';
  
 
 export class AdminService implements IAdminService {
@@ -44,6 +45,13 @@ export class AdminService implements IAdminService {
                     throw new NotFoundError(MESSAGES.NO_USERS_FOUND)
                 }
                 const updatedUser = await this.userRepository.updateUserStatus(userId, isBlocked);
+                if (isBlocked) {
+                    const socketId = onlineUsers.get(userId);
+                    if (socketId) {
+                        const io = getIO();
+                        io.to(socketId).emit("user:blocked");
+                    }
+                }
                 return {
                     message: `User ${isBlocked ? 'blocked' : 'unblocked'} successfully`,
                     user:{
@@ -133,24 +141,24 @@ export class AdminService implements IAdminService {
           }
           
 
-          async updateCategoryStatus(categoryId:string, isListed:boolean): Promise<{message:string, category: Partial<ICategory>}> {
-          
-                const categoryExist = await this.categoryRepository.findCategoryById(categoryId);
-                if(!categoryExist){
-                    throw new NotFoundError(MESSAGES.CATEGORY_NOT_FOUND)
+        async updateCategoryStatus(categoryId:string, isListed:boolean): Promise<{message:string, category: Partial<ICategory>}> {
+        
+            const categoryExist = await this.categoryRepository.findCategoryById(categoryId);
+            if(!categoryExist){
+                throw new NotFoundError(MESSAGES.CATEGORY_NOT_FOUND)
+            }
+            const updateCategory = await this.categoryRepository.updateCategoryStatus(categoryId, isListed)
+            if(!updateCategory){
+                throw new NotFoundError(MESSAGES.CATEGORY_STATUS_UPDATE_FAILED)
+            }
+            return {
+                message: `Category ${isListed ? 'listed' : 'unListed'} successfully`,
+                category:{
+                    _id: updateCategory._id,
+                    catId: updateCategory.catId,
+                    isListed: updateCategory.isListed
                 }
-                const updateCategory = await this.categoryRepository.updateCategoryStatus(categoryId, isListed)
-                if(!updateCategory){
-                    throw new NotFoundError(MESSAGES.CATEGORY_STATUS_UPDATE_FAILED)
-                }
-                return {
-                    message: `Category ${isListed ? 'listed' : 'unListed'} successfully`,
-                    category:{
-                        _id: updateCategory._id,
-                        catId: updateCategory.catId,
-                        isListed: updateCategory.isListed
-                    }
-                }
-          }
+            }
+        }
 
     }

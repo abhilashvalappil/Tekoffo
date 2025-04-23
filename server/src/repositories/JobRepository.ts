@@ -29,9 +29,18 @@ class JobRepository extends BaseRepository<JobDataType> implements IJobRepositor
         return await this.find({ clientId: new Types.ObjectId(clientId) });
     }
 
-    async getAllJobs(): Promise<JobDataType[]>{
-        return (await this.find({ isBlocked: false })) || [];
-    }
+    // async getAllJobs(): Promise<JobDataType[]>{
+    //     return (await this.find({ isBlocked: false })) || [];
+    // }
+
+    async findAllJobs(): Promise<JobDataType[]> {
+        return (
+          (await this 
+            .find({ isBlocked: false, status: 'open' })  
+            .populate('clientId', 'fullName profilePicture') 
+            .exec()) || []
+        );
+      }
 
     async findJobAndDelete(id:string): Promise<JobDataType | null>{
         return await this.findByIdAndDelete(id);

@@ -1,19 +1,24 @@
 import bcrypt from "bcrypt";
-import { IUserService,IUserRepository,ProfileFormData,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository } from "../interfaces";
+import { IUserService,IUserRepository,ProfileFormData,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser } from "../interfaces";
 import {MESSAGES} from '../constants/messages'
 import { CustomError, NotFoundError, UnauthorizedError } from "../errors/customErrors";
 import { FreelancerData, JobDataType, JobInputData, JobUpdateData } from '../interfaces/entities/IJob';
+import { proposalDataType } from "../types/jobTypes";
+import { Types } from "mongoose";
+import { IProposal } from "../interfaces/entities/IProposal";
  
 
 export class UserService implements IUserService {
     private userRepository: IUserRepository;
     private categoryRepository:ICategoryRepository;
     private jobRepository: IJobRepository;
+    private proposalRepository:IProposalRepository
 
-    constructor(userRepository: IUserRepository, categoryRepository:ICategoryRepository, jobRepository: IJobRepository){
+    constructor(userRepository: IUserRepository, categoryRepository:ICategoryRepository, jobRepository: IJobRepository, proposalRepository:IProposalRepository){
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.jobRepository = jobRepository;
+        this.proposalRepository = proposalRepository;
     }
 
     async createUserProfile(userId:string, ProfileData:ProfileFormData): Promise<{message:string,userProfile:UserProfileResponse}> {
@@ -224,12 +229,52 @@ export class UserService implements IUserService {
 
     async getAllJobs(): Promise<{jobs:JobDataType[]}> {
    
-        const jobs = await this.jobRepository.getAllJobs();
+        const jobs = await this.jobRepository.findAllJobs();
             return {jobs}
     }
 
     async getAllFreelancers(): Promise<{freelancers:FreelancerData[]}> {
             const freelancers = await this.userRepository.findFreelancers();
             return {freelancers}
+    }
+    
+    async getClientProfileByJob(clientId:string): Promise<{clientProfile:Partial<IUser> | null}>{
+        
+        const clientProfile = await this.userRepository.findUserById(clientId);
+        if(!clientProfile){
+            throw new NotFoundError(MESSAGES.INVALID_USER)
+        }
+        return {clientProfile}
+    }
+
+    async createJobProposal(freelancerId:string,proposalDetails:proposalDataType): Promise<{message:string}> {
+        console.log('console from service proposaldetails',proposalDetails)
+        const userExist = await this.userRepository.findUserById(freelancerId);
+        if(!userExist){
+            throw new NotFoundError(MESSAGES.INVALID_USER)
+        }
+        const jobExist = await this.jobRepository.findJobById(proposalDetails.jobId.toString());
+        if(!jobExist){
+            throw new NotFoundError(MESSAGES.JOB_NOT_FOUND)
+        }
+        const proposalData = {
+            ...proposalDetails,
+            attachments:proposalDetails.attachments? proposalDetails.attachments.path : '', 
+            freelancerId: new Types.ObjectId(freelancerId)
+        }
+        
+        await this.proposalRepository.createProposal(proposalData)
+        return{message:MESSAGES.PROPOSAL_CREATED}
+    }
+
+    async getClientReceivedProposals(clientId:string): Promise<{proposals:IProposal[]}> {
+
+        const userExist = await this.userRepository.findUserById(clientId)
+        if(!userExist){
+            throw new NotFoundError(MESSAGES.INVALID_USER)
+        }
+        const proposals = await this.proposalRepository.findProposals(clientId)
+        // console.log('console from userservice getClientReceivedProposals',proposals)
+        return{proposals}
     }
 }

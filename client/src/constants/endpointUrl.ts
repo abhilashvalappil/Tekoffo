@@ -35,4 +35,6 @@ export const commonENDPOINTS = {
     GET_MY_JOBS: "/jobs/my-posts",
     GET_POSTED_JOBS: "/jobs/posted",
     GET_Freelancers: "/freelancers",
+    SEND_PROPOSAL: "/send-proposal",
+    GET_RECEIVED_PROPOSALS: "/proposals/received",
   }

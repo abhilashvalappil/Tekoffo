@@ -9,12 +9,18 @@ import { OAuth2Client } from 'google-auth-library';
 import cookieParser from 'cookie-parser'
 import morganMiddleware from './middlewares/morgan.middleware';
 import { errorHandler } from './errors/errorHandler';
- 
+import http from "http";
+import { initSocket } from './config/socket'; 
+import { setupSocketEvents } from './utils/socketManager';
 
 dotenv.config();
 
 const app = express();
 const client = new OAuth2Client(process.env.CLIENT_ID);
+
+const server = http.createServer(app);
+const io = initSocket(server);  
+setupSocketEvents(io);  
 
 app.use(cors({
   origin: 'http://localhost:5173',
@@ -43,6 +49,6 @@ app.get("/", (req, res) => {
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port http://localhost:${PORT}`));
 
 export default app;

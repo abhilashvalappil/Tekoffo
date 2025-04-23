@@ -10,8 +10,10 @@ import { OAuth2Client } from 'google-auth-library';
 import authMiddleware from "../middlewares/authMiddleware";
 import CategoryRepository from "../repositories/CategoryRepository";
 import JobRepository from "../repositories/JobRepository";
+import ProposalRepository from "../repositories/ProposalRepository";
 import { authorizeRole } from "../middlewares/roleMiddleware";
 import { upload } from '../utils/cloudinary';
+import { uploadProposal } from "../utils/cloudinary";
 
 const userRouter = Router();
 
@@ -20,7 +22,7 @@ const cookieHandlerService = new CookieHandlerService();
 const googleClient = new OAuth2Client(process.env.CLIENT_ID);
 const authService = new AuthService(UserRepository, jwtService,googleClient); 
 const authController = new AuthController(authService,cookieHandlerService);
-const userService = new UserService(UserRepository,CategoryRepository,JobRepository )
+const userService = new UserService(UserRepository,CategoryRepository,JobRepository,ProposalRepository )
 const userController = new UserController(userService);
 
 
@@ -34,14 +36,15 @@ userRouter.post('/forgot-password',authController.forgotPassword.bind(authContro
 userRouter.post('/verify-forgot-otp',authController.verifyForgotPassOtp.bind(authController))
 userRouter.post('/reset-password',authController.resetPassword.bind(authController))
 userRouter.post('/logout',authController.logout.bind(authController))
+userRouter.post('/auth/refresh-token',authController.refreshAccessToken.bind(authController))
 
 
 //* freelancer routes
 userRouter.post('/create-freelancerprofile',upload.single('profilePicture'),authMiddleware,authorizeRole('freelancer'),userController.createFreelancerProfile.bind(userController))
 userRouter.put('/update-freelancerprofile',upload.single('profilePicture'),authMiddleware,authorizeRole('freelancer'),userController.updateFreelancerProfile.bind(userController))
 userRouter.get('/jobs/posted',authMiddleware,authorizeRole('freelancer'),userController.getAvailbleJobs.bind(userController))
-
-
+userRouter.get('/jobs/client',authMiddleware,authorizeRole('freelancer'),userController.getClientProfileByJob.bind(userController))
+userRouter.post('/send-proposal',uploadProposal.single('attachments'),authMiddleware,authorizeRole('freelancer'),userController.createProposal.bind(userController))
 
 
 
@@ -55,6 +58,7 @@ userRouter.put('/update-job',authMiddleware,authorizeRole('client'),userControll
 userRouter.delete('/delete-job',authMiddleware,authorizeRole('client'),userController.deleteJobPost.bind(userController))
 userRouter.get('/jobs/my-posts',authMiddleware,authorizeRole('client'),userController.getMyJobPosts.bind(userController))
 userRouter.get('/freelancers',authMiddleware,authorizeRole('client'),userController.getAllFreelancers.bind(userController))
+userRouter.get('/proposals/received',authMiddleware,authorizeRole('client'),userController.getReceivedProposals.bind(userController))
 
 
 export default userRouter;

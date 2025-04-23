@@ -1,11 +1,18 @@
 import { Routes,   } from 'react-router-dom';
+import { useSelector } from "react-redux";
+import { RootState } from "./redux/store";
 import './App.css'
 import AdminRoutes from './routes/AdminRoutes'
 import PublicRoutes from './routes/PublicRoutes'
 import ClientRoutes from './routes/ClientRoutes'
 import FreelancerRoutes from './routes/FreelancerRoutes';
+import { useSocketConnection } from './hooks/useSocket';
 
-function App() {
+// function App() {
+  const App: React.FC = () => {
+
+    const user = useSelector((state: RootState) => state.auth.user);
+    useSocketConnection(user);
 
   return (
   <Routes>

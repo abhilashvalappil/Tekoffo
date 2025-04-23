@@ -1,10 +1,12 @@
 import bcrypt from "bcrypt";
+import jwt from 'jsonwebtoken';
 import { transporter } from '../config/nodemailer.config';
 import { OAuth2Client } from 'google-auth-library';
 import { UserRole, IUserResponse, SignUpData,IAuthService,IUserRepository,IJwtService} from "../interfaces";
 import { otpGenerator } from "../utils/OtpGenerator";
 import { redisClient } from "../config/redis";
 import { MESSAGES } from '../constants/messages';
+import { JWT_SECRET } from "../config";
 import { ValidationError,ConflictError,NotFoundError,UnauthorizedError } from "../errors/customErrors";
 
 
@@ -155,6 +157,22 @@ export class AuthService implements IAuthService {
                 },
                 accessToken,
             }
+    }
+
+    async generateAccessToken(userId:string): Promise<{accessToken:string}>{
+
+      const user = await this.userRepository.findUserById(userId)
+      if(!user){
+        throw new NotFoundError(MESSAGES.INVALID_USER)
+      }
+      const storedToken = await redisClient.get(userId)
+      if(!storedToken){
+        throw new NotFoundError(MESSAGES.NO_TOKEN_FOUND)
+      }
+
+       jwt.verify(storedToken,JWT_SECRET) as { id: string; role: string; email: string };
+       const newAccesstoken = this.jwtService.generateAccessToken(user._id,user.role,user.email);
+       return { accessToken: newAccesstoken };
     }
 
     async logout(userId:string): Promise<{message:string}>{

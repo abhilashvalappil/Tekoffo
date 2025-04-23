@@ -1,5 +1,5 @@
 
-import { Document, Model } from "mongoose";
+import { Document, Model, Query } from "mongoose";
 import { IBaseRepository } from "../interfaces";
 
 class BaseRepository<T extends Document> implements IBaseRepository<T> {
@@ -29,9 +29,17 @@ class BaseRepository<T extends Document> implements IBaseRepository<T> {
     // async find(query?: any): Promise<T[]> {
     //     return await this.model.find(query || {}).exec();
     //   }
-    async find(query: any = {}, skip: number = 0, limit: number = 10): Promise<T[]> {
-        return await this.model.find(query).skip(skip).limit(limit).exec();
-      }
+    // async find(query: any = {}, skip: number = 0, limit: number = 10): Promise<T[]> {
+    //     return await this.model.find(query).skip(skip).limit(limit).exec();
+    //   }
+    
+  find(query: any = {}, skip: number = 0, limit: number = 10): Query<T[], T> {
+    return this.model.find(query).skip(skip).limit(limit);
+  }
+
+  async findExec(query: any = {}, skip: number = 0, limit: number = 10): Promise<T[]> {
+    return (await this.model.find(query).skip(skip).limit(limit).exec()) || [];
+  }
       async count(query: any = {}): Promise<number> {
         return await this.model.countDocuments(query).exec();
       }

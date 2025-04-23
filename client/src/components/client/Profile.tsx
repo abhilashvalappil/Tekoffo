@@ -19,7 +19,7 @@ interface FormErrors {
   profilePicture?: string;
 }
 
-function DisplayProfile() {
+const DisplayProfile = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);

@@ -51,14 +51,7 @@ export interface SignUpData {
     role: UserRole;
   }
 
-//   export interface ProfileFormData {
-//     fullName: string;
-//     companyName: string;
-//     description: string;
-//     country: string;
-//     // profilePicture: string;
-//     profilePicture?: Express.Multer.File;
-//   }
+ 
 
 export interface ProfileFormData {
     fullName: string;
@@ -73,15 +66,7 @@ export interface ProfileFormData {
     profilePicture?: Express.Multer.File;  
   }
 
-//   export interface UserProfileResponse {
-//       _id: string;
-//       fullName: string;
-//       companyName?: string;
-//       description: string;
-//       country: string;
-//     //   profilePicture?: string;
-//     profilePicture?: string;
-//     };
+  
   
 export interface UserProfileResponse {
     _id: string;
@@ -100,3 +85,4 @@ export interface UserProfileResponse {
     portfolioUrl?: string;
   }
   
+ 

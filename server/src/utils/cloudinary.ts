@@ -9,18 +9,6 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET!,
   });
 
- 
-
-// const storage = new CloudinaryStorage({
-//     cloudinary,
-//     params: async (req, file) => {
-//       return {
-//         folder: 'user_profiles', // Cloudinary folder
-//         allowed_formats: ['jpg', 'jpeg', 'png'], // Allowed file formats
-//         transformation: [{ width: 500, height: 500, crop: 'limit' }], // Image transformation
-//       };
-//     },
-//   });
 
 const storage = new CloudinaryStorage({
     cloudinary,
@@ -34,3 +22,13 @@ const storage = new CloudinaryStorage({
   });
 
   export const upload = multer({ storage });
+
+  const proposalStorage = new CloudinaryStorage({
+    cloudinary,
+    params: async () => ({
+      folder: 'proposals',
+      allowed_formats: ['pdf'],
+    }),
+  });
+  export const uploadProposal = multer({ storage: proposalStorage });
+  

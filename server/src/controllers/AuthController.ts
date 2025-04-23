@@ -98,6 +98,20 @@ export class AuthController {
         }
     }
 
+    async refreshAccessToken(req:Request, res:Response, next: NextFunction): Promise<void> {
+        try {
+            const { userId } = req.body;
+            if(!userId){
+                res.status(Http_Status.BAD_REQUEST).json(MESSAGES.INVALID_REQUEST)
+            }
+            const { accessToken } = await this.authService.generateAccessToken(userId)
+            this.cookieHandlerService.setCookie(res,accessToken)
+            res.status(Http_Status.OK).json({ accessToken });
+        } catch (error) {
+            next(error)
+        }
+    }
+
     async logout(req:Request, res:Response, next: NextFunction): Promise<void> {
         try {
             const {userId} = req.body;

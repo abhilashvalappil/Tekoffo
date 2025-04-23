@@ -1,8 +1,8 @@
 import { Document, Types, ObjectId } from 'mongoose'
 
  export interface JobDataType extends Document {
-  _id:string,
-  clientId: Types.ObjectId;
+  _id:string;
+  clientId: Client | Types.ObjectId;
     title: string;
     category: string;
     subCategory:string;
@@ -17,12 +17,16 @@ import { Document, Types, ObjectId } from 'mongoose'
     updated_At: Date;
   }
 
+  export interface Client {
+    name: string;
+    profilePicture?: string;
+  }
+
   export interface JobInputData {
     title: string;
     category: string;
     subCategory: string;
     description: string;
-    // requirements: string;
     requirements: string[];
     budget: number;
     duration: string;

@@ -6,15 +6,16 @@ import SignInPage from "../components/auth/Signin";
 import ForgotPasswod from '../components/auth/ForgotPass'
 import ForgotPasswordOtp from '../components/auth/ForgotPassOtp'
 import ResetPassword from "../components/auth/ResetPassword";
-import Landing from "../components/Home/Landing";
+// import Landing from "../components/Home/Landing";
 import PublicLayout from "./PublicLayout";
+import PaymentForm from "../components/client/PaymentForm";
  
 
 
 const PublicRoutes = () => (
     <>
       <Route element={<PublicLayout />}>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<PaymentForm />} />
         <Route path="/signup-as" element={<RoleSelection />} />
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/signup" element={<Signup />} />

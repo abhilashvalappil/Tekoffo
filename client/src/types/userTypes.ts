@@ -78,3 +78,13 @@ export interface UserProfileResponse {
     portfolioUrl?: string;
   }
  
+  export interface Client {
+    id: string;
+    fullName: string;
+    profilePicture?: string;
+    companyName?: string;
+    country: string;
+    avatarUrl?: string;
+    description: string;
+    email: string;
+  }

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import {
   Clock,
   Briefcase,
@@ -13,14 +14,72 @@ import {
   Send,
   MessageSquare,
   Wallet,
+  Building2,
+  MapPin,
+  User,
 } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../redux/services/authService';
 import { persistor, RootState } from '../../redux/store';
 import { useJobs } from '../../hooks/useJobs';
-import Navbar from './Navbar'; // Adjust the path based on your file structure
+import Navbar from './Navbar';
+import JobDetailsModal from './JobApply';
 import { userENDPOINTS } from '../../constants/endpointUrl';
+import { useClient } from '../../hooks/useClients';
+import ClientProfileModal from './ClientProfileModal';
+
+//* Interface for job data
+interface Job {
+  id: string;
+  clientId:string;
+  title: string;
+  category: string;
+  subcategory: string;
+  description: string;
+  requirements: string[];
+  budget: string;
+  duration: string;
+  posted: string;
+  clientName: string;
+  clientLocation: string;
+  clientRating: number;
+  postedDate: string;
+}
+
+//* Interface for raw job data from API
+interface RawJob {
+  _id: string;
+  clientId:string;
+  title?: string;
+  category: string;
+  subCategory: string;
+  description: string;
+  requirements: string[];
+  budget: number;
+  duration: string;
+  created_At: string;
+  clientName?: string;
+  clientLocation?: string;
+  clientRating?: number;
+}
+
+interface Client {
+  id: string;
+  fullName: string;
+  profilePicture?: string;
+  companyName?: string;
+  country: string;
+  avatarUrl?: string;
+  description: string;
+  email: string;
+}
+
+//* Interface for budget range filter
+interface BudgetRange {
+  min: string;
+  max: string;
+}
 
 // Utility function to calculate "posted" time
 const getPostedTime = (createdAt: string): string => {
@@ -35,71 +94,88 @@ const getPostedTime = (createdAt: string): string => {
   return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 };
 
-// Map category IDs to human-readable names (adjust based on your backend)
+// Map category IDs to human-readable names
 const categoryMap: { [key: string]: string } = {
   '1744261565186': 'Web Development',
   '1744261537338': 'UI/UX Design',
   '1744261489814': 'Frontend Development',
 };
 
-const AvailableJobs = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedSubcategory, setSelectedSubcategory] = useState('');
-  const [budgetRange, setBudgetRange] = useState({ min: '', max: '' });
-  const [activeTab, setActiveTab] = useState('jobs');
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+/**
+ * AvailableJobs component displays a list of job postings with filters and modal for job details
+ */
+const AvailableJobs: React.FC = () => {
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [showFilters, setShowFilters] = useState<boolean>(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
+  const [budgetRange, setBudgetRange] = useState<BudgetRange>({ min: '', max: '' });
+  const [activeTab, setActiveTab] = useState<string>('jobs');
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
+  const [isClientModalOpen, setIsClientModalOpen] = useState<boolean>(false);
+const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
+  // Redux and navigation
   const user = useSelector((state: RootState) => state.auth.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  //* Fetch jobs customhook
   const { jobs: rawJobs, loading, error } = useJobs(userENDPOINTS.GET_POSTED_JOBS);
+  const {client,fetchClient} = useClient()
 
-  // Transform API data to match UI expectations
-  const jobs = rawJobs.map((job: any) => ({
+  
+  // Transform raw job data
+  const jobs: Job[] = rawJobs.map((job: RawJob) => ({
     id: job._id,
-    title: job.title || 'Untitled Job', // Fallback for empty title
-    category: categoryMap[job.category] || 'Unknown Category', // Map ID to name
-    subcategory: job.subCategory, // Rename to match UI
-    description: job.description,
-    // requirements: job.requirements.split(',').map((req: string) => req.trim()), // Parse string to array
-    requirements: job.requirements,
-    budget: job.budget.toString(), // Ensure string for filtering
-    duration: job.duration,
+    clientId:job.clientId,
+    title: job.title || 'Untitled Job',
+    category: categoryMap[job.category] || 'Unknown Category',
+    subcategory: job.subCategory || 'Unknown Subcategory',
+    description: job.description || 'No description provided',
+    requirements: job.requirements || [],
+    budget: job.budget.toString(),
+    duration: job.duration || 'Not specified',
     posted: getPostedTime(job.created_At),
+    clientName: job.clientName || 'Unknown Client',
+    clientLocation: job.clientLocation || 'Unknown Location',
+    clientRating: job.clientRating || 4.5,
+    postedDate: job.created_At || new Date().toISOString(),
   }));
 
-  // Get unique categories and subcategories for filters
+  // Get unique categories and subcategories
   const categories = [...new Set(jobs.map((job) => job.category))];
   const subcategories = [...new Set(jobs.map((job) => job.subcategory))];
 
-  if (loading) return <p className="text-center py-8">Loading jobs...</p>;
-  if (error) return <p className="text-center py-8 text-red-500">Error: {error}</p>;
+  // Memoized filtered jobs
+  const filteredJobs = useMemo(() => {
+    return jobs.filter((job) => {
+      const matchesSearch =
+        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        job.description.toLowerCase().includes(searchTerm.toLowerCase());
 
-  // Filter jobs based on search term and filters
-  const filteredJobs = jobs.filter((job) => {
-    const matchesSearch =
-      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = !selectedCategory || job.category === selectedCategory;
+      const matchesSubcategory = !selectedSubcategory || job.subcategory === selectedSubcategory;
+      const matchesBudget =
+        (!budgetRange.min || parseInt(job.budget) >= parseInt(budgetRange.min)) &&
+        (!budgetRange.max || parseInt(job.budget) <= parseInt(budgetRange.max));
 
-    const matchesCategory = !selectedCategory || job.category === selectedCategory;
-    const matchesSubcategory = !selectedSubcategory || job.subcategory === selectedSubcategory;
-    const matchesBudget =
-      (!budgetRange.min || parseInt(job.budget) >= parseInt(budgetRange.min)) &&
-      (!budgetRange.max || parseInt(job.budget) <= parseInt(budgetRange.max));
+      return matchesSearch && matchesCategory && matchesSubcategory && matchesBudget;
+    });
+  }, [jobs, searchTerm, selectedCategory, selectedSubcategory, budgetRange]);
 
-    return matchesSearch && matchesCategory && matchesSubcategory && matchesBudget;
-  });
-
+ 
   const resetFilters = () => {
     setSelectedCategory('');
     setSelectedSubcategory('');
     setBudgetRange({ min: '', max: '' });
   };
 
+  //* Handle logout
   const handleLogout = async () => {
     try {
       if (user?._id) {
@@ -113,6 +189,27 @@ const AvailableJobs = () => {
     }
   };
 
+   
+  const handleView = async (job: Job) => {
+    try {
+      const clientData = await fetchClient(job.clientId);  
+      setSelectedClient(clientData);  
+      setIsClientModalOpen(true); 
+    } catch (error) {
+      console.error('Failed to fetch client:', error);
+      
+    }
+  };
+
+   
+  const handleApplyNow = (job: Job) => {
+    console.log('console from availablejobss.tsx',job)
+    
+    setSelectedJob(job);
+    setIsModalOpen(true);
+  };
+
+  //* Navigation items
   const navItems = [
     { icon: <LayoutDashboard className="h-5 w-5" />, label: 'Overview', id: 'overview', path: '/freelancer-dashboard' },
     { icon: <Briefcase className="h-5 w-5" />, label: 'Find Jobs', id: 'jobs', path: '/freelancer/jobs' },
@@ -122,9 +219,17 @@ const AvailableJobs = () => {
     { icon: <Wallet className="h-5 w-5" />, label: 'Earnings', id: 'earnings' },
   ];
 
+  // Loading and error states
+  if (loading) {
+    return <p className="text-center py-8 text-[#0A142F]">Loading jobs...</p>;
+  }
+
+  if (error) {
+    return <p className="text-center py-8 text-red-500">Error: {error}</p>;
+  }
+
   return (
     <div className="min-h-screen bg-white text-[#0A142F]">
-      {/* Navbar */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -138,11 +243,11 @@ const AvailableJobs = () => {
       />
 
       {/* Main Content */}
-      <main className="pt-20 p-4 md:p-20 bg-[#F8FAFC] z-10 relative">
+      <main className="pt-20 p-4 md:p-8 lg:p-20 bg-[#F8FAFC] z-10 relative">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="flex flex-col gap-4 mb-8">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <h1 className="text-2xl md:text-3xl font-bold text-[#0A142F]">
                 Available Jobs
               </h1>
@@ -174,7 +279,7 @@ const AvailableJobs = () => {
             {showFilters && (
               <div className="bg-white p-4 rounded-lg border border-gray-200 mt-4">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="font-semibold">Filters</h2>
+                  <h2 className="font-semibold text-[#0A142F]">Filters</h2>
                   <button
                     onClick={resetFilters}
                     className="text-sm text-[#0A142F]/70 hover:text-[#0A142F] flex items-center gap-1"
@@ -183,13 +288,15 @@ const AvailableJobs = () => {
                     Reset
                   </button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Category</label>
+                    <label className="block text-sm font-medium mb-2 text-[#0A142F]">
+                      Category
+                    </label>
                     <select
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="w-full p-2 border border-gray-200 rounded-lg"
+                      className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0A142F]/20"
                     >
                       <option value="">All Categories</option>
                       {categories.map((category) => (
@@ -200,11 +307,13 @@ const AvailableJobs = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Subcategory</label>
+                    <label className="block text-sm font-medium mb-2 text-[#0A142F]">
+                      Subcategory
+                    </label>
                     <select
                       value={selectedSubcategory}
                       onChange={(e) => setSelectedSubcategory(e.target.value)}
-                      className="w-full p-2 border border-gray-200 rounded-lg"
+                      className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0A142F]/20"
                     >
                       <option value="">All Subcategories</option>
                       {subcategories.map((subcategory) => (
@@ -215,7 +324,9 @@ const AvailableJobs = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Budget Range</label>
+                    <label className="block text-sm font-medium mb-2 text-[#0A142F]">
+                      Budget Range
+                    </label>
                     <div className="flex gap-2">
                       <input
                         type="number"
@@ -224,7 +335,7 @@ const AvailableJobs = () => {
                         onChange={(e) =>
                           setBudgetRange((prev) => ({ ...prev, min: e.target.value }))
                         }
-                        className="w-1/2 p-2 border border-gray-200 rounded-lg"
+                        className="w-1/2 p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0A142F]/20"
                       />
                       <input
                         type="number"
@@ -233,7 +344,7 @@ const AvailableJobs = () => {
                         onChange={(e) =>
                           setBudgetRange((prev) => ({ ...prev, max: e.target.value }))
                         }
-                        className="w-1/2 p-2 border border-gray-200 rounded-lg"
+                        className="w-1/2 p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0A142F]/20"
                       />
                     </div>
                   </div>
@@ -280,19 +391,56 @@ const AvailableJobs = () => {
                     />
                   </div>
 
+                   {/* Client Profile Preview */}
+      <div className="bg-gray-50 rounded-lg p-4 mb-4">
+        <div className="flex items-start gap-4">
+          <img 
+            src={job.clientId?.profilePicture || 'https://via.placeholder.com/48'} 
+            // alt={client.name}
+            alt="Client"
+            className="w-12 h-12 rounded-full object-cover"
+          />
+          <div className="flex-1">
+            <h4 className="font-semibold text-[#0A142F]">{job.clientId?.fullName}</h4>
+            {/* <p className="text-sm text-[#0A142F]/70">{client.title}</p> */}
+            <div className="flex flex-wrap gap-3 mt-2 text-sm text-[#0A142F]/70">
+              <div className="flex items-center gap-1">
+                <Building2 size={14} />
+                <span>{job.clientId?.companyName || 'No Company name provided'}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <MapPin size={14} />
+                {/* <span>{client.location}</span> */}
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => handleView(job)}
+            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            <User size={16} />
+            <span className="text-sm font-medium">View Profile</span>
+          </button>
+        </div>
+      </div>
+
                   <p className="text-[#0A142F]/70 mb-4 line-clamp-2">{job.description}</p>
 
                   <div className="mb-4">
                     <h3 className="text-sm font-semibold text-[#0A142F] mb-2">Requirements:</h3>
                     <div className="flex flex-wrap gap-2">
-                      {job.requirements.map((req: string, index: number) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-gray-50 rounded-full text-sm text-[#0A142F]/70"
-                        >
-                          {req}
-                        </span>
-                      ))}
+                      {job.requirements.length > 0 ? (
+                        job.requirements.map((req, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-1 bg-gray-50 rounded-full text-sm text-[#0A142F]/70"
+                          >
+                            {req}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-[#0A142F]/70 text-sm">No requirements specified</span>
+                      )}
                     </div>
                   </div>
 
@@ -307,7 +455,10 @@ const AvailableJobs = () => {
                         <span>{job.duration}</span>
                       </div>
                     </div>
-                    <button className="w-full md:w-auto px-4 py-2 bg-[#0A142F] text-white hover:bg-[#0A142F]/90 rounded-lg transition-colors">
+                    <button
+                      onClick={() => handleApplyNow(job)}
+                      className="w-full md:w-auto px-4 py-2 bg-[#0A142F] text-white rounded-lg hover:bg-[#0A142F]/90 transition-colors"
+                    >
                       Apply Now
                     </button>
                   </div>
@@ -317,6 +468,27 @@ const AvailableJobs = () => {
           </div>
         </div>
       </main>
+
+      {/* Job Details Modal */}
+      <JobDetailsModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedJob(null);
+        }}
+        job={selectedJob}
+        client={client}
+      />
+
+      {/* Client Profile Modal */}
+      <ClientProfileModal
+        isOpen={isClientModalOpen}
+        onClose={() => {
+          setIsClientModalOpen(false);
+          setSelectedClient(null);
+        }}
+        client={selectedClient}
+      />
     </div>
   );
 };

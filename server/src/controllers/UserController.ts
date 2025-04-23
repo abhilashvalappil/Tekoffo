@@ -44,24 +44,7 @@ export class UserController {
                 return;
               }
               const profilePicture = req.file;
-            
-            // const {fullName, companyName, description, country, profilePicture} = req.body.payload;
-            // const { fullName, companyName, description, country } = req.body;
-            
-
-            // if(!fullName  || !description || !country){
-            //     res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.BASIC_PROFILE_FIELDS_REQUIRED})
-            // }
-
-
-            // const result = await this.userService.createUserProfile(userId, {
-            //     fullName,
-            //     companyName,
-            //     description,
-            //     country,
-            //     // profilePicture,
-            //     profilePicture: profilePicture ? profilePicture : undefined,
-            // });
+    
             const result = await this.userService.createUserProfile(userId, {
                 ...validationResult.data,
                 profilePicture: profilePicture ? profilePicture : undefined,
@@ -417,6 +400,65 @@ export class UserController {
         }
     }
 
+    async getClientProfileByJob(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
+        try {
+            const {clientId} = req.query;
+            // console.log('console from usercontroller getClientProfileByJob',clientId)
 
+            if(typeof clientId !== 'string' || !clientId){
+                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.CLIENT_ID_MISSING})
+                return;
+            }
+            const {clientProfile} = await this.userService.getClientProfileByJob(clientId) 
+            res.status(Http_Status.OK).json(clientProfile)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async createProposal(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
+        try {
+            // const {proposalDetails} = req.body;
+            const freelancerId = req.userId;
+            if(!freelancerId){
+                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
+                return;
+            }
+            console.log('console from createproposal controler',req.body)
+            const proposalDetails = {
+                jobId: req.body.jobId,
+                clientId: req.body.clientId,
+                coverLetter: req.body.coverLetter,
+                proposedBudget: Number(req.body.proposedBudget),
+                duration: req.body.duration,
+              };
+              
+            const file = req.file;
+            console.log('Uploaded fileeeeeee:', file);
+            await this.userService.createJobProposal(freelancerId,{
+                ...proposalDetails,
+                //  attachments: file ? [{ fileName: file.filename }] : undefined
+                attachments:file ? file : undefined
+            })
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async getReceivedProposals(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
+        try {
+            const clientId = req.userId;
+            // console.log('console from getReceivedProposals',clientId)
+            if(!clientId){
+                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
+                return;
+            }
+            const { proposals } = await this.userService.getClientReceivedProposals(clientId)
+            // console.log('console frommmmmmmmmm usercontroller',proposals)
+            res.status(Http_Status.OK).json(proposals);
+        } catch (error) {
+            next(error)
+        }
+    }
 
 }

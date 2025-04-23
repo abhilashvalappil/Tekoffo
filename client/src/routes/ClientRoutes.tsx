@@ -9,6 +9,7 @@ import ChangePassword from "../components/client/ChangePassword";
 import PostJob from "../components/client/PostJob";
 import MyJobPosts from "../components/client/MyJobs";
 import Freelancers from "../components/client/AvailableFreelancers";
+import Proposals from "../components/client/Proposals";
 
  
 const ClientRoutes = () => (
@@ -75,6 +76,14 @@ const ClientRoutes = () => (
       element={
         <ProtectedRoute allowedRoles={["client"]}>
           <Freelancers />
+        </ProtectedRoute>
+     } />
+
+    <Route 
+      path="/client/proposals"
+      element={
+        <ProtectedRoute allowedRoles={["client"]}>
+          <Proposals />
         </ProtectedRoute>
      } />
      
