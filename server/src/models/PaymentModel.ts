@@ -49,14 +49,14 @@ const PaymentSchema: Schema<IPayment> = new Schema({
         ref: "Job",
         required:true
     },
-    commission:{
-        type:Number,
-        required: true
-    },
     application_fee_amount: {
          type: Number, 
          required: true
     }, 
+    platFormServiceFee:{
+        type: Number, 
+         required: true
+    },
     transferDataDestination:{
         type: String,
         required: true

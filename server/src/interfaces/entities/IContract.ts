@@ -9,10 +9,11 @@ export interface IContract extends Document {
     gigId?:mongoose.Schema.Types.ObjectId;
     stripePaymentIntentId:string;
     amount:number;
-    commission: number;
+    application_fee_amount: number;
+    platFormServiceFee: number;
     transferDataDestination: string;
     transactionId:string;
-    contractStatus:'active'| 'completed'| 'cancelled';
+    contractStatus:'pending'| 'active'| 'submitted'|  'completed'| 'cancelled';
     startedAt:Date;
     completedAt?: Date;
     createdAt?: Date;
@@ -26,10 +27,11 @@ export interface CreateContractDTO {
     proposalId: mongoose.Schema.Types.ObjectId;
     transactionId: string;
     stripePaymentIntentId: string;
-    amount: number;
-    commission: number;
+    amount:number
+    application_fee_amount: number;
+    platFormServiceFee: number;
     transferDataDestination: string;
-    contractStatus: 'active'| 'completed'| 'cancelled';
+    contractStatus: 'pending'| 'active'| 'submitted'|  'completed'| 'cancelled';
     startedAt: Date;
   }
   

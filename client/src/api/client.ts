@@ -94,6 +94,7 @@ export const fetchProposal = async(proposalId:string): Promise<ProposalData> => 
 
 export const createPaymentIntent = async(paymentIntentData:PaymentIntentPayload): Promise<{clientSecret:string,transactionId:string}> => {
     try {
+        console.log('console from createpaymentintent apiiiiiiiiii',paymentIntentData)
         const response = await API.post(userENDPOINTS.CREATE_PAYMENT_INTENT,{paymentIntentData})
         // console.log('consle from createpaymentintent :',response.data)
         return response.data;

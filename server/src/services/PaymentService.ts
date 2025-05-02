@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { IUserService,IUserRepository,ProfileFormData,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser, IPaymentService, CreateContractDTO, INotification,  } from "../interfaces";
+import { IUserService,IUserRepository,ProfileFormData,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser, IPaymentService, CreateContractDTO, INotification, IContract,  } from "../interfaces";
 import {MESSAGES} from '../constants/messages'
 import { CustomError, NotFoundError, UnauthorizedError } from "../errors/customErrors";
 import { FreelancerData, JobDataType, JobInputData, JobUpdateData } from '../interfaces/entities/IJob';
@@ -55,15 +55,15 @@ export class PaymentService implements IPaymentService {
         return {onboardingLink}
     }
 
-    async createPaymentIntent(amount: number, freelancerId: string, clientId: string, jobId: string,  proposalId: string): Promise<{ clientSecret: string; transactionId: string }> {
+    async createPaymentIntent(amount: number, serviceFee:number, freelancerId: string, clientId: string, jobId: string,  proposalId: string): Promise<{ clientSecret: string; transactionId: string }> {
         console.log('consoleing clientidddddd',clientId)
         const client = await this.userRepository.findUserById(clientId);
         if (!client?.fullName || !client?.email || !client?._id) {
             throw new Error("Client data is incomplete. Cannot create Stripe customer.");
           }
         const customer = await stripe.customers.create({
-            name: client?.fullName,
-            email: client?.email,
+            name: client.fullName,
+            email: client.email,
             metadata: {
               clientId: clientId
             },
@@ -72,14 +72,16 @@ export class PaymentService implements IPaymentService {
         if (!freelancer?.stripeAccountId) {
             throw new Error('Freelancer Stripe account ID not found.');
         }
-        console.log('checking freelancerId :', freelancerId)
+        console.log('checking amountttttttttt :', amount)
          const paymentIntent = await stripe.paymentIntents.create({
-                amount: amount * 100,
+                amount,
+                // amount: amount * 100,
                 currency: 'usd',
                 capture_method: 'manual',
                 payment_method_types: ['card'],
                 customer: customer.id, 
-                application_fee_amount:  Math.round(amount * 100 * 0.10),  
+                application_fee_amount: Math.round(amount * 0.05),  
+                // application_fee_amount:  Math.round(amount * 100 * 0.10),  
                 transfer_data: {
                      destination: freelancer?.stripeAccountId 
                 },
@@ -105,8 +107,8 @@ export class PaymentService implements IPaymentService {
                 freelancerId,
                 proposalId,
                 jobId,
-                commission: amount * 0.1,
-                application_fee_amount: amount * 0.1,
+                application_fee_amount: amount * 0.05,
+                platFormServiceFee:amount * 0.05,
                 clientSecret: paymentIntent.client_secret,
                 transferDataDestination,
                 transferGroup: paymentIntent.transfer_group,
@@ -140,7 +142,8 @@ export class PaymentService implements IPaymentService {
             jobId,
             stripePaymentIntentId,
             amount,
-            commission,
+            application_fee_amount,
+            platFormServiceFee,
             transferDataDestination,
             transactionId,
         } = payment;
@@ -152,10 +155,11 @@ export class PaymentService implements IPaymentService {
             jobId,
             stripePaymentIntentId,
             amount,
-            commission,
+            application_fee_amount,
+            platFormServiceFee,
             transferDataDestination,
             transactionId,
-            contractStatus: 'active',
+            contractStatus: 'pending',
             startedAt: new Date(),
         }
         await this.contractRepository.createContract(newContract)
@@ -210,6 +214,23 @@ export class PaymentService implements IPaymentService {
     async markAllNotificationsAsRead(ids:string[]): Promise<{message:string}> {
         await this.notificationRepository.updateAllNotifications(ids)
         return {message:'All Notifications are marked as read'}
+    }
+
+    async getUserContracts(userId:string): Promise<{contracts:IContract[]}> {
+        const user = await this.userRepository.findUserById(userId)
+        let contracts: IContract[] = [];
+        if(!user){
+            throw new NotFoundError(MESSAGES.UNAUTHORIZED)
+        }
+        if(user && user.role == 'freelancer'){
+            contracts = await this.contractRepository.findContractsByFreelancerId(userId)
+            // console.log('contractssssssssssssssssss44444444',contracts)
+        }
+        
+        if(user && user.role == 'client'){
+            contracts = await this.contractRepository.findContractsByClientId(userId)
+        }
+        return {contracts}
     }
 
 }

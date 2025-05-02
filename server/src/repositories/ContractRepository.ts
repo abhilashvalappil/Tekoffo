@@ -11,6 +11,24 @@ class ContractRepository extends BaseRepository<IContract> implements IContractR
     async createContract(contract:CreateContractDTO): Promise<IContract> {
         return await this.create(contract)
     }
+
+    async findContractsByFreelancerId(userId:string): Promise<IContract[]> {
+        return await this.find({
+            freelancerId:userId
+        })
+        .populate({
+            path: 'jobId',
+            select: 'title'
+        })
+        .populate({
+            path: 'clientId',
+            select: 'fullName'
+        })
+    }
+
+    async findContractsByClientId(userId:string): Promise<IContract[]> {
+        return await this.find({clientId:userId})
+    }
 }
 
 export default new ContractRepository();

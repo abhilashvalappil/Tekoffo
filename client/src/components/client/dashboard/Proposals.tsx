@@ -209,10 +209,7 @@ const Proposals = () => {
       prev.map((p) => (p.id === proposal.id ? { ...p, status: 'accepted' } : p))
     );
     setIsModalOpen(false);
-    console.log('console from proposalsssssssssssssss',proposal.id)
-    // const proposedData = await fetchAndUpdateProposal(proposal.id)
-    // navigate('/client/view-payment')
-    // console.log('helloooooooooooooooooooooooo',proposedData )
+    
     navigate('/client/payment-review', {
       state: {
         proposalId: proposal.id,

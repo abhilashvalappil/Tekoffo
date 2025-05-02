@@ -22,32 +22,18 @@ class BaseRepository<T extends Document> implements IBaseRepository<T> {
     async findById(id: string): Promise<T | null> {
     return await this.model.findById(id);
     }
-    // async find(): Promise<T[]> {
-    //     return await this.model.find().exec();
-    // }
-    
-    // async find(query?: any): Promise<T[]> {
-    //     return await this.model.find(query || {}).exec();
-    //   }
-    // async find(query: any = {}, skip: number = 0, limit: number = 10): Promise<T[]> {
-    //     return await this.model.find(query).skip(skip).limit(limit).exec();
-    //   }
-    
-      //  find(query: any = {}, skip: number = 0, limit: number = 0): Query<T[], T> {
-      //   return this.model.find(query).skip(skip).limit(limit);
-      // }
-      find(query: any = {}, options: { skip?: number; limit?: number; sort?: any } = {}): Query<T[], T> {
-        const { skip = 0, limit = 8, sort = {} } = options;
-        return this.model.find(query).skip(skip).limit(limit).sort(sort);
-    }
-    
 
-      async findExec(query: any = {}, skip: number = 0, limit: number = 10): Promise<T[]> {
-        return (await this.model.find(query).skip(skip).limit(limit).exec()) || [];
-      }
-      async count(query: any = {}): Promise<number> {
-        return await this.model.countDocuments(query).exec();
-      }
+    find(query: any = {}, options: { skip?: number; limit?: number; sort?: any } = {}): Query<T[], T> {
+      const { skip = 0, limit = 8, sort = {} } = options;
+      return this.model.find(query).skip(skip).limit(limit).sort(sort);
+    }
+  
+    async findExec(query: any = {}, skip: number = 0, limit: number = 10): Promise<T[]> {
+      return (await this.model.find(query).skip(skip).limit(limit).exec()) || [];
+    }
+    async count(query: any = {}): Promise<number> {
+      return await this.model.countDocuments(query).exec();
+    }
 
     async findByIdAndDelete(id:string): Promise<T | null>{
         return await this.model.findByIdAndDelete(id)

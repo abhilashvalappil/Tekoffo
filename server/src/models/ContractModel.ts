@@ -35,8 +35,12 @@ const ContractSchema : Schema<IContract>  = new Schema({
         type: Number,
         required: true
     },
-    commission: {
-        type: Number,
+    application_fee_amount: {
+        type: Number, 
+        required: true
+   }, 
+    platFormServiceFee:{
+        type: Number, 
         required: true
     },
     transferDataDestination:{
@@ -49,7 +53,7 @@ const ContractSchema : Schema<IContract>  = new Schema({
     },
     contractStatus: {
         type: String,
-        enum: ['active', 'completed', 'cancelled'],
+        enum: ['pending','active', 'submitted', 'completed', 'cancelled'],
         default: 'active',
       },
       startedAt:{

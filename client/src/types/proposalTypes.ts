@@ -36,7 +36,7 @@ export interface ProposalData {
     proposalType:string;
     status:string;
     coverLetter:string;
-    proposedBudget:string;
+    proposedBudget:number;
     duration:string;
     attachments:string;
     createdAt:string;

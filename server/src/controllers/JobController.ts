@@ -192,7 +192,7 @@ export class JobController {
             } catch (error) {
                 next(error)
             }
-        }
+    }
 
     async getProposal(req: AuthRequest, res: Response, next: NextFunction): Promise<void>{
         try {

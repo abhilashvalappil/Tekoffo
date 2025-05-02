@@ -12,8 +12,8 @@ export interface IPayment extends Document {
     stripePaymentIntentId: string;
     transactionId: string;
     clientSecret: string;
-    commission: number;
     application_fee_amount: number;
+    platFormServiceFee: number;
     transferDataDestination: string;
     transferGroup: string;
     onBehalfOf: string;

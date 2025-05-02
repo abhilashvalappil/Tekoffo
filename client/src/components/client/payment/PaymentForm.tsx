@@ -10,6 +10,8 @@ import { createContract, createPaymentIntent, fetchAndUpdateProposal } from '../
 interface PaymentFormProps {
   proposalData: ProposalData | null;
   totalAmount: number;
+  amount:number;
+  serviceFee:number;
   isProcessing: boolean;
   setIsProcessing: (value: boolean) => void;
   setError: (value: string | null) => void;
@@ -18,6 +20,8 @@ interface PaymentFormProps {
 
 export default function PaymentForm({
   proposalData,
+  amount,
+  serviceFee,
   totalAmount,
   isProcessing,
   setIsProcessing,
@@ -40,7 +44,7 @@ export default function PaymentForm({
 
     try {
       // Validate proposal data
-      const { _id: proposalId, freelancerId, clientId, _id:jobId } = proposalData;
+      const { _id: proposalId, freelancerId, clientId, jobId } = proposalData;
       if (!proposalId || !freelancerId || !clientId || !jobId) {
         throw new Error('Incomplete proposal data.');
       }
@@ -48,9 +52,10 @@ export default function PaymentForm({
       const paymentIntentData = {
         proposalId,
         freelancerId:freelancerId._id,
-        amount: totalAmount,
+        amount: amount,
+        serviceFee:serviceFee,
         clientId: clientId._id,
-        jobId,
+        jobId: jobId._id,
 
       }
       const { clientSecret, transactionId } = await createPaymentIntent(paymentIntentData)

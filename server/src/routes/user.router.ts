@@ -66,6 +66,7 @@ userRouter.get('/check-stripe-account',authMiddleware,authorizeRole('freelancer'
 userRouter.get('/notifications',authMiddleware,authorizeRole('freelancer'),paymentController.getNotifications.bind(paymentController))
 userRouter.put('/notifications/:id/read',authMiddleware,authorizeRole('freelancer'),paymentController.markNotificationAsRead.bind(paymentController))
 userRouter.put('/notifications/read-all',authMiddleware,authorizeRole('freelancer'),paymentController.markAllNotificationsAsRead.bind(paymentController))
+userRouter.get('/contracts',authMiddleware,authorizeRole('freelancer'),paymentController.getUserContracts.bind(paymentController))
 
 
 

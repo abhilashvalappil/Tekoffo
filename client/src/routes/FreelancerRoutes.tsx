@@ -9,6 +9,7 @@ import AvailableJobs from "../components/freelancer/dashboard/AvailableJobs";
 import CompleteOnboarding from "../components/freelancer/dashboard/CompleteOnboarding";
 import OnboardingSuccess from "../components/freelancer/dashboard/OnboardingSuccess";
 import FreelancerProposals from "../components/freelancer/dashboard/Proposals";
+import Contracts from "../components/freelancer/dashboard/Contracts";
 
  
 const FreelancerRoutes = () => (
@@ -50,6 +51,14 @@ const FreelancerRoutes = () => (
      element={
         <ProtectedRoute allowedRoles={["freelancer"]}>
      <FreelancerProposals />
+      </ProtectedRoute>
+     } />
+
+    <Route 
+    path="/freelancer/contracts" 
+     element={
+        <ProtectedRoute allowedRoles={["freelancer"]}>
+     <Contracts />
       </ProtectedRoute>
      } />
 

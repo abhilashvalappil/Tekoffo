@@ -697,7 +697,6 @@ const Navbar: React.FC<NavbarProps> = ({
     const fetchNotifications = async () => {
       try {
         const response = await API.get('/notifications');
-        console.log('console from navbar',response)
         const fetchedNotifications: Notification[] = response.data.map((n: any) => ({
           id: n._id,
           type: 'payment', // Adjust based on notification type if stored in DB
@@ -757,7 +756,7 @@ const Navbar: React.FC<NavbarProps> = ({
           notification.id === id ? { ...notification, status: 'read' } : notification
         )
       );
-      console.log('console from markas readiddddddddd :',id)
+      // console.log('console from markas readiddddddddd :',id)
       await API.put(`/notifications/${id}/read`, { read: true });
     } catch (error) {
       console.error('Failed to mark notification as read:', error);

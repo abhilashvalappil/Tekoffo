@@ -60,12 +60,13 @@ export class PaymentController {
 
             const userId = req.userId;
             if(!userId){
+                
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
             console.log('console from userconrtoler createpayment :', req.body.paymentIntentData)
-            const { amount, freelancerId, clientId, jobId,proposalId } = req.body.paymentIntentData;
-            const { clientSecret, transactionId } = await this.paymentService.createPaymentIntent(amount, freelancerId, clientId, jobId,proposalId );
+            const { amount,serviceFee, freelancerId, clientId, jobId,proposalId } = req.body.paymentIntentData;
+            const { clientSecret, transactionId } = await this.paymentService.createPaymentIntent(amount, serviceFee, freelancerId, clientId, jobId, proposalId );
             res.json({ clientSecret, transactionId });
         } catch (error) {
             next(error)
@@ -82,6 +83,36 @@ export class PaymentController {
             console.log('console from createcontracttttt',req.body)
             const {transactionId} = req.body;
             await this.paymentService.createContract(transactionId)
+        } catch (error) {
+            next(error)
+        }
+    }
+    
+    async getNotifications(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const userId = req.userId;
+            if(!userId){
+                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
+                return;
+            }
+            const {notifications} = await this.paymentService.getNotifications(userId)
+            // console.log('console from notifications controller 555555',notifications)
+            res.status(Http_Status.OK).json(notifications)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async getUserContracts(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const userId = req.userId;
+            if(!userId){
+                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
+                return;
+            }
+            const {contracts} = await this.paymentService.getUserContracts(userId)
+            // console.log("console from getusercontracts controller", contracts)
+            res.status(Http_Status.OK).json(contracts)
         } catch (error) {
             next(error)
         }
@@ -106,21 +137,6 @@ export class PaymentController {
         }
     }
 
-    async getNotifications(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
-        try {
-            const userId = req.userId;
-            if(!userId){
-                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
-                return;
-            }
-            const {notifications} = await this.paymentService.getNotifications(userId)
-            // console.log('console from notifications controller 555555',notifications)
-            res.status(Http_Status.OK).json(notifications)
-        } catch (error) {
-            next(error)
-        }
-    }
-     
     async markNotificationAsRead(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
         try {
             const userId = req.userId;
@@ -134,6 +150,7 @@ export class PaymentController {
             next(error)
         }
     }
+
     async markAllNotificationsAsRead(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
         try {
             const userId = req.userId;
@@ -147,6 +164,5 @@ export class PaymentController {
             next(error)
         }
     }
-
 
 }
