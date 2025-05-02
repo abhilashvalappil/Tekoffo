@@ -83,10 +83,11 @@ export class AuthController {
             console.log('console from authcontolerrrrrrrrrrr',req.body)
             const {identifier, password} = req.body;
             if(!identifier || !password){
-                res.status(Http_Status.BAD_REQUEST).json(MESSAGES.ALL_FIELDS_REQUIRED)
+                res.status(Http_Status.BAD_REQUEST).json({ message: MESSAGES.ALL_FIELDS_REQUIRED })
+                return;
             }
             const result = await this.authService.verifyUser(identifier, password);
-          
+            
             this.cookieHandlerService.setCookie(res, result.accessToken)
             res.status(Http_Status.OK).json({
                 message:result.message,
@@ -94,6 +95,7 @@ export class AuthController {
                 accessToken:result.accessToken
             });
         } catch (error) {
+            console.log('console from authsignin controler error :',error)
             next(error)
         }
     }
@@ -102,7 +104,7 @@ export class AuthController {
         try {
             const { userId } = req.body;
             if(!userId){
-                res.status(Http_Status.BAD_REQUEST).json(MESSAGES.INVALID_REQUEST)
+                res.status(Http_Status.BAD_REQUEST).json({message:MESSAGES.INVALID_REQUEST})
             }
             const { accessToken } = await this.authService.generateAccessToken(userId)
             this.cookieHandlerService.setCookie(res,accessToken)

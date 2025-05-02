@@ -26,7 +26,9 @@ import {MESSAGES} from '../constants/messages'
         
             case error instanceof UnauthorizedError:
               statusCode = Http_Status.UNAUTHORIZED;
+              console.log('console from errorr 2444444',error.message)
               message = error.message;
+              console.log('console from errorr handler',message)
               break;
         
             case error instanceof CustomError:
@@ -44,4 +46,5 @@ import {MESSAGES} from '../constants/messages'
             message,
             ...(process.env.NODE_ENV === 'development' && { error: error.message })
         });
+        console.log('nowwwwwwwwwww',message)
     };

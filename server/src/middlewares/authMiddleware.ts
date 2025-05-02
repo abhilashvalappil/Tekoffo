@@ -16,7 +16,6 @@ const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction): vo
   if (!accessToken) {
     console.log('No token found in cookies');
     res.status(401).json({ message: 'No access token provided' });
-    // return;  
   }
 
   try {

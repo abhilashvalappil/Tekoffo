@@ -8,7 +8,6 @@ export interface IUser extends Document {
     password:string;
     googleId?: string;
     isBlocked?: boolean; 
-    //***** */
     fullName: string;
     companyName?:string;
     description:string;
@@ -19,6 +18,9 @@ export interface IUser extends Document {
     linkedinUrl?: string;
     githubUrl?: string;
     portfolioUrl?: string;
+    stripeAccountId?:string;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
 
 export enum UserRole {
@@ -85,4 +87,15 @@ export interface UserProfileResponse {
     portfolioUrl?: string;
   }
   
- 
+  export interface User {
+    _id: string;
+    username: string;
+    email: string;
+    role:UserRole
+    isBlocked?: boolean;
+
+}
+
+export interface FetchUserResponse {
+  users: User[];
+}

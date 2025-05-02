@@ -15,6 +15,8 @@ export const register = createAsyncThunk(
       return response.data;
     } catch (error) {
       if (error instanceof AxiosError) {
+        const errormsg = error.response?.data?.message
+        console.log('the error from registe: ',errormsg)
         return rejectWithValue(
           error.response?.data?.message || "registration failed"
         );
@@ -38,13 +40,20 @@ export const signIn = createAsyncThunk <SignInResponse, SignInCredentials>(
         return response.data;
       } else {
         const response = await API.post(commonENDPOINTS.LOGIN, credentials)
+        console.log('console from response authservice.ts',response.data)
         return response.data;
       }
     } catch (error) {
+      console.log('Full error response:',error)
       if (error instanceof AxiosError) {
-        return rejectWithValue(
-          error.response?.data?.message || "Sign in failed"
-        );
+        // console.log('Error message:', error.response?.data?.message);
+        // return rejectWithValue(
+        //   error.response?.data?.message || "Sign in failed"
+        // );
+        const errorMessage =
+          error.response?.data?.message || "Sign in failed";
+        console.log("Backend error message:", errorMessage);
+        return rejectWithValue(errorMessage);
       }
       return rejectWithValue("An unknown error occurred");
     }

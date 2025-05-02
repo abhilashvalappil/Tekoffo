@@ -9,6 +9,7 @@ import { clearMessages } from '../../redux/slices/authSlice'
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema, SignUpFormData } from '../../utils/validations/AuthValidation'
+import { handleApiError } from '../../utils/errors/errorHandler';
  
 
 
@@ -69,9 +70,11 @@ const SignupPage: React.FC = () => {
           navigate('/verify-otp', { state: { email: result.email, role:result.role, otpTimer:result.expiresIn } });
         }, 1000);
       }
-    } catch (err: any) {
-      setServerError(err.message);
-      console.error('Signup failed:', err);
+    } catch (err) {
+      const errorMessage = handleApiError(err);
+      setServerError(errorMessage);
+      // setServerError((err as Error).message);
+      // console.error('Signup failed:', err);
     }
   };
  

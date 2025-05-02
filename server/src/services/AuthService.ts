@@ -25,43 +25,43 @@ export class AuthService implements IAuthService {
          
     }
    
-        async signUp(data: SignUpData): Promise<{message: string, email: string, role:string,expiresIn:number}> {
-           
-            const userNameExist = await this.userRepository.findByUserName(data.username);
-            if(userNameExist){
-                throw new ConflictError(MESSAGES.USERNAME_ALREADY_EXISTS)
-            }
+    async signUp(data: SignUpData): Promise<{message: string, email: string, role:string,expiresIn:number}> {
+        
+        const userNameExist = await this.userRepository.findByUserName(data.username);
+        if(userNameExist){
+            throw new ConflictError(MESSAGES.USERNAME_ALREADY_EXISTS)
+        }
 
-            const emailExist = await this.userRepository.findByEmail(data.email);
-            if(emailExist){
-                throw new ConflictError(MESSAGES.EMAIL_ALREADY_EXISTS)
-            }
+        const emailExist = await this.userRepository.findByEmail(data.email);
+        if(emailExist){
+            throw new ConflictError(MESSAGES.EMAIL_ALREADY_EXISTS)
+        }
 
-            data.password = await bcrypt.hash(data.password,10)
+        data.password = await bcrypt.hash(data.password,10)
 
-            const otp = otpGenerator();
-            const expiresIn = 30;
-            console.log("the ottttttttppppppppppp",otp)
+        const otp = otpGenerator();
+        const expiresIn = 30;
+        console.log("the ottttttttppppppppppp",otp)
 
-            const mailOptions = {
-                from: process.env.USER_EMAIL,
-                to: data.email,
-                subject: 'Welcome to Tekoffo',
-                text: `Your OTP is: ${otp}`, 
-              };
+        const mailOptions = {
+            from: process.env.USER_EMAIL,
+            to: data.email,
+            subject: 'Welcome to Tekoffo',
+            text: `Your OTP is: ${otp}`, 
+          };
 
-              try {
-                await transporter.sendMail(mailOptions)
-                console.log("OTP sent successfully");
-              } catch (error) {
-                console.error("Error sending email:", error);
-              }
+          try {
+            await transporter.sendMail(mailOptions)
+            console.log("OTP sent successfully");
+          } catch (error) {
+            console.error("Error sending email:", error);
+          }
 
-              await redisClient.set(`otp:${data.email}`, otp, { EX: expiresIn });
-              await redisClient.set(`signup:${data.email}`, JSON.stringify(data), { EX: 300 });
+          await redisClient.set(`otp:${data.email}`, otp, { EX: expiresIn });
+          await redisClient.set(`signup:${data.email}`, JSON.stringify(data), { EX: 300 });
 
-            return {message:MESSAGES.REGISTRATION_OTP_SENT, email: data.email, role:data.role, expiresIn:expiresIn };
-    }
+        return {message:MESSAGES.REGISTRATION_OTP_SENT, email: data.email, role:data.role, expiresIn:expiresIn };
+  }
 
     async verifyOtp(email: string, otp: string): Promise<{message:string,user: IUserResponse, accessToken: string}> {
 
@@ -129,8 +129,11 @@ export class AuthService implements IAuthService {
             if(user.isBlocked){
               throw new UnauthorizedError(MESSAGES.ACCOUNT_BLOCKED);
             }
+
+            console.log('User found, checking password...');
             const isValidPassword = await bcrypt.compare(password, user.password);
             if(!isValidPassword){
+              console.log('Invalid password');
                 throw new UnauthorizedError(MESSAGES.INVALID_PASSWORD)
             }
 

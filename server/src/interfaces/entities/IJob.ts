@@ -13,8 +13,8 @@ import { Document, Types, ObjectId } from 'mongoose'
     duration:string;
     status: 'open' | 'inprogress' | 'completed';
     isBlocked: boolean;
-    created_At: Date;
-    updated_At: Date;
+    created_At?: Date;
+    updated_At?: Date;
   }
 
   export interface Client {

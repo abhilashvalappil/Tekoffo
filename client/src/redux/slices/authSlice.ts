@@ -36,11 +36,12 @@ const authSlice = createSlice({
         state.loading = false;
         state.user = action.payload.user;
         state.isAuthenticated = true;
-        // state.successMessage = action.pa
+         
       })
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+        console.log('console from authslice error testing',action.payload)
       })
 
       .addCase(signIn.pending, (state) => {
@@ -57,6 +58,7 @@ const authSlice = createSlice({
 
       .addCase(signIn.rejected, (state, action) => {
         state.loading = false;
+        // console.log('console from authslice error testing',action.payload)
         state.error =  action.payload as string;
       })
 

@@ -1,9 +1,10 @@
 
-import {IUserResponse,IAdminService,IUserRepository,ICategoryRepository,ICategory } from '../interfaces';
+import {IUserResponse,IAdminService,IUserRepository,ICategoryRepository,ICategory, FetchUserResponse } from '../interfaces';
 import { MESSAGES } from '../constants/messages';
 import { CustomError,ValidationError,ConflictError,NotFoundError,UnauthorizedError } from "../errors/customErrors";
 import { onlineUsers } from '../utils/socketManager';
 import { getIO } from '../config/socket';
+import { PaginatedResponse } from '../types/commonTypes';
  
 
 export class AdminService implements IAdminService {
@@ -16,27 +17,40 @@ export class AdminService implements IAdminService {
         this.categoryRepository = categoryRepository;
     }
 
-        async fetchUsers(userId:string): Promise<{users:  IUserResponse[]; totalCount: number}> {
-           
-                const user = await this.userRepository.findUserById(userId);
-                if (!user) {
-                    throw new NotFoundError(MESSAGES.INVALID_USER);
-                }
+        async fetchUsers(userId:string, page: number, limit: number): Promise<{
+            data:FetchUserResponse;
+            meta: { total: number; page: number; pages: number; limit: number };
+        }> {
+            
+            const user = await this.userRepository.findUserById(userId);
+            if (!user) {
+                throw new NotFoundError(MESSAGES.INVALID_USER);
+            }
+            
+            const skip = (page - 1) * limit;
+            const users = await this.userRepository.findUsers(skip, limit);
+            const total = await this.userRepository.countUsers();
 
-                const users = await this.userRepository.findUsers();
-                if(!users){
-                    throw new NotFoundError(MESSAGES.NO_USERS_FOUND)
-                }
-                return {
-                    users: users.map(user => ({
-                        _id: user._id,
-                        username: user.username,
-                        email: user.email,
-                        role: user.role,
-                        isBlocked: user.isBlocked,
-                    })),
-                    totalCount: users.length
-                };         
+            if(!users){
+                throw new NotFoundError(MESSAGES.NO_USERS_FOUND)
+            }
+            return {
+                data: {
+                    users:users.map(user => ({
+                    _id: user._id,
+                    username: user.username,
+                    email: user.email,
+                    role: user.role,
+                    isBlocked: user.isBlocked,
+                })),
+            },
+                meta: {
+                    total: total,
+                    page,
+                    pages: Math.ceil(total / limit),
+                    limit,
+                },
+            };         
         }
 
         async updateUserStatus(userId:string, isBlocked: boolean): Promise<{message:string; user: any}> {
@@ -106,28 +120,21 @@ export class AdminService implements IAdminService {
                 return{message:MESSAGES.CATEGORY_UPDATED_SUCCESSFULLY}
         }
 
-        // async fetchCategories(): Promise<{categories: ICategory[]}> {
-        //     try {
-        //       const categories = await this.categoryRepository.getAllCategories();
-        //       return {categories};
-              
-        //     } catch (error: any) {
-        //       throw new CustomError(`Failed to fetch categoriesss: ${error.message}`);
-        //     }
-        //   }
-        async fetchCategories(userId:string,page = 1, limit = 8) {
+        async fetchCategories(userId:string, page: number, limit: number): Promise<PaginatedResponse<ICategory>> {
 
                 const user = await this.userRepository.findUserById(userId)
              
                 if(!user){
                     throw new NotFoundError(MESSAGES.INVALID_USER)
-                }
+                }   
 
               const skip = (page - 1) * limit;
-              const categories = await this.categoryRepository.getAllCategories(skip, limit);
-          
-              // Count total categories (for pagination)
-              const total = await this.categoryRepository.countCategories();
+              const [categories, total] = await Promise.all([
+                this.categoryRepository.getAllCategories(skip, limit),
+                this.categoryRepository.countCategories()
+            ]);
+            //   const categories = await this.categoryRepository.getAllCategories(skip, limit);
+            //   const total = await this.categoryRepository.countCategories();
           
               return {
                 data: categories,

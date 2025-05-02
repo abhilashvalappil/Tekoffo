@@ -6,4 +6,7 @@ export interface ICategory extends Document {
     name:string;
     subCategories:string[];
     isListed:Boolean;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
+

@@ -1,3 +1,4 @@
+
 import { Routes,   } from 'react-router-dom';
 import { useSelector } from "react-redux";
 import { RootState } from "./redux/store";
@@ -8,7 +9,7 @@ import ClientRoutes from './routes/ClientRoutes'
 import FreelancerRoutes from './routes/FreelancerRoutes';
 import { useSocketConnection } from './hooks/useSocket';
 
-// function App() {
+ 
   const App: React.FC = () => {
 
     const user = useSelector((state: RootState) => state.auth.user);

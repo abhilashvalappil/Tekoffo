@@ -96,7 +96,6 @@ import {
   MessageSquare,
   Settings,
   BarChart3,
-  Menu,
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 

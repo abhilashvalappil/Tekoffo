@@ -8,9 +8,12 @@ export interface IUserRepository {
     findByEmailOrUsername(identifier: string): Promise<IUser | null>;
     findByEmailAndUpdate(email:string,updateData: Partial<IUser>): Promise<IUser | null>;
     findUserById(userId: string): Promise<IUser | null>;
-    findUsers(): Promise<IUser[]>
+    // findUsers(): Promise<IUser[]>
+    findUsers(skip: number, limit: number): Promise<IUser[]>
+    countUsers(): Promise<number> 
     updateUserStatus(userId: string, isBlocked: boolean): Promise<IUser | null>;
     createUserProfile(userId: string, updateData: Partial<IUser>): Promise<IUser | null>
     updateUserProfile(userId: string, updateProfile: Partial<IUser>): Promise<IUser | null> 
     findFreelancers(): Promise<FreelancerData[]>
+    checkStripeAccount(freelancerId: string): Promise<boolean>
 }

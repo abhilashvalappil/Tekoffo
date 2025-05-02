@@ -34,6 +34,7 @@ const SignIn = () => {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [serverError, setServerError] = useState<string | null>(null);
+  console.log('conosle from singin.tsxxxxxxx',serverError)
 
 
 const validateForm = (): boolean => {
@@ -61,6 +62,7 @@ const validateForm = (): boolean => {
     if (validateForm()) {
       try {
         const result = await dispatch(signIn({ identifier: formData.identifier, password: formData.password }));
+        console.log('signin reponse printing : ', result)
         if (signIn.fulfilled.match(result)) {
           const userRole = result.payload.user.role;
         if (userRole === 'freelancer') {
@@ -71,10 +73,19 @@ const validateForm = (): boolean => {
           navigate('/admin/dashboard');
         }
         }else if(signIn.rejected.match(result)){
-          setServerError(result.payload as string)
+          console.log("Rejected payload:", result.payload);
+
+          // const errorMessage = result.payload as string;
+          // setServerError(errorMessage || 'Sign in failed');
+          const errorMessage =
+          typeof result.payload === "string"
+            ? result.payload
+            : "Sign in failed";
+        setServerError(errorMessage);
         }
         
       } catch (error) {
+        console.log('console from signin.tsx',error)
         console.error('Sign in failed:', error);
         
       }
@@ -106,7 +117,7 @@ const validateForm = (): boolean => {
       } else {
         setServerError(result.payload as string || 'Google Sign-In failed');
       }
-    } catch (error: any) {
+    } catch (error) {
       setServerError('Google authentication failed: ' + (error.message || 'Unknown error'));
     }
   };

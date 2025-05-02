@@ -28,7 +28,12 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
-app.use(express.json());
+// app.use(express.json());
+app.use(express.json({
+  strict: true,
+  type: ['application/json', 'application/*+json']
+}));
+
 app.use(cookieParser());
 app.use(express.urlencoded({extended:true}))
 app.use(morganMiddleware);

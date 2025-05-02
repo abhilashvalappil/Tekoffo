@@ -6,8 +6,5 @@ export interface proposalDataType {
     coverLetter?:string;    
     proposedBudget:number;
     duration:string;
-    // attachments?:{
-    //     fileName: string;
-    //   }[]; 
     attachments?:Express.Multer.File;  
 }

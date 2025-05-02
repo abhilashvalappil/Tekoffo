@@ -9,14 +9,19 @@ export interface IUserService {
     createUserProfile(userId:string, data: ProfileFormData): Promise<{message:string,userProfile:UserProfileResponse}>
     updateUserProfile(userId:string,updateProfileData:ProfileFormData): Promise<{message:string,userProfile:UserProfileResponse}>
     changePassword(userId:string, currentPassword:string, newPassword:string): Promise<{message:string}>
-    fetchCategories(): Promise<{categories: ICategory[]}>
-    postJob(clientId:string, jobData:JobInputData): Promise<{message:string}>
-    fetchMyJobPosts(clientId:string): Promise<{jobs:JobDataType[]}> 
-    getAllJobs(): Promise<{jobs:JobDataType[]}>
     getAllFreelancers(): Promise<{freelancers:FreelancerData[]}>
-    updateJobPost(clientId:string, jobData:JobUpdateData): Promise<{message:string}>
-    deleteJobPost(clientId:string,id:string): Promise<{message:string}>
-    getClientProfileByJob(clientId:string): Promise<{clientProfile:Partial<IUser> | null}>
-    createJobProposal(freelancerId:string,proposalDetails:proposalDataType): Promise<{message:string}>
-    getClientReceivedProposals(clientId:string): Promise<{proposals:IProposal[]}> 
+    // getClientReceivedProposals(clientId:string): Promise<{proposals:IProposal[]}> 
+    // updateProposalStatus(proposalId: string, clientId: string): Promise<{proposal:IProposal | null}>
+    // getProposal(proposalId: string, clientId: string): Promise<{proposal:IProposal | null}>
+    // checkStripeAccount(freelancerId:string): Promise<boolean>
+    // createStripeAccount(freelancerId:string, email:string): Promise<void>
+    // createStripeAccount(freelancerId:string, email:string): Promise<{onboardingLink:string}> 
+    createCheckout(data: {
+        totalAmount: number;
+        proposalId: string;
+        clientId: string;
+        freelancerId: string;
+      }):Promise<{url:string | null,sessionId:string}>
+      handlePaymentSuccess(sessionId:string): Promise<void>
+    //   createPaymentIntent(amount: number, freelancerId: string, clientId: string, jobId: string,  proposalId: string): Promise<{ clientSecret: string; transactionId: string }>
 }

@@ -1,6 +1,6 @@
 // src/constants/messages.ts
 export const MESSAGES = {
-    ALL_FIELDS_REQUIRED: "All fields (username, email, password, role) are required",
+    ALL_FIELDS_REQUIRED: "username or email and password is required",
     BASIC_PROFILE_FIELDS_REQUIRED: "Full name, description, and country are required",
     COMPLETE_PROFILE_FIELDS_REQUIRED: "Full name, description, country, skills, and preferred job fields are required",
     CATEGORY_ALREADY_EXISTS: "Category already exists!",
@@ -20,6 +20,7 @@ export const MESSAGES = {
     EMAIL_REQUIRED: "Email is required",
     EMAIL_NOT_FOUND: "User not exist with this email address",
     FULL_NAME_REQUIRED:  "Full name is required and must be at least 3 characters",
+    MISSING_FREELANCER_ID: 'Freelancer ID is required',
     REGISTRATION_OTP_SENT: "Registration OTP sent to email",
     OTP_REQUIRED: "OTP is required",
     OTP_EXPIRED: "OTP expired. Please request a new one.",
@@ -34,6 +35,12 @@ export const MESSAGES = {
     PROFILE_UPDATE_FAILED: "Failed to update profile. Please try again later.",
     PROFILE_PICTURE_SIZE_LIMIT: "Profile picture must be less than 5MB",
     PROPOSAL_CREATED: "Proposal created successfully",
+    PROPOSAL_NOT_FOUND: "Proposal not found",
+    PROPOSAL_UPDATE_FAILED: "Failed to update proposal status",
+    PROPOSAL_ALREADY_ACCEPTED: "This proposal has already been accepted",
+    PROPOSAL_ALREADY_REJECTED: "This proposal has already been rejected",
+    PROPOSAL_ID_REQUIRED: "Proposal ID is required",
+    PROPOSAL_INVALID: "Invalid proposal data",
     INVALID_OTP: "Invalid OTP",
     INVALID_USER : "User not found",
     INVALID_REQUEST:"UserId is required!",

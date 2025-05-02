@@ -1,13 +1,13 @@
 
 import { Request, Response, NextFunction } from "express";
 import { IUserService } from "../interfaces"; 
-import { ValidationError } from "../errors/customErrors";
 import { Http_Status } from "../constants/statusCodes";
 import { MESSAGES } from '../constants/messages';
 import { profileSchema,freelancerProfileSchema } from "../validations/profilevalidation";
-import { JobFormSchema,UpdateJobInputSchema } from "../validations/jobValidation";
-import { ZodIssue } from 'zod';
-
+import Stripe from "stripe";
+import dotenv from "dotenv";
+dotenv.config();
+ 
 
 
 interface AuthRequest extends Request {
@@ -17,9 +17,12 @@ interface AuthRequest extends Request {
 
 export class UserController {
     private userService: IUserService;
+    private stripe: Stripe;
 
     constructor(userService: IUserService){
         this.userService = userService;
+        this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-03-31.basil' });
+
     }
 
     async createProfile(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
@@ -139,125 +142,9 @@ export class UserController {
             next(error)
         }
     }
-
-    async getCategories(req:Request, res:Response, next: NextFunction): Promise<void> {
-        try {
-            const {categories} = await this.userService.fetchCategories();
-             res.status(Http_Status.OK).json({success: true, categories})
-        } catch (error) {
-            next(error)
-        }
-    }
-
-    async postJob(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
-        try {
-            console.log('console from usercontrollerrrrrrrrrrr',req.body)
-            
-            const clientId = req.userId;
-            if(!clientId){
-                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
-                return;
-            }
-
-            const validationResult = JobFormSchema.safeParse(req.body);
-            if (!validationResult.success) {
-                const errors = validationResult.error.issues.map((issue: ZodIssue) => ({
-                  field: issue.path[0],
-                  message: issue.message,
-                }));
-                res.status(Http_Status.BAD_REQUEST).json({error: 'Validation failed',
-                  details: errors,
-                });
-                return;
-              }
-
-            // const {title, category, subCategory, requirements, description, budget, duration} = req.body;
-            // if (!title || !category || !subCategory || !Array.isArray(requirements) || requirements.length === 0 || !description || !budget || !duration) {
-            //     res.status(Http_Status.BAD_REQUEST).json({ error: MESSAGES.MISSING_CREDENTIALS });
-            //   }
-            //   const jobData = { title, category, subCategory, requirements, description, budget, duration };
-
-              const jobData = validationResult.data;
-              const {message} = await this.userService.postJob(clientId,jobData)
-              res.status(Http_Status.CREATED).json({success:true, message})
-        } catch (error) {
-            next(error)
-        }
-    }
-
-    async updateJobPost(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
-        try {
-            console.log('console from usercontroller.ts updatejob',req.body)
-
-            const clientId = req.userId;
-            if(!clientId){
-                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
-                return;
-            }
-
-            const validationResult = UpdateJobInputSchema.safeParse(req.body);
-            if (!validationResult.success) {
-                const errors = validationResult.error.issues.map((issue: ZodIssue) => ({
-                  field: issue.path[0],
-                  message: issue.message,
-                }));
-                res.status(Http_Status.BAD_REQUEST).json({error: 'Validation failed',details: errors,});
-                return;
-              }
-
-            const {id, title, category, subCategory, requirements, description, budget, duration} = req.body;
-            if (!id || !title || !category || !subCategory || !requirements || !description || !budget || !duration) {
-            res.status(Http_Status.BAD_REQUEST).json({ error: MESSAGES.MISSING_CREDENTIALS });
-            }
-
-            // const jobData = {id, title, category, subCategory, requirements, description, budget, duration };
-            const jobData = validationResult.data;
-            const {message} = await this.userService.updateJobPost(clientId,jobData)
-            res.status(Http_Status.CREATED).json(message)
-        } catch (error) {
-            next(error)
-        }
-    }
-
-    async deleteJobPost(req:AuthRequest, res:Response, next: NextFunction): Promise<void>{
-        try {
-            const clientId = req.userId;
-            if(!clientId){
-                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
-                return;
-            }
-            console.log('console from usercontrollerrrrr deletejobb',req.body)
-            const {id} = req.body;
-
-            if(!id){
-                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.INVALID_REQUEST_DELETION})
-            }
-            const message = this.userService.deleteJobPost(clientId,id)
-            res.status(Http_Status.NO_CONTENT).json(message)
-        } catch (error) {
-            next(error)
-        }
-    }
-
-    async getMyJobPosts(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
-        try {
-            const clientId = req.userId;
-            if(!clientId){
-                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
-                return;
-            }
-            const result = await this.userService.fetchMyJobPosts(clientId);
-            res.status(Http_Status.OK).json({ success: true, result });
-        } catch (error) {
-            next(error)
-        }
-    }
-
+ 
     async createFreelancerProfile(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
         try {
-            console.log("console from freelancer profile usercontroller.tssssss",req.body)
-            console.log('Uploaded file:', req.file)
-
             const userId = req.userId;
             if(!userId){
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
@@ -271,10 +158,6 @@ export class UserController {
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.COMPLETE_PROFILE_FIELDS_REQUIRED})
             }
 
-    //         const parsedSkills = typeof skills === 'string' ? JSON.parse(skills) : skills;
-    // const parsedPreferredJobFields =
-    //   typeof preferredJobFields === 'string' ? JSON.parse(preferredJobFields) : preferredJobFields;
-
             const parsedSkills = typeof skills === 'string'
             ? skills.split(',').map((s) => s.trim()).filter(Boolean)
             : skills;
@@ -282,18 +165,6 @@ export class UserController {
         const parsedPreferredJobFields = typeof preferredJobFields === 'string'
             ? preferredJobFields.split(',').map((f) => f.trim()).filter(Boolean)
             : preferredJobFields;
-
-            // const result = await this.userService.createUserProfile(userId, {
-            //     fullName,
-            //     description,
-            //     country,
-            //     skills:parsedSkills,
-            //     preferredJobFields:parsedPreferredJobFields,
-            //     linkedinUrl,
-            //     githubUrl,
-            //     portfolioUrl,
-            //     profilePicture: profilePicture ? profilePicture : undefined,
-            // });
 
             const rawData = {
                 fullName,
@@ -330,8 +201,6 @@ export class UserController {
 
     async updateFreelancerProfile(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
         try {
-            console.log("console from freelancer updateprofile usercontroller.ts",req.body)
-            console.log('Uploaded updateee file:', req.file)
 
             const userId = req.userId;
             if(!userId){
@@ -347,8 +216,8 @@ export class UserController {
             }
 
             const parsedSkills = typeof skills === 'string' ? JSON.parse(skills) : skills;
-    const parsedPreferredJobFields =
-      typeof preferredJobFields === 'string' ? JSON.parse(preferredJobFields) : preferredJobFields;
+            const parsedPreferredJobFields =
+            typeof preferredJobFields === 'string' ? JSON.parse(preferredJobFields) : preferredJobFields;
 
             const result = await this.userService.updateUserProfile(userId, {
                 fullName,
@@ -365,26 +234,11 @@ export class UserController {
                 success:true,
                 message:result.message,
                 userProfile:result.userProfile
-            })
-
-        } catch (error) {
-            next(error)
-        }
-    }
-
-    async getAvailbleJobs(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
-        try {
-            const userId = req.userId;
-            if(!userId){
-                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
-                return;
+            });
+            } catch (error) {
+                next(error)
             }
-             const {jobs} = await this.userService.getAllJobs();
-             res.status(Http_Status.OK).json({success:true, jobs})
-        } catch (error) {
-            next(error)
         }
-    }
 
     async getAllFreelancers(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
         try {
@@ -400,64 +254,48 @@ export class UserController {
         }
     }
 
-    async getClientProfileByJob(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
+    async createCheckout(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
         try {
-            const {clientId} = req.query;
-            // console.log('console from usercontroller getClientProfileByJob',clientId)
-
-            if(typeof clientId !== 'string' || !clientId){
-                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.CLIENT_ID_MISSING})
-                return;
-            }
-            const {clientProfile} = await this.userService.getClientProfileByJob(clientId) 
-            res.status(Http_Status.OK).json(clientProfile)
+          const { totalAmount, proposalId, clientId, freelancerId } = req.body;
+    
+          if (!totalAmount || !proposalId || !clientId || !freelancerId) {
+            res.status(400).json({ error: 'Missing required fields' });
+            return;
+          }
+    
+          const { url } = await this.userService.createCheckout({
+            totalAmount,
+            proposalId,
+            clientId,
+            freelancerId,
+          });
+    
+          res.status(200).json({ url });
         } catch (error) {
-            next(error)
+          console.error('Error creating checkout session:', error);
+          res.status(500).json({ error: 'Failed to create checkout session' });
         }
-    }
+      }
 
-    async createProposal(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
+      async handleWebhook(req: Request, res: Response): Promise<void> {
+        const sig: string = req.headers['stripe-signature'] as string;
+        console.log('reddddddddddd',req.body)
         try {
-            // const {proposalDetails} = req.body;
-            const freelancerId = req.userId;
-            if(!freelancerId){
-                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
-                return;
+            const event = this.stripe.webhooks.constructEvent(
+                req.body,
+                sig,
+                process.env.STRIPE_WEBHOOK_SECRET!
+            );
+    
+            if (event.type === 'checkout.session.completed') {
+                const session = event.data.object as Stripe.Checkout.Session;
+                await this.userService.handlePaymentSuccess(session.id);
             }
-            console.log('console from createproposal controler',req.body)
-            const proposalDetails = {
-                jobId: req.body.jobId,
-                clientId: req.body.clientId,
-                coverLetter: req.body.coverLetter,
-                proposedBudget: Number(req.body.proposedBudget),
-                duration: req.body.duration,
-              };
-              
-            const file = req.file;
-            console.log('Uploaded fileeeeeee:', file);
-            await this.userService.createJobProposal(freelancerId,{
-                ...proposalDetails,
-                //  attachments: file ? [{ fileName: file.filename }] : undefined
-                attachments:file ? file : undefined
-            })
+    
+            res.status(200).json({ received: true });
         } catch (error) {
-            next(error)
-        }
-    }
-
-    async getReceivedProposals(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
-        try {
-            const clientId = req.userId;
-            // console.log('console from getReceivedProposals',clientId)
-            if(!clientId){
-                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
-                return;
-            }
-            const { proposals } = await this.userService.getClientReceivedProposals(clientId)
-            // console.log('console frommmmmmmmmm usercontroller',proposals)
-            res.status(Http_Status.OK).json(proposals);
-        } catch (error) {
-            next(error)
+            console.error('Webhook error:', error);
+            res.status(400).json({ error: 'Webhook error' });
         }
     }
 

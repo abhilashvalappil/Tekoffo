@@ -59,11 +59,12 @@ class CategoryRepository extends BaseRepository<ICategory> implements ICategoryR
   
 
     async getAllCategories(skip: number, limit: number): Promise<ICategory[]> {
-        return await this.find({}, skip, limit) || [];  
+        // return await this.find({}, skip, limit, { createdAt: -1 }) || [];  
+        return await this.find({}, { skip, limit, sort: { createdAt: -1 } }) || [];  
       }
 
       async countCategories(): Promise<number> {
-        return await this.count();  // Using the count method from BaseRepository
+        return await this.count();   
       }
       
 

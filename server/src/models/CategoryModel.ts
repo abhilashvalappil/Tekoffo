@@ -15,11 +15,9 @@ const CategorySchema: Schema = new Schema({
         type:Boolean,
         default:true
         },
-    created_At:{ 
-        type: Date,
-        default: Date.now
-     },
-
-})
+},{
+    timestamps: true,
+  }
+)
 
 export default mongoose.model<ICategory>('Category', CategorySchema);

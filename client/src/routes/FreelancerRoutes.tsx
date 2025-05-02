@@ -1,11 +1,14 @@
 
 
 import { Route,   } from "react-router-dom";
-import FreelancerHome from "../components/freelancer/Freelancer";
+import FreelancerHome from "../components/freelancer/dashboard/FreelancerDashboard";
 import ProtectedRoute from "./ProtectedRoute";
-import CreateFreelancerProfile from "../components/freelancer/CreateProfile"; 
-import FreelancerProfile from "../components/freelancer/Profile";
-import AvailableJobs from "../components/freelancer/AvailableJobs";
+import CreateFreelancerProfile from "../components/freelancer/profile/CreateProfile"; 
+import FreelancerProfile from "../components/freelancer/profile/Profile";
+import AvailableJobs from "../components/freelancer/dashboard/AvailableJobs";
+import CompleteOnboarding from "../components/freelancer/dashboard/CompleteOnboarding";
+import OnboardingSuccess from "../components/freelancer/dashboard/OnboardingSuccess";
+import FreelancerProposals from "../components/freelancer/dashboard/Proposals";
 
  
 const FreelancerRoutes = () => (
@@ -39,6 +42,30 @@ const FreelancerRoutes = () => (
      element={
         <ProtectedRoute allowedRoles={["freelancer"]}>
      <AvailableJobs />
+      </ProtectedRoute>
+     } />
+
+    <Route 
+    path="/freelancer/proposals" 
+     element={
+        <ProtectedRoute allowedRoles={["freelancer"]}>
+     <FreelancerProposals />
+      </ProtectedRoute>
+     } />
+
+    <Route 
+    path="/freelancer/complete-onboarding" 
+     element={
+        <ProtectedRoute allowedRoles={["freelancer"]}>
+     <CompleteOnboarding />
+      </ProtectedRoute>
+     } />
+
+    <Route 
+    path="/onboarding/success" 
+     element={
+        <ProtectedRoute allowedRoles={["freelancer"]}>
+     <OnboardingSuccess />
       </ProtectedRoute>
      } />
 

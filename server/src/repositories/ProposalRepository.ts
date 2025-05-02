@@ -12,6 +12,54 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
     async createProposal(proposalData: Partial<IProposal>): Promise<IProposal> {
         return await this.create(proposalData)
     }
+    async findProposalById(proposalId:string): Promise<IProposal | null> {
+        return await this.findById(proposalId)
+    }
+
+    async findProposalDetails(proposalId: string): Promise<IProposal | null> {
+        const proposalDetails = await this.findById(proposalId);
+        if (proposalDetails) {
+            return await proposalDetails.populate([
+                {
+                    path: 'jobId',
+                    select: 'title description',
+                },
+                {
+                    path: 'freelancerId',
+                    select: 'fullName',
+                },
+                {
+                    path: 'clientId',
+                    select: 'fullName',
+                },
+            ]);
+        }
+        return null;  
+    }
+    
+    async updateProposalStatusToAccepted(proposalId: string): Promise<IProposal | null> {
+        const updatedProposal = await this.updateById(
+            proposalId,
+            {
+                status: 'accepted',
+                updatedAt: new Date()
+            }
+        );
+    
+        if (!updatedProposal) return null;
+    
+        return await updatedProposal.populate([
+            {
+                path: 'jobId',
+                select: 'title description',
+            },
+            {
+                path: 'freelancerId',
+                select: 'fullName',
+            }
+        ]);
+    }
+    
     
     async findProposals(clientId:string): Promise<IProposal[]> {
         return await this.find({
@@ -27,6 +75,23 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
             select: 'fullName profilePicture email country description skills preferredJobFields linkedinUrl githubUrl portfolioUrl '
         })
     }
+
+    async findAppliedProposalsByFreelancer(freelancerId:string): Promise<IProposal[]> {
+        return await this.find({
+            freelancerId:new Types.ObjectId(freelancerId),
+            proposalType:'freelancer-applied'
+        })
+        .populate({
+            path: 'jobId',
+            select: 'title'
+        })
+        .populate({
+            path: 'clientId',
+            select: 'fullName'
+        })
+    }
+
+     
 }
 
 export default new ProposalRepository();

@@ -12,23 +12,27 @@ export class ValidationError extends CustomError {
     }
 }
 
-export class ConflictError extends CustomError {
+export class ConflictError extends ValidationError {
     constructor(message: string) {
         super(message);
         this.name = 'ConflictError';
+        console.log('console not Conflict error with message : ',message)
     }
 }
 
-export class NotFoundError extends CustomError {
+export class NotFoundError extends ConflictError {
     constructor(message: string){
         super(message);
         this.name = 'NotFoundError';
+        console.log('console not found error with message : ',message)
+
     }
 }
 
-export class UnauthorizedError extends CustomError {
+export class UnauthorizedError extends NotFoundError {
     constructor(message: string) {
         super(message);
-        this.name = "UnauthorizedError";
+        this.name = 'UnauthorizedError';
+        console.log('console UnauthorizedError error with message :',message)
     }
 }

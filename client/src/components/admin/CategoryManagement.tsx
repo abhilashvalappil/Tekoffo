@@ -7,6 +7,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
 import { categorySchema,CategoryFormData } from '../../utils/validations/CategoryValidation';
+import Pagination from '@mui/material/Pagination';
+import Stack from '@mui/material/Stack';
+
 
 interface Category {
   _id?: string;
@@ -414,7 +417,7 @@ const CategoryManagement = () => {
                 </table>
               </div>
 
-              <div className="flex justify-between items-center mt-4">
+              {/* <div className="flex justify-between items-center mt-4">
                 <button
                   onClick={() => handlePageChange(pagination.page - 1)}
                   disabled={pagination.page === 1}
@@ -432,7 +435,17 @@ const CategoryManagement = () => {
                 >
                   Next
                 </button>
-              </div>
+              </div> */}
+              <Stack spacing={2} alignItems="center" className="mt-4">
+  <Pagination
+    count={pagination.pages}
+    page={pagination.page}
+    onChange={(event, value) => handlePageChange(value)}
+    color="primary"
+  />
+</Stack>
+
+
             </div>
           </div>
         </div>

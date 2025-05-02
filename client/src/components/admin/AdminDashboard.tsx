@@ -18,6 +18,8 @@ import { useNavigate } from 'react-router-dom';
 import { persistor } from '../../redux/store'
 import Table from './Table';
 import Sidebar from './Sidebar';
+import Pagination from '@mui/material/Pagination';
+import Stack from '@mui/material/Stack';
 
 interface User {
   _id: string;
@@ -45,6 +47,7 @@ function AdminDash() {
  
   // const userId = useSelector((state) => state.auth.user?._id || null)
   const userId = useSelector((state:RootState) => state.auth.user?._id || null)
+  const user = useSelector((state:RootState) =>state.auth.user )
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   // const { users, loading, error, totalCount } = useSelector(
@@ -54,15 +57,27 @@ function AdminDash() {
   const [totalCount,setTotalCount] = useState(0);
   const [loading,setLoading] = useState(false)
   const [error, setError] = useState('');
+  const [pagination, setPagination] = useState({
+      total: 0,
+      page: 1,
+      pages: 1,
+      limit: 3,
+    });
 
    
   useEffect(() => {
     const getUsers = async () => {
       try {
         setLoading(true);
-        const response = await fetchUsers();  
-        setUsers(response.users);
-        setTotalCount(response.totalCount);
+        const response = await fetchUsers(pagination.page, pagination.limit);  
+        // console.log('the userssssssssss',response.meta)
+        setUsers(response.data.users);
+        setPagination((prev) => ({
+          ...prev,
+          total: response.meta.total,
+          pages: response.meta.pages,
+        }));
+        setTotalCount(response.meta.total);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -70,7 +85,7 @@ function AdminDash() {
       }
     };
     getUsers();
-  }, []);
+  }, [pagination.page, pagination.limit]);
 
   const handleToggleBlock = async(userId: string, isBlocked: boolean) => {
     try {
@@ -85,6 +100,15 @@ function AdminDash() {
       console.error("Error updating user status:", error.message);
     }
   }
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= pagination.pages) {
+      setPagination((prev) => ({
+        ...prev,
+        page: newPage,
+      }));
+    }
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -232,11 +256,12 @@ function AdminDash() {
                   className="flex items-center gap-3 focus:outline-none"
                 >
                   <div className="text-right hidden md:block">
-                    <p className="text-sm font-medium text-[#0A1529]">John Doe</p>
+                    <p className="text-sm font-medium text-[#0A1529]">{user.username}</p>
                     <p className="text-xs text-gray-500">Admin</p>
                   </div>
                   <img
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                  src = {user.profilePicture? user.profilePicture : ""}
+                    // src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                     alt="Admin"
                     className="w-10 h-10 rounded-lg border-2 border-[#0066FF]"
                   />
@@ -339,14 +364,6 @@ function AdminDash() {
                       avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
                     },
                     {
-                      name: 'Sarah Smith',
-                      email: 'sarah@example.com',
-                      role: 'Client',
-                      status: 'Pending',
-                      joined: 'Mar 10, 2024',
-                      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-                    },
-                    {
                       name: 'Michael Johnson',
                       email: 'michael@example.com',
                       role: 'Freelancer',
@@ -384,6 +401,14 @@ function AdminDash() {
               </table>
             </div> */}
              <Table data={users} columns={columns} />
+             <Stack spacing={2} alignItems="center" className="mt-4">
+  <Pagination
+    count={pagination.pages}
+    page={pagination.page}
+    onChange={(event, value) => handlePageChange(value)}
+    color="primary"
+  />
+</Stack>
           </div>
         </div>
       </main>

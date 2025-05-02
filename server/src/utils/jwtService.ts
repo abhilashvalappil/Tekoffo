@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import config from '../config';
+import config from "../config/index";
 import { JWT_SECRET } from '../config/index'
 
 export class JwtService {

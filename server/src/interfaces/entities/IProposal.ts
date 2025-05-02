@@ -10,13 +10,11 @@ export interface IProposal extends Document {
     duration:string;
     proposalType:'freelancer-applied' | 'client-invited';
     status:'pending' | 'accepted' | 'rejected';
-    // attachments?: {
-    //     fileName: string;
-    //   }[];
     attachments?:string;
     invitationMessage?:string;
     viewedByReceiver:boolean;
     createdAt?: Date;
+    updatedAt?: Date;
 }
 
 export interface ProposalInputDataType {

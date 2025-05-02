@@ -20,7 +20,7 @@ import {store} from '../redux/store'
           const userId = store.getState().auth.user?._id;
           console.log('console from services/api.tsssss',userId)
 
-          if (!userId) {
+          if (!userId && window.location.pathname !== '/signin') {
             window.location.href = "/signin";
             return Promise.reject("No userId to refresh token");
           }

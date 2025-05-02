@@ -45,14 +45,8 @@ const JobSchema: Schema<JobDataType> = new Schema({
      type: Boolean,
       default: false
      },
-  created_At: {
-     type: Date, 
-     default: Date.now 
-    },
-  updated_At: {
-     type: Date, 
-     default: Date.now
-     }
-});
+},{
+   timestamps: true,
+ });
 
 export default mongoose.model<JobDataType>('Job', JobSchema);

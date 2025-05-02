@@ -1,24 +1,35 @@
 import bcrypt from "bcrypt";
-import { IUserService,IUserRepository,ProfileFormData,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser } from "../interfaces";
+import { IUserService,IUserRepository,ProfileFormData,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser,  } from "../interfaces";
 import {MESSAGES} from '../constants/messages'
 import { CustomError, NotFoundError, UnauthorizedError } from "../errors/customErrors";
 import { FreelancerData, JobDataType, JobInputData, JobUpdateData } from '../interfaces/entities/IJob';
 import { proposalDataType } from "../types/jobTypes";
 import { Types } from "mongoose";
 import { IProposal } from "../interfaces/entities/IProposal";
- 
+import { IPaymentRepository } from "../interfaces/repositoryInterfaces/IPaymentRepository";
+import Stripe from "stripe";
+import dotenv from "dotenv";
+dotenv.config();
+import { v4 as uuidv4 } from 'uuid';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-03-31.basil' });
 
 export class UserService implements IUserService {
     private userRepository: IUserRepository;
     private categoryRepository:ICategoryRepository;
     private jobRepository: IJobRepository;
-    private proposalRepository:IProposalRepository
+    private proposalRepository:IProposalRepository;
+    private paymentRepository: IPaymentRepository;
+    private stripe: Stripe;
 
-    constructor(userRepository: IUserRepository, categoryRepository:ICategoryRepository, jobRepository: IJobRepository, proposalRepository:IProposalRepository){
+    constructor(userRepository: IUserRepository, categoryRepository:ICategoryRepository, jobRepository: IJobRepository, proposalRepository:IProposalRepository, paymentRepository: IPaymentRepository){
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.jobRepository = jobRepository;
         this.proposalRepository = proposalRepository;
+        this.paymentRepository = paymentRepository;
+        this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-03-31.basil' });
+        // this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' });
+
     }
 
     async createUserProfile(userId:string, ProfileData:ProfileFormData): Promise<{message:string,userProfile:UserProfileResponse}> {
@@ -159,122 +170,67 @@ export class UserService implements IUserService {
             return {message:MESSAGES.PASSWORD_CHANGED}
     }
 
-    async fetchCategories(): Promise<{categories: ICategory[]}> {
-            const categories = await this.categoryRepository.getListedCategories()
-            return {categories}
-    }
-
-    async postJob(clientId:string, jobData:JobInputData): Promise<{message:string}> {
-            const user = await this.userRepository.findUserById(clientId)
-            if(!user){
-                throw new NotFoundError(MESSAGES.INVALID_USER)
-            }
-            const savedJob = await this.jobRepository.createJobPost(clientId,jobData)
-            return {message:MESSAGES.JOB_CREATED_SUCCESSFULLY}
-    }
-
-    async updateJobPost(clientId:string, jobData:JobUpdateData): Promise<{message:string}> {
-  
-            const user = await this.userRepository.findUserById(clientId)
-
-            if(!user){
-                throw new NotFoundError(MESSAGES.INVALID_USER)
-            }
-
-            const existingJob = await this.jobRepository.findJobById(jobData.id);
-        if (!existingJob || existingJob.clientId.toString() !== clientId) {
-            throw new NotFoundError(MESSAGES.INVALID_JOB);
-        }
-
-            // const savedJob = await this.jobRepository.updateJobPost(clientId,jobData)
-            const savedJob = await this.jobRepository.updateJobPost(jobData.id!, {
-                title: jobData.title,
-                category: jobData.category,
-                subCategory: jobData.subCategory,
-                requirements:jobData.requirements,  
-                description: jobData.description,
-                budget: jobData.budget,
-                duration: jobData.duration,
-                updated_At: new Date()
-            });
-            return {message:MESSAGES.JOB_UPDATED_SUCCESSFULLY}
-    }
-
-    async deleteJobPost(clientId:string,id:string): Promise<{message:string}>{
-       
-            const user = await this.userRepository.findUserById(clientId)
-
-            if(!user){
-                throw new NotFoundError(MESSAGES.INVALID_USER)
-            } 
-
-            const existingJob = await this.jobRepository.findJobById(id);
-            if (!existingJob || existingJob.clientId.toString() !== clientId) {
-                throw new NotFoundError(MESSAGES.INVALID_JOB);
-            }
-            const deletePost = await this.jobRepository.findJobAndDelete(id);
-            return {message:MESSAGES.JOB_DELETED_SUCCESSFULLY}
-    }
-
-    async fetchMyJobPosts(clientId:string): Promise<{jobs:JobDataType[]}> {
-     
-            const user = await this.userRepository.findUserById(clientId)
-            if(!user){
-                throw new NotFoundError(MESSAGES.INVALID_USER)
-            }
-            const jobs = await this.jobRepository.findJobsByClientId(clientId);
-            return {jobs} ;
-      }
-
-
-    async getAllJobs(): Promise<{jobs:JobDataType[]}> {
-   
-        const jobs = await this.jobRepository.findAllJobs();
-            return {jobs}
-    }
-
     async getAllFreelancers(): Promise<{freelancers:FreelancerData[]}> {
             const freelancers = await this.userRepository.findFreelancers();
             return {freelancers}
     }
+
+    async createCheckout(data: {
+        totalAmount: number;
+        proposalId: string;
+        clientId: string;
+        freelancerId: string;
+      }): Promise<{ url: string | null; sessionId: string }> {
+        
+          // Validate input data
+          if (!data.totalAmount || data.totalAmount <= 0 || !Number.isInteger(data.totalAmount)) {
+            throw new CustomError('Invalid totalAmount: Must be a positive integer in cents' );
+          }
+          if (!data.proposalId || !data.clientId || !data.freelancerId) {
+            throw new CustomError('Missing required fields: proposalId, clientId, or freelancerId' );
+          }
+          if (!process.env.DOMAIN_URL) {
+            throw new CustomError('DOMAIN_URL environment variable is not set' );
+          }
+          if (!process.env.STRIPE_SECRET_KEY) {
+            throw new CustomError('STRIPE_SECRET_KEY environment variable is not set' );
+          }
     
-    async getClientProfileByJob(clientId:string): Promise<{clientProfile:Partial<IUser> | null}>{
-        
-        const clientProfile = await this.userRepository.findUserById(clientId);
-        if(!clientProfile){
-            throw new NotFoundError(MESSAGES.INVALID_USER)
-        }
-        return {clientProfile}
+          console.log('Creating Stripe checkout session with data:', data); // Debug log
+    
+          const session = await this.stripe.checkout.sessions.create({
+            line_items: [
+              {
+                price_data: {
+                  currency: 'usd',
+                  product_data: {
+                    name: 'Freelancer Job Payment',
+                  },
+                  unit_amount: data.totalAmount, 
+                },
+                quantity: 1,
+              },
+            ],
+            mode: 'payment',
+            success_url: `${process.env.DOMAIN_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${process.env.DOMAIN_URL}/payment/cancel`,
+            metadata: {
+              proposalId: data.proposalId,
+              clientId: data.clientId,
+              freelancerId: data.freelancerId,
+            },
+          });
+    
+          console.log('Stripe session created:', { sessionId: session.id, url: session.url });
+          return { url: session.url, sessionId: session.id };
     }
 
-    async createJobProposal(freelancerId:string,proposalDetails:proposalDataType): Promise<{message:string}> {
-        console.log('console from service proposaldetails',proposalDetails)
-        const userExist = await this.userRepository.findUserById(freelancerId);
-        if(!userExist){
-            throw new NotFoundError(MESSAGES.INVALID_USER)
+    async handlePaymentSuccess(sessionId:string): Promise<void>{
+        console.log('console from userservice handlepayment :', sessionId)
+        const session = await this.stripe.checkout.sessions.retrieve(sessionId);
+        if (session.payment_status === 'paid'){
+            // await this.paymentRepository.savePayment()
         }
-        const jobExist = await this.jobRepository.findJobById(proposalDetails.jobId.toString());
-        if(!jobExist){
-            throw new NotFoundError(MESSAGES.JOB_NOT_FOUND)
-        }
-        const proposalData = {
-            ...proposalDetails,
-            attachments:proposalDetails.attachments? proposalDetails.attachments.path : '', 
-            freelancerId: new Types.ObjectId(freelancerId)
-        }
-        
-        await this.proposalRepository.createProposal(proposalData)
-        return{message:MESSAGES.PROPOSAL_CREATED}
     }
 
-    async getClientReceivedProposals(clientId:string): Promise<{proposals:IProposal[]}> {
-
-        const userExist = await this.userRepository.findUserById(clientId)
-        if(!userExist){
-            throw new NotFoundError(MESSAGES.INVALID_USER)
-        }
-        const proposals = await this.proposalRepository.findProposals(clientId)
-        // console.log('console from userservice getClientReceivedProposals',proposals)
-        return{proposals}
-    }
 }

@@ -1,0 +1,1 @@
+export const SERVICE_FEE_PERCENTAGE: number = 0.05;

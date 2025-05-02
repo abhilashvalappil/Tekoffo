@@ -78,14 +78,17 @@ const UserSchema: Schema = new Schema({
      type: Boolean, 
      default: false 
     },
-  created_At: { 
-    type: Date,
-     default: Date.now 
-    },
   isBlocked: {
      type: Boolean,
       default: false 
     },
-});
+    stripeAccountId: {
+      type:String,
+      default: ''
+    }
+},{
+  timestamps: true,
+}
+);
 
 export default mongoose.model<IUser>('User', UserSchema);

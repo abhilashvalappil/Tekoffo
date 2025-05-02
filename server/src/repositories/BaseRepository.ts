@@ -1,6 +1,7 @@
 
-import { Document, Model, Query } from "mongoose";
+import { Document, FilterQuery, Model, Query, UpdateQuery } from "mongoose";
 import { IBaseRepository } from "../interfaces";
+import { UpdateResult } from "mongoose";
 
 class BaseRepository<T extends Document> implements IBaseRepository<T> {
     private model: Model<T>;
@@ -11,7 +12,6 @@ class BaseRepository<T extends Document> implements IBaseRepository<T> {
 
     async create(data: Partial<T>): Promise<T> {
         return await this.model.create(data);
-         
     }
     async findOne(query: any): Promise<T | null> {
         return await this.model.findOne(query)
@@ -33,13 +33,18 @@ class BaseRepository<T extends Document> implements IBaseRepository<T> {
     //     return await this.model.find(query).skip(skip).limit(limit).exec();
     //   }
     
-  find(query: any = {}, skip: number = 0, limit: number = 10): Query<T[], T> {
-    return this.model.find(query).skip(skip).limit(limit);
-  }
+      //  find(query: any = {}, skip: number = 0, limit: number = 0): Query<T[], T> {
+      //   return this.model.find(query).skip(skip).limit(limit);
+      // }
+      find(query: any = {}, options: { skip?: number; limit?: number; sort?: any } = {}): Query<T[], T> {
+        const { skip = 0, limit = 8, sort = {} } = options;
+        return this.model.find(query).skip(skip).limit(limit).sort(sort);
+    }
+    
 
-  async findExec(query: any = {}, skip: number = 0, limit: number = 10): Promise<T[]> {
-    return (await this.model.find(query).skip(skip).limit(limit).exec()) || [];
-  }
+      async findExec(query: any = {}, skip: number = 0, limit: number = 10): Promise<T[]> {
+        return (await this.model.find(query).skip(skip).limit(limit).exec()) || [];
+      }
       async count(query: any = {}): Promise<number> {
         return await this.model.countDocuments(query).exec();
       }
@@ -52,6 +57,9 @@ class BaseRepository<T extends Document> implements IBaseRepository<T> {
         return await this.model.findByIdAndUpdate(id, updateData, { new: true });
     }
     
+    async updateMany( query: FilterQuery<T>, update: UpdateQuery<T>): Promise<UpdateResult> {
+      return await this.model.updateMany(query, update);
+    }
 }
 
 export default BaseRepository;

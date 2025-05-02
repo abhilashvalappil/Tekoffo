@@ -20,16 +20,15 @@ export class AdminController {
 
             const userId = req.userId;
             if(!userId){
-                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
+                res.status(Http_Status.FORBIDDEN).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
 
-            const result = await this.adminService.fetchUsers(userId);
-            res.status(Http_Status.OK).json({
-                success:true,
-                message:MESSAGES.USERS_FETCHED,
-                data:result
-            })
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 3;
+
+            const paginatedResponse = await this.adminService.fetchUsers(userId,page,limit);
+            res.status(Http_Status.OK).json(paginatedResponse)
         } catch (error) {
             next(error);
         }
@@ -82,28 +81,28 @@ export class AdminController {
         }
     }
 
-    // async getCategories(req:Request, res:Response): Promise<void> {
-    //     try {
-    //         const {categories} = await this.adminService.fetchCategories();
-    //         res.status(Http_Status.OK).json({success: true, categories})
-    //     } catch (error) {
-    //         ErrorHandler.handleError(error, res);
-    //     }
-    // }
     async getCategories(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
         try {
             const userId = req.userId;
             if(!userId){
-                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
+                res.status(Http_Status.FORBIDDEN).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
 
           const page = parseInt(req.query.page as string) || 1;
           const limit = parseInt(req.query.limit as string) || 8;
+
+          if (isNaN(page) || page < 1) {
+              res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid page number" });
+        }
+        if (isNaN(limit) || limit < 1) {
+              res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
+        }
       
           const paginatedResponse = await this.adminService.fetchCategories(userId,page, limit);
       
-          res.status(Http_Status.OK).json({ success: true, ...paginatedResponse });
+        //   res.status(Http_Status.OK).json({ success: true, ...paginatedResponse });
+        res.status(Http_Status.OK).json(paginatedResponse);
         } catch (error) {
             next(error);
         }

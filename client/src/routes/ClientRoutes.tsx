@@ -1,15 +1,18 @@
 
 
-import { Route,   } from "react-router-dom";
-import ClientDashboard from "../components/client/ClientDashboard";
+import { Route} from "react-router-dom";
+import ClientDashboard from "../components/client/dashboard/ClientDashboard";
 import ProtectedRoute from "./ProtectedRoute";
-import CreateProfile from "../components/client/CreateProfile";
-import DisplayProfile from "../components/client/Profile";
-import ChangePassword from "../components/client/ChangePassword";
-import PostJob from "../components/client/PostJob";
-import MyJobPosts from "../components/client/MyJobs";
-import Freelancers from "../components/client/AvailableFreelancers";
-import Proposals from "../components/client/Proposals";
+import CreateProfile from "../components/client/profile/CreateProfile";
+import DisplayProfile from "../components/client/profile/Profile";
+import ChangePassword from "../components/client/profile/ChangePassword";
+import PostJob from "../components/client/dashboard/PostJob";
+import MyJobPosts from "../components/client/dashboard/MyJobs";
+import Freelancers from "../components/client/dashboard/AvailableFreelancers";
+import Proposals from "../components/client/dashboard/Proposals";
+import PaymentReview from "../components/client/payment/PaymentReview";
+// import PaymentForm from "../components/client/PaymentForm";
+import PaymentSuccess from "../pages/PaymentSuccess";
 
  
 const ClientRoutes = () => (
@@ -85,6 +88,22 @@ const ClientRoutes = () => (
         <ProtectedRoute allowedRoles={["client"]}>
           <Proposals />
         </ProtectedRoute>
+     } />
+
+    <Route 
+      path="/client/payment-review"
+      element={
+        <ProtectedRoute allowedRoles={["client"]}>
+          <PaymentReview />
+        </ProtectedRoute>
+     } />
+
+    <Route 
+      path="/payment-success"
+      element={
+        // <ProtectedRoute allowedRoles={["client"]}>
+          <PaymentSuccess />
+        // </ProtectedRoute>
      } />
      
   </>

@@ -11,9 +11,28 @@ export interface proposalDataType {
 
 export interface ProposalData {
     _id:string;
-    jobId:string;
-    clientId:string;
-    freelancerId:string;
+    jobId: {
+        _id: string;
+        title: string;
+        description: string;
+      };    
+    clientId:{
+        _id: string;
+        fullName: string;
+    };
+    freelancerId: {
+        _id: string;
+        fullName: string;
+        email:string;
+        profilePicture?:string;
+        country:string;
+        description:string;
+        skills:string[];
+        preferredJobFields:string[];
+        linkedinUrl?:string;
+        githubUrl?:string;
+        portfolioUrl:string;
+      };
     proposalType:string;
     status:string;
     coverLetter:string;

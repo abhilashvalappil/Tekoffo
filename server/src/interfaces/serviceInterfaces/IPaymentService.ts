@@ -1,0 +1,14 @@
+import { INotification } from "../entities/INotification";
+
+
+
+export interface IPaymentService {
+    checkStripeAccount(freelancerId:string): Promise<boolean>
+    createStripeAccount(freelancerId:string, email:string): Promise<{onboardingLink:string}> 
+    createPaymentIntent(amount: number, freelancerId: string, clientId: string, jobId: string,  proposalId: string): Promise<{ clientSecret: string; transactionId: string }>
+    createContract(transactionId:string): Promise<{message:string}> 
+    releasePayment(paymentIntentId:string,transactionId:string): Promise<{message:string}>
+    getNotifications(userId:string): Promise<{notifications:INotification[]}> 
+    markNotificationAsRead(id:string): Promise<{message:string}>
+    markAllNotificationsAsRead(ids:string[]): Promise<{message:string}>
+}

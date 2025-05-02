@@ -30,15 +30,18 @@ class UserRepository extends BaseRepository<IUser> implements IUserRepository {
 
      async findUserById(userId: string): Promise<IUser | null> {
       return await this.findById(userId);
-  }
+    }
 
-    async findUsers(): Promise<IUser[]> {
-      return await this.find() || [];
+    async findUsers(skip: number, limit: number): Promise<IUser[]> {
+      return await this.find({role:{$ne:'admin'}},{ skip, limit, sort: { createdAt: -1 } }) || [];
+    }
+    async countUsers(): Promise<number> {
+      return await this.count();   
     }
 
     async updateUserStatus(userId: string, isBlocked: boolean) {
       return await this.updateById(userId, { isBlocked } as Partial<IUser>);
-  }
+    }
 
   async createUserProfile(userId: string, createProfile: Partial<IUser>): Promise<IUser | null> {
     return await this.updateById(userId, createProfile);
@@ -51,6 +54,11 @@ class UserRepository extends BaseRepository<IUser> implements IUserRepository {
   async findFreelancers(): Promise<FreelancerData[]> {
     return await this.find({$and:[{role:'freelancer'},{isBlocked:false}]})
   }
+
+   async checkStripeAccount(freelancerId: string): Promise<boolean> {
+        const freelancer = await this.findById(freelancerId);
+        return !!freelancer?.stripeAccountId;
+    }
   
 }
 

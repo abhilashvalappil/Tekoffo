@@ -9,7 +9,7 @@
 // }
 export interface User {
   _id?: string;
-  fullName?: string; // Optional, as it might not be set yet
+  fullName?: string; 
   companyName?:string;
   description?: string;
   country?: string;
