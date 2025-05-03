@@ -1,5 +1,5 @@
 import Contract  from '../models/ContractModel';
-import { CreateContractDTO, IContract, IContractRepository } from '../interfaces';
+import { CreateContractDTO, IContract, IContractRepository, status } from '../interfaces';
 import BaseRepository from './BaseRepository';
 
 
@@ -10,6 +10,10 @@ class ContractRepository extends BaseRepository<IContract> implements IContractR
 
     async createContract(contract:CreateContractDTO): Promise<IContract> {
         return await this.create(contract)
+    }
+
+    async findContractById(id:string): Promise<IContract|null> {
+        return await this.findById(id)
     }
 
     async findContractsByFreelancerId(userId:string): Promise<IContract[]> {
@@ -28,6 +32,10 @@ class ContractRepository extends BaseRepository<IContract> implements IContractR
 
     async findContractsByClientId(userId:string): Promise<IContract[]> {
         return await this.find({clientId:userId})
+    }
+
+    async updateContractStatus(id:string, status: status): Promise<IContract|null> {
+        return await this.updateById(id,{contractStatus:status})
     }
 }
 

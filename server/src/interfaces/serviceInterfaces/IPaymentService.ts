@@ -8,9 +8,11 @@ export interface IPaymentService {
     createStripeAccount(freelancerId:string, email:string): Promise<{onboardingLink:string}> 
     createPaymentIntent(amount: number,serviceFee:number, freelancerId: string, clientId: string, jobId: string,  proposalId: string): Promise<{ clientSecret: string; transactionId: string }>
     createContract(transactionId:string): Promise<{message:string}> 
+    submitContractForApproval(freelancerId:string,contractId:string): Promise<{message:string}>
     releasePayment(paymentIntentId:string,transactionId:string): Promise<{message:string}>
     getNotifications(userId:string): Promise<{notifications:INotification[]}> 
     markNotificationAsRead(id:string): Promise<{message:string}>
     markAllNotificationsAsRead(ids:string[]): Promise<{message:string}>
     getUserContracts(userId:string): Promise<{contracts:IContract[]}>
+
 }

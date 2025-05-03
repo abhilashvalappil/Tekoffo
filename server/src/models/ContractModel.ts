@@ -1,5 +1,5 @@
 import mongoose, { Schema, Types } from 'mongoose';
-import { IContract } from "../interfaces";
+import { IContract, status } from "../interfaces";
 
 const ContractSchema : Schema<IContract>  = new Schema({
     clientId: {
@@ -53,8 +53,8 @@ const ContractSchema : Schema<IContract>  = new Schema({
     },
     contractStatus: {
         type: String,
-        enum: ['pending','active', 'submitted', 'completed', 'cancelled'],
-        default: 'active',
+        enum: ['active', 'submitted', 'completed', 'cancelled'],
+        default: status.Active,
       },
       startedAt:{
         type: Date,

@@ -2,7 +2,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { IUser } from '../interfaces/entities/IUser';
 
-const UserSchema: Schema = new Schema({
+const UserSchema: Schema<IUser> = new Schema({
   username: { 
     type: String,
      required: true,

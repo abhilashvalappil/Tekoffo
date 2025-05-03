@@ -118,6 +118,21 @@ export class PaymentController {
         }
     }
 
+    async submitContractForApproval(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const freelancerId = req.userId;
+            if(!freelancerId){
+                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
+                return;
+            }
+            const {contractId} = req.body;
+            const {message} = await this.paymentService.submitContractForApproval(freelancerId,contractId)
+            res.status(Http_Status.OK).json(message)
+        } catch (error) {
+            next(error)
+        }
+    }
+
     async releasePayment(req: AuthRequest, res: Response, next: NextFunction): Promise<void>{
         try {
 

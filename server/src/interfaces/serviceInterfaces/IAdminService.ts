@@ -11,10 +11,9 @@ export interface IAdminService {
                 meta: { total: number; page: number; pages: number; limit: number };
             }>
     updateUserStatus(userId: string, isBlocked: boolean): Promise<{ message: string; user: any }>;
-    addCategory(catId:string,name:string,subCategories?:string[]): Promise<{message:string}>;
-    // fetchCategories(): Promise<{categories: ICategory[]}>
+    addCategory(name:string,subCategories:string[]): Promise<{message:string}>;
     fetchCategories(userId:string, page: number, limit: number): Promise<PaginatedResponse<ICategory>>
     updateCategoryStatus(categoryId:string, isListed:boolean): Promise<{message:string, category: Partial<ICategory>}>
-    updateCategory(id:string, catId:string,name:string,subCategories?:string[]): Promise<{message:string}>
+    updateCategory(id:string,name:string,subCategories:string[]): Promise<{message:string}>
      
 }

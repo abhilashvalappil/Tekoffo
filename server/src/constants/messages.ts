@@ -7,6 +7,8 @@ export const MESSAGES = {
     CATEGORY_NOT_FOUND: "Category does not exist!" ,
     COUNTRY_REQUIRED: "Country is required",
     COMPANY_NAME_MIN_LENGTH: "Company name must be at least 3 characters",
+    CONTRACT_NOT_FOUND: "Contract not found",
+    CONTRACT_SUBMITTED_FOR_APPROVAL:"The contract has been submitted for approval",
     DESCRIPTION_REQUIRED: "Description must be at least 8 characters",
     SUBCATEGORY_ALREADY_EXISTS: "Subcategory already exists!",
     CATEGORY_CREATED_SUCCESSFULLY: "Category created successfully!",

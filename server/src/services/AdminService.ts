@@ -78,9 +78,8 @@ export class AdminService implements IAdminService {
                   };
         }
 
-        async addCategory(catId:string,name:string,subCategories?:string[]): Promise<{message:string}> {
+        async addCategory(name:string,subCategories:string[]): Promise<{message:string}> {
 
-                // console.log('console from adcategoryyyyyyyyyy',)
                 const categoryExist = await this.categoryRepository.findCategory(name)
                 if(categoryExist){
                     throw new ConflictError(MESSAGES.CATEGORY_ALREADY_EXISTS)
@@ -88,71 +87,66 @@ export class AdminService implements IAdminService {
 
                 if (subCategories && subCategories.length > 0) {
                 const subCategoryExist = await this.categoryRepository.findSubCategoriesMatch(subCategories);
-                if(subCategoryExist){
-                    throw new ConflictError(MESSAGES.SUBCATEGORY_ALREADY_EXISTS)
+                if (subCategoryExist) {
+                  throw new ConflictError(MESSAGES.SUBCATEGORY_ALREADY_EXISTS);
                 }
             }
-                
-                const result = await this.categoryRepository.createCategory({catId,name,subCategories})
+            
+                const result = await this.categoryRepository.createCategory({name,subCategories})
                 return{message:MESSAGES.CATEGORY_CREATED_SUCCESSFULLY}
-        }
+            }
 
-        async updateCategory(id:string, catId:string,name:string,subCategories?:string[]): Promise<{message:string}> {
-                console.log('console from adminservice updatecateegory',id,catId,name,subCategories)
+        async updateCategory(id:string,name:string,subCategories:string[]): Promise<{message:string}> {
                 const CategoryExist = await this.categoryRepository.findCategoryById(id);
                 if(!CategoryExist){
                     throw new NotFoundError(MESSAGES.CATEGORY_NOT_FOUND)
                 }
 
-                const existingCategory = await this.categoryRepository.checkCategoryExistsExcludingId(id, name);
-                if (existingCategory) {
+                const categoryNameExist = await this.categoryRepository.checkCategoryExistsExcludingId(id, name);
+                if (categoryNameExist) {
                 throw new ConflictError(MESSAGES.CATEGORY_ALREADY_EXISTS);
                 }
 
                 if (subCategories && subCategories.length > 0) {
                 const subCategoryExist = await this.categoryRepository.SubCategoriesMatch(subCategories, id);
-                if(subCategoryExist){
-                    throw new ConflictError(MESSAGES.SUBCATEGORY_ALREADY_EXISTS)
-                    }
+                if (subCategoryExist) {
+                  throw new ConflictError(MESSAGES.SUBCATEGORY_ALREADY_EXISTS);
                 }
+              }
 
                 await this.categoryRepository.updateCategory({_id: id, name,subCategories})
                 return{message:MESSAGES.CATEGORY_UPDATED_SUCCESSFULLY}
         }
 
         async fetchCategories(userId:string, page: number, limit: number): Promise<PaginatedResponse<ICategory>> {
+            const user = await this.userRepository.findUserById(userId);
+            if (!user) {
+                throw new NotFoundError(MESSAGES.INVALID_USER);
+            }
 
-                const user = await this.userRepository.findUserById(userId)
-             
-                if(!user){
-                    throw new NotFoundError(MESSAGES.INVALID_USER)
-                }   
-
-              const skip = (page - 1) * limit;
-              const [categories, total] = await Promise.all([
+            const skip = (page - 1) * limit;
+            const [categories, total] = await Promise.all([
                 this.categoryRepository.getAllCategories(skip, limit),
-                this.categoryRepository.countCategories()
+                this.categoryRepository.countCategories(),
             ]);
-            //   const categories = await this.categoryRepository.getAllCategories(skip, limit);
-            //   const total = await this.categoryRepository.countCategories();
-          
-              return {
-                data: categories,
-                meta: {
-                  total,
-                  page,
-                  pages: Math.ceil(total / limit),
-                  limit,
-                },
-              };
-          }
+        
+            return {
+            data: categories,
+            meta: {
+                total,
+                page,
+                pages: Math.ceil(total / limit),
+                limit,
+            },
+            };
+        }
           
 
         async updateCategoryStatus(categoryId:string, isListed:boolean): Promise<{message:string, category: Partial<ICategory>}> {
         
             const categoryExist = await this.categoryRepository.findCategoryById(categoryId);
-            if(!categoryExist){
-                throw new NotFoundError(MESSAGES.CATEGORY_NOT_FOUND)
+            if (!categoryExist) {
+              throw new NotFoundError(MESSAGES.CATEGORY_NOT_FOUND);
             }
             const updateCategory = await this.categoryRepository.updateCategoryStatus(categoryId, isListed)
             if(!updateCategory){

@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { IUserService,IUserRepository,ProfileFormData,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser, IPaymentService, CreateContractDTO, INotification, IContract,  } from "../interfaces";
+import { IUserService,IUserRepository,ProfileFormData,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser, IPaymentService, CreateContractDTO, INotification, IContract, status,  } from "../interfaces";
 import {MESSAGES} from '../constants/messages'
 import { CustomError, NotFoundError, UnauthorizedError } from "../errors/customErrors";
 import { FreelancerData, JobDataType, JobInputData, JobUpdateData } from '../interfaces/entities/IJob';
@@ -159,10 +159,11 @@ export class PaymentService implements IPaymentService {
             platFormServiceFee,
             transferDataDestination,
             transactionId,
-            contractStatus: 'pending',
+            contractStatus: status.Active,
             startedAt: new Date(),
         }
         await this.contractRepository.createContract(newContract)
+        await this.jobRepository.updateJobPost(jobId.toString(),{status:'inprogress'})
         const client = await this.userRepository.findUserById(clientId.toString())
         if(!client){
             throw new NotFoundError(MESSAGES.INVALID_USER)
@@ -186,17 +187,6 @@ export class PaymentService implements IPaymentService {
         console.log('Notification sent to freelancer', message);
 
         return{message:'Contract created and notification sent'}
-    }
-
-    async releasePayment(paymentIntentId:string,transactionId:string): Promise<{message:string}>{
-        const transaction = await this.paymentRepository.findTransaction(transactionId)
-        if (!transaction) {
-            throw new NotFoundError('Transaction not found');
-          }
-
-        await stripe.paymentIntents.capture(paymentIntentId);
-        await this.paymentRepository.updatePaymentStatus(transaction._id.toString() ,'released')
-        return{message:"payment released successfully"}
     }
 
     async getNotifications(userId:string): Promise<{notifications:INotification[]}> {
@@ -224,13 +214,38 @@ export class PaymentService implements IPaymentService {
         }
         if(user && user.role == 'freelancer'){
             contracts = await this.contractRepository.findContractsByFreelancerId(userId)
-            // console.log('contractssssssssssssssssss44444444',contracts)
         }
         
         if(user && user.role == 'client'){
             contracts = await this.contractRepository.findContractsByClientId(userId)
         }
         return {contracts}
+    }
+
+    async submitContractForApproval(freelancerId:string,contractId:string): Promise<{message:string}> {
+        const contractExist = await this.contractRepository.findContractById(contractId)
+        if(!contractExist){
+            throw new NotFoundError(MESSAGES.CONTRACT_NOT_FOUND)
+        }
+        const freelancerExist = await this.userRepository.findUserById(freelancerId);
+        if(!freelancerExist){
+            throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
+        }
+        await this.contractRepository.updateContractStatus(contractId,status.Submitted)
+        return {message:MESSAGES.CONTRACT_SUBMITTED_FOR_APPROVAL}
+    }
+
+
+
+    async releasePayment(paymentIntentId:string,transactionId:string): Promise<{message:string}>{
+        const transaction = await this.paymentRepository.findTransaction(transactionId)
+        if (!transaction) {
+            throw new NotFoundError('Transaction not found');
+          }
+
+        await stripe.paymentIntents.capture(paymentIntentId);
+        await this.paymentRepository.updatePaymentStatus(transaction._id.toString() ,'released')
+        return{message:"payment released successfully"}
     }
 
 }

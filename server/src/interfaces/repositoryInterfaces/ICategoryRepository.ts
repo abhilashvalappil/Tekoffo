@@ -1,7 +1,9 @@
-import { ICategory } from "../entities/ICategory";
+import { ICategory,createCategoryDTO } from "../entities/ICategory";
+ 
 
 export interface ICategoryRepository {
-    createCategory(category:Partial<ICategory>): Promise<ICategory>;
+    createCategory(category:createCategoryDTO): Promise<ICategory>
+    // createCategory(category:Partial<ICategory>): Promise<ICategory>;
     findCategory(category:string): Promise<ICategory | null>;
     updateCategory(category: Partial<ICategory>): Promise<ICategory | null>
     checkCategoryExistsExcludingId(id:string, name: string): Promise<ICategory | null> 

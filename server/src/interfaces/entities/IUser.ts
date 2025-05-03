@@ -15,9 +15,12 @@ export interface IUser extends Document {
     country:string;
     skills?: string[];
     preferredJobFields?: string[];
+    total_Earnings?:number;
+    total_Spent?:number;
     linkedinUrl?: string;
     githubUrl?: string;
     portfolioUrl?: string;
+    isGoogleAuth?:string;
     stripeAccountId?:string;
     createdAt?: Date;
     updatedAt?: Date;

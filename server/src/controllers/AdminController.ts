@@ -52,11 +52,11 @@ export class AdminController {
 
     async addCategory(req:Request, res:Response, next: NextFunction): Promise<void> {
         try {
-            const {catId, name, subCategories} = req.body.categoryData;
-            if(!catId || !name){
+            const { name, subCategories} = req.body.categoryData;
+            if(!name || subCategories.length < 0){
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.MISSING_CREDENTIALS})
             }
-            const result = await this.adminService.addCategory(catId,name,subCategories)
+            const result = await this.adminService.addCategory(name,subCategories)
             res.status(Http_Status.CREATED).json({
                 success:true,
                 message:result.message
@@ -69,12 +69,12 @@ export class AdminController {
     async updaCategory(req:Request, res:Response, next: NextFunction): Promise<void> {
         try {
             // console.log('console from admincontroller.ts',req.body)
-            const {_id: id, catId, name, subCategories} = req.body;
-            if(!id || !name){
+            const {_id: id, name, subCategories} = req.body;
+            if(!id || !name || !subCategories){
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.MISSING_CREDENTIALS})
             }
 
-            const message = await this.adminService.updateCategory(id,catId,name.trim(),subCategories)
+            const message = await this.adminService.updateCategory(id,name.trim(),subCategories)
             res.status(Http_Status.CREATED).json(message)
         } catch (error) {
             next(error);

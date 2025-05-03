@@ -1,18 +1,53 @@
 import Category from '../models/CategoryModel';
-import { ICategory, ICategoryRepository } from '../interfaces';
+import { ICategory, ICategoryRepository,createCategoryDTO } from '../interfaces';
 import BaseRepository from './BaseRepository';
+import {  } from '../interfaces';
 
 
 class CategoryRepository extends BaseRepository<ICategory> implements ICategoryRepository {
     constructor(){
         super(Category)
     }
-    async createCategory(category:Partial<ICategory>): Promise<ICategory> {
+    async createCategory(category:createCategoryDTO): Promise<ICategory> {
         return await this.create(category)
     }
     async findCategory(name:string): Promise<ICategory | null> {
         return await this.findOne({name:{ $regex: new RegExp(`^${name}$`, 'i')}})
     }
+
+    async findSubCategoriesMatch(subCategories: string[]): Promise<ICategory | null> {
+      const regexes = subCategories.map(
+        (item) => new RegExp(`^${item}$`, 'i')  
+      );
+      return await this.findOne({
+          subCategories: { $in: regexes }
+      });
+  }
+
+
+  async updateCategory(category: Partial<ICategory>): Promise<ICategory | null> {
+    const { _id, ...updateData } = category;
+    return await this.updateById(_id!, updateData);  
+  }
+
+  async checkCategoryExistsExcludingId(id:string,name: string): Promise<ICategory | null> {
+    return await this.findOne({
+      name: { $regex: new RegExp(`^${name}$`, 'i') },
+      _id: { $ne: id } 
+    });
+  }
+
+  async SubCategoriesMatch(subCategories: string[], id: string): Promise<ICategory | null> {
+    const regexes = subCategories.map(
+      (item) => new RegExp(`^${item}$`, 'i')  
+    );
+    return await this.findOne({
+        _id: { $ne: id},
+        subCategories: { $in: regexes }
+    });
+  }
+
+  
 
     // async findCategoryById(id:string): Promise<ICategory | null> {
     //   return await this.findById(id)
@@ -23,39 +58,15 @@ class CategoryRepository extends BaseRepository<ICategory> implements ICategoryR
     //   return await this.findOneAndUpdate({ catId }, updateData); 
     // }
 
-    async updateCategory(category: Partial<ICategory>): Promise<ICategory | null> {
-      const { _id, ...updateData } = category;
-      return await this.updateById(_id!, updateData);  
-    }
-    
-    
-    async checkCategoryExistsExcludingId(name: string,id:string): Promise<ICategory | null> {
-      return await this.findOne({
-        name: { $regex: new RegExp(`^${name}$`, 'i') },
-        id: { $ne: id } 
-      });
-    }
-    
-
     async findCategoryById(categoryId: string): Promise<ICategory | null> {
         return await this.findById(categoryId);
       }
       
 
-    async findSubCategoriesMatch(subCategories: string[]): Promise<ICategory | null> {
-        return await this.findOne({
-            subCategories: { $in: subCategories }
-        });
-    }
+   
     // async findSubCategoriesMatch(subCategories: string[]): Promise<ICategory | null> {
     //     return await this.findOne({ subCategories: subCategories });
     //   }
-    async SubCategoriesMatch(subCategories: string[], id: string): Promise<ICategory | null> {
-      return await this.findOne({
-          _id: { $ne: id},
-          subCategories: { $in: subCategories }
-      });
-  }
   
 
     async getAllCategories(skip: number, limit: number): Promise<ICategory[]> {

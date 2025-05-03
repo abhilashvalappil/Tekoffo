@@ -67,6 +67,7 @@ userRouter.get('/notifications',authMiddleware,authorizeRole('freelancer'),payme
 userRouter.put('/notifications/:id/read',authMiddleware,authorizeRole('freelancer'),paymentController.markNotificationAsRead.bind(paymentController))
 userRouter.put('/notifications/read-all',authMiddleware,authorizeRole('freelancer'),paymentController.markAllNotificationsAsRead.bind(paymentController))
 userRouter.get('/contracts',authMiddleware,authorizeRole('freelancer'),paymentController.getUserContracts.bind(paymentController))
+userRouter.post('/contracts/submit',authMiddleware,authorizeRole('freelancer'),paymentController.submitContractForApproval.bind(paymentController))
 
 
 

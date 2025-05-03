@@ -13,11 +13,18 @@ export interface IContract extends Document {
     platFormServiceFee: number;
     transferDataDestination: string;
     transactionId:string;
-    contractStatus:'pending'| 'active'| 'submitted'|  'completed'| 'cancelled';
+    contractStatus:status;
     startedAt:Date;
     completedAt?: Date;
     createdAt?: Date;
     updatedAt?: Date;
+}
+
+export enum status{
+    Active = 'active',
+    Submitted = 'submitted',
+    Completed = 'completed',
+    Cancelled = 'cancelled'
 }
 
 export interface CreateContractDTO {
@@ -31,7 +38,7 @@ export interface CreateContractDTO {
     application_fee_amount: number;
     platFormServiceFee: number;
     transferDataDestination: string;
-    contractStatus: 'pending'| 'active'| 'submitted'|  'completed'| 'cancelled';
+    contractStatus: status;
     startedAt: Date;
   }
   

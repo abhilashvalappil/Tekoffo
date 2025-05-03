@@ -10,3 +10,7 @@ export interface ICategory extends Document {
     updatedAt?: Date;
 }
 
+export interface createCategoryDTO {
+    name:string;
+    subCategories:string[];
+}
