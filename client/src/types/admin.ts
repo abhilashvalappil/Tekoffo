@@ -20,10 +20,16 @@ export interface FetchUserResponse {
     totalCount: number;
   }
 
-export interface Category {
-    catId:string;
+export interface AddCategoryPayload {
+    // catId:string;
     name: string;
-    subcategories?: string[];
+    subcategories: string[];
+  }
+
+  export interface EditCategoryPayload {
+    _id:string;
+    name: string;
+    subcategories: string[];
   }
 
   export interface fetchedCategories {

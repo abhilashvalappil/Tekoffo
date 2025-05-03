@@ -43,6 +43,7 @@ export const commonENDPOINTS = {
     CREATE_PAYMENT_INTENT:'/create-payment-intent',
     CREATE_CONTRACT:'/create-contract',
     GET_CONTRACTS:'/contracts',
+    SUBMIT_CONTRACT:'/contracts/submit',
     CREATE_CHECKOUT: "/create-checkout-session",
     FREELANCER_APPLIED_PROPOSALS: "/api/proposals"
   }

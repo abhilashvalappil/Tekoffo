@@ -41,3 +41,20 @@ export interface ProposalData {
     attachments:string;
     createdAt:string;
 }
+
+
+export interface AppliedProposal {
+  _id: string;
+  jobId: {
+    _id: string;
+    title: string;
+  };
+  clientId: {
+    _id: string;
+    fullName: string;
+  };
+  proposedBudget: number;
+  duration: string;
+  status: 'accepted' | 'rejected' | 'pending';
+  createdAt: string;
+}

@@ -1,6 +1,6 @@
 import API from '../services/api'
 import { adminENDPOINTS } from '../constants/endpointUrl'
-import { FetchUserResponse, Category, fetchedCategories } from '../types/admin'
+import { FetchUserResponse, fetchedCategories, AddCategoryPayload, EditCategoryPayload } from '../types/admin'
 import { handleApiError } from '../utils/errors/errorHandler'
 
 export const fetchUsers = async(page = 1, limit = 3): Promise<{
@@ -27,7 +27,7 @@ export const updateUserStatus = async(userId: string, isBlocked: boolean): Promi
     }
 }
 
-export const addCategory = async(categoryData:Partial<Category>) => {
+export const addCategory = async(categoryData:Partial<AddCategoryPayload>) => {
     try {
         const result = await API.post(adminENDPOINTS.ADD_CATEGORY,{categoryData})
         return result.data;
@@ -36,12 +36,14 @@ export const addCategory = async(categoryData:Partial<Category>) => {
     }
 }
 
-export const updateCategory = async(categoryData:Partial<Category>) => {
+export const updateCategory = async(categoryData:Partial<EditCategoryPayload>) => {
     try {
+        console.log('the edittt category datas aree',categoryData)
         const response = await API.put(adminENDPOINTS.UPDATE_CATEGORY,categoryData)
         console.log('conosle from updatecategoryyyyy',response.data)
         return response.data;
     } catch (error) {
+        console.log('the edittcategory error is :',error)
         throw new Error(handleApiError(error));
     }
 }

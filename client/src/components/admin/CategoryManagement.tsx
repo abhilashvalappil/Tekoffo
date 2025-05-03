@@ -5,15 +5,15 @@ import { addCategory, fetchCategories, updateCategoryStatus, updateCategory } fr
 import { Toaster, toast } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { categorySchema,CategoryFormData } from '../../utils/validations/CategoryValidation';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 
 
 interface Category {
-  _id?: string;
-  catId: string;
+  _id: string;
+  // catId: string;
   name: string;
   subCategories: string[];
   isListed: boolean;
@@ -37,7 +37,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
   const {
     register,
     handleSubmit,
-    setValue,
+    // setValue,
     reset,
     formState: { errors },
   } = useForm<CategoryFormData>({
@@ -69,10 +69,14 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
     const categoryData: Partial<Category> = {
       _id: mode === 'edit' ? category?._id : undefined,
       // _id: mode === 'add' ? category?._id : undefined,
-      catId: mode === 'edit' ? category?.catId : Date.now().toString(),
+      // catId: mode === 'edit' ? category?.catId : Date.now().toString(),
       name: data.name,
-      _id: data._id,
-      subCategories: data.subcategories, // already transformed to array by zod
+      subCategories: data.subcategories
+      .split(',')
+      .map((sub) => sub.trim())
+      .filter((sub) => sub.length > 0),
+      // _id: data._id,
+      // subCategories: data.subcategories, // already transformed to array by zod
     };
 
     const toastId = toast.loading(mode === 'add' ? 'Adding category...' : 'Updating category...');
@@ -112,6 +116,10 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
               <input
                 type="text"
                 {...register('name')}
+                onChange={() => {
+                  setServerError('');
+                  // setValue('name', e.target.value);  
+                }}
                 className={`w-full px-3 py-2 border ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 } rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500`}
@@ -140,7 +148,10 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
             <div className="flex justify-end gap-2">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => {
+                  setServerError('');
+                  onClose();
+                }}
                 className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
               >
                 Cancel
@@ -172,12 +183,12 @@ const CategoryManagement = () => {
     total: 0,
     page: 1,
     pages: 1,
-    limit: 8,
+    limit: 6,
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState<'name-asc' | 'name-desc' | 'status-asc' | 'status-desc'>('name-asc');
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -215,7 +226,7 @@ const CategoryManagement = () => {
     if (modalMode === 'add') {
       const newCategory: Category = {
         _id: categoryData._id,
-        catId: Date.now().toString(),
+        // catId: Date.now().toString(),
         name: categoryData.name!,
         subCategories: categoryData.subCategories!,
         isListed: true,
@@ -370,7 +381,7 @@ const CategoryManagement = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredAndSortedCategories.map((category) => (
-                      <tr key={category.catId}>
+                      <tr key={category._id}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
                             {category.name}
@@ -437,19 +448,16 @@ const CategoryManagement = () => {
                 </button>
               </div> */}
               <Stack spacing={2} alignItems="center" className="mt-4">
-  <Pagination
-    count={pagination.pages}
-    page={pagination.page}
-    onChange={(event, value) => handlePageChange(value)}
-    color="primary"
-  />
-</Stack>
-
-
+                <Pagination
+                  count={pagination.pages}
+                  page={pagination.page}
+                  onChange={(event, value) => handlePageChange(value)}
+                  color="primary"
+                />
+              </Stack>
             </div>
           </div>
         </div>
-
         <CategoryModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}

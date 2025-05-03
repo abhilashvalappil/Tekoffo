@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Search, Calendar, Filter, ChevronDown } from 'lucide-react';
 import { useFetchContracts } from '../../../hooks/useFetchContracts';
-import { contractResponse } from '../../../types/paymentTypes';
+import { submitContract } from '../../../api';
+import toast, { Toaster } from 'react-hot-toast';
+import { handleApiError } from '../../../utils/errors/errorHandler';
+// import { contractResponse } from '../../../types/paymentTypes';
 
 const Contracts = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -9,6 +12,17 @@ const Contracts = () => {
   const [timeFilter, setTimeFilter] = useState<string>('all');
 
   const { contracts, loading, error, refetch } = useFetchContracts();
+
+  const handleApplyForApproval = async(contractId:string) => {
+    try{
+    const message  = await submitContract(contractId)
+    console.log('checking contratmssggggggg',message)
+    toast.success(message)
+    refetch();
+    }catch(error){
+      toast.error(handleApiError(error));
+    }
+  }
 
   // Filter contracts
   const filterContracts = () => {
@@ -58,6 +72,10 @@ const Contracts = () => {
 
   return (
     <div className="min-h-screen bg-white text-[#0A142F]">
+      <Toaster
+  position="top-center"
+  reverseOrder={false}
+/>
       <div className="container mx-auto px-30 py-20">
         <h1 className="text-3xl font-bold mb-8">Contracts Management</h1>
 
@@ -120,6 +138,7 @@ const Contracts = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -131,7 +150,7 @@ const Contracts = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {contract.completedAt ? new Date(contract.completedAt).toLocaleDateString() : 'N/A'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">${(contract.amount / 100).toLocaleString()}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.amount}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -147,6 +166,14 @@ const Contracts = () => {
                           {contract.contractStatus.charAt(0).toUpperCase() + contract.contractStatus.slice(1)}
                         </span>
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => handleApplyForApproval(contract._id)}
+                        className="bg-blue-900 text-white text-xs px-2 py-1 rounded hover:bg-blue-800 transition"
+                      >
+                        Apply for Approval
+                      </button>
+                    </td>
                     </tr>
                   ))}
                 </tbody>
