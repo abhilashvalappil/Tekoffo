@@ -3,7 +3,14 @@ import { submitProposal } from '../../../api';
 
 interface JobDetails {
   id: string;
-  clientId:string;
+  // clientId:string;
+  clientId:{
+    _id:string;
+    fullName:string;
+    profilePicture?:string;
+    companyName?:string;
+    country:string;
+  }
   title: string;
   clientName: string;
   clientLocation: string;
@@ -59,7 +66,6 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ isOpen, onClose, job 
     e.preventDefault();
     
     console.log({ cvFile, message, expectedBudget, duration });
-     
 
     const proposalDetails = new FormData()
     console.log('job apply deta propoooooooooo',proposalDetails)

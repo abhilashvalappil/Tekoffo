@@ -10,7 +10,8 @@ import {
   DollarSign, 
   Clock 
 } from 'lucide-react';
-import Navbar from './Navbar';
+import Navbar from '../shared/Navbar';
+import { navItems } from '../shared/NavbarItems';
 import { createJob } from '../../../api';
 import { JobFormSchema, JobFormData } from '../../../utils/validations/JobFormValidation';
 import { fetchListedCategories } from '../../../api';
@@ -56,13 +57,13 @@ const PostJob: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const navItems = [
-    { icon: <LayoutDashboard className="h-5 w-5" />, label: 'Overview', id: 'overview' },
-    { icon: <Briefcase className="h-5 w-5" />, label: 'Post a Job', id: 'post' },
-    { icon: <Users className="h-5 w-5" />, label: 'Talent', id: 'talent' },
-    { icon: <FileText className="h-5 w-5" />, label: 'Projects', id: 'projects' },
-    { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', id: 'messages' },
-  ];
+  // const navItems = [
+  //   { icon: <LayoutDashboard className="h-5 w-5" />, label: 'Overview', id: 'overview' },
+  //   { icon: <Briefcase className="h-5 w-5" />, label: 'Post a Job', id: 'post' },
+  //   { icon: <Users className="h-5 w-5" />, label: 'Talent', id: 'talent' },
+  //   { icon: <FileText className="h-5 w-5" />, label: 'Projects', id: 'projects' },
+  //   { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', id: 'messages' },
+  // ];
 
   const handleChange = (field: keyof JobFormData, value: string | number | string[]) => {
     setFormData((prev) => ({

@@ -9,6 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { categorySchema,CategoryFormData } from '../../utils/validations/CategoryValidation';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
+import { handleApiError } from '../../utils/errors/errorHandler';
 
 
 interface Category {
@@ -90,8 +91,8 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
       }
       onSave(categoryData);
       onClose();
-    } catch (error: any) {
-      const errorMessage = error.message || 'Failed to save category';
+    } catch (error) {
+      const errorMessage = handleApiError(error);
       toast.error(errorMessage, { id: toastId });
       setServerError(errorMessage);
       console.error('Error saving category:', error);
@@ -200,9 +201,10 @@ const CategoryManagement = () => {
           total: fetchedData.meta.total,
           pages: fetchedData.meta.pages,
         }));
-      } catch (error: any) {
-        setError(error.message);
-        toast.error(error.message || 'Failed to fetch categories');
+      } catch (error) {
+        const errormessage = handleApiError(error)
+        setError(errormessage);
+        toast.error(errormessage);
       } finally {
         setLoading(false);
       }
@@ -266,8 +268,8 @@ const CategoryManagement = () => {
       );
 
       toast.success(`Category ${newStatus ? 'listed' : 'unlisted'} successfully`);
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update category status');
+    } catch (error) {
+      toast.error(handleApiError(error));
       console.error('Error toggling category status:', error);
     }
   };
@@ -447,16 +449,17 @@ const CategoryManagement = () => {
                   Next
                 </button>
               </div> */}
-              <Stack spacing={2} alignItems="center" className="mt-4">
-                <Pagination
-                  count={pagination.pages}
-                  page={pagination.page}
-                  onChange={(event, value) => handlePageChange(value)}
-                  color="primary"
-                />
-              </Stack>
+            
             </div>
           </div>
+          <Stack spacing={2} alignItems="center" className="mt-4">
+            <Pagination
+              count={pagination.pages}
+              page={pagination.page}
+              onChange={(event, value) => handlePageChange(value)}
+              color="primary"
+            />
+          </Stack>
         </div>
         <CategoryModal
           isOpen={isModalOpen}

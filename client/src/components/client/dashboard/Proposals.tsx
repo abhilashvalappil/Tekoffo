@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Calendar, Filter, Eye, Check, X, ChevronDown, User, LayoutDashboard, Briefcase, ClipboardList, Users, FileText, MessageSquare } from 'lucide-react';
-import Navbar from './Navbar';
+import Navbar from '../shared/Navbar';
+import { navItems } from '../shared/NavbarItems';
 import { getReceivedProposals } from '../../../api';
 import { ProposalData } from '../../../types/proposalTypes';
 import { useNavigate } from 'react-router-dom';
@@ -69,15 +70,7 @@ const Proposals = () => {
 
   const navigate = useNavigate();
 
-  const navItems = [
-    { icon: <LayoutDashboard className="h-5 w-5" />, label: 'Overview', id: 'overview' },
-    { icon: <Briefcase className="h-5 w-5" />, label: 'Post a Job', id: 'post', path: '/client/post-job' },
-    { icon: <ClipboardList className="h-5 w-5" />, label: 'My Job Posts', id: 'my-jobs', path: '/client/myjobs' },
-    { icon: <Users className="h-5 w-5" />, label: 'Talent', id: 'talent', path: '/client/freelancers' },
-    { icon: <FileText className="h-5 w-5" />, label: 'Proposals', id: 'proposals', path: '/client/proposals' },
-    { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', id: 'messages' },
-  ];
-
+  
   //* Fetch proposals
   useEffect(() => {
     const loadProposals = async () => {

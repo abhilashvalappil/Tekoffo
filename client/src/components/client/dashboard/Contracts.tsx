@@ -1,7 +1,13 @@
+ 
 import { useEffect, useState } from 'react';
-import { Search, Calendar, Filter, ChevronDown } from 'lucide-react';
+import { Search, Calendar, Filter, ChevronDown, Briefcase,
+  LayoutDashboard,
+  MessageSquare,
+  Wallet,
+  FileText,
+  ScrollText, } from 'lucide-react';
 import { useFetchContracts } from '../../../hooks/useFetchContracts';
-import { submitContract, submitReview } from '../../../api';
+import { approveContract, submitReview } from '../../../api';
 import toast, { Toaster } from 'react-hot-toast';
 import Navbar from '../shared/Navbar';
 import { navItems } from '../shared/NavbarItems';
@@ -20,7 +26,7 @@ const Contracts = () => {
   const [activeTab, setActiveTab] = useState<string>('contracts');
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [pagination, setPagination] = useState({total: 0, page: 1, pages: 1,limit: 3,});
+  const [pagination, setPagination] = useState({total: 0,page: 1,pages: 1,limit: 3});
 
   const { contracts, loading, error, meta, refetch } = useFetchContracts(debouncedSearchTerm,pagination.page, pagination.limit ,statusFilter, timeFilter);
   
@@ -41,9 +47,9 @@ const handlePageChange = (newPage: number) => {
   }
 };
 
-  const handleApplyForApproval = async(contractId:string) => {
+  const handleContractWorkApprove = async(contractId:string,stripePaymentIntentId:string,transactionId:string) => {
     try{
-    const message  = await submitContract(contractId)
+    const message  = await approveContract(contractId,stripePaymentIntentId,transactionId)
     // console.log('checking contratmssggggggg',message)
     toast.success(message)
     refetch();
@@ -60,6 +66,10 @@ const handlePageChange = (newPage: number) => {
       toast.error(handleApiError(error));
     }
   }
+
+    
+
+   
 
   if (loading) return <p>Loading contracts...</p>;
   if (error) return <p>Error loading contracts: {error.message}</p>;
@@ -131,7 +141,7 @@ const handlePageChange = (newPage: number) => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contract</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Freelancer</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
@@ -144,7 +154,7 @@ const handlePageChange = (newPage: number) => {
                   {contracts.map((contract) => (
                     <tr key={contract._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{contract.jobId.title}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.clientId.fullName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.freelancerId.fullName}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">{new Date(contract.startedAt).toLocaleDateString()}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {contract.completedAt ? new Date(contract.completedAt).toLocaleDateString() : 'N/A'}
@@ -166,22 +176,18 @@ const handlePageChange = (newPage: number) => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                      {/* <button
-                        onClick={() => handleApplyForApproval(contract._id)}
-                        className="bg-blue-900 text-white text-xs px-2 py-1 rounded hover:bg-blue-800 transition"
-                      >
-                        Apply for Approval
-                      </button> */}
-                       {contract.contractStatus === 'active' ? (
+                       
+                       {contract.contractStatus === 'submitted' ? (
                         <button
-                          onClick={() => handleApplyForApproval(contract._id)}
-                          className="bg-blue-900 text-white text-xs px-3 py-1 rounded-md hover:bg-blue-800 shadow-sm transition"
-                        >
-                          Apply for Approval
-                        </button>
-                      ) : contract.contractStatus === 'submitted' ? (
+                        onClick={() => handleContractWorkApprove(contract._id,contract.stripePaymentIntentId,contract.transactionId)}
+                        className="bg-green-600 text-white text-xs px-3 py-1 rounded-md hover:bg-green-700 shadow-sm transition"
+                      >
+                        Approve
+                      </button>
+                      
+                      ) : contract.contractStatus === 'active' ? (
                         <span className="inline-block text-xs px-3 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white shadow-md animate-pulse">
-                          Waiting for Approval
+                          Waiting for submission
                         </span>
                       ) : (
                         // <span className="inline-block text-xs px-3 py-1 rounded-full bg-gradient-to-r from-green-400 to-emerald-600 text-white shadow-md">
@@ -199,9 +205,9 @@ const handlePageChange = (newPage: number) => {
                       open={isOpen}
                       onClose={() => setIsOpen(false)}
                       // onSubmit={handleReviewSubmit}
-                      onSubmit={(reviewData) => handleReviewSubmit(contract.clientId._id, reviewData,contract._id)}
+                      onSubmit={(reviewData) => handleReviewSubmit(contract.freelancerId._id, reviewData,contract._id)}
                     />
-                    </>
+                      </>
                       )}
                     </td>
                     </tr>

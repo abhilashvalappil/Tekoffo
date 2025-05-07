@@ -6,6 +6,7 @@ import { commonENDPOINTS } from '../../redux/services/api/endpointUrl';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../redux/store';
 import {register} from '../../redux/services/authService'
+import { handleApiError } from '../../utils/errors/errorHandler';
 
  
 
@@ -92,9 +93,9 @@ const VerifyOtp = () => {
       }else {
         setServerError(response.data.message || "Failed to resend OTP");
       }
-    }catch (error: any) {
-     setServerError(error.response?.data?.message || "Error resending OTP");
-      console.log("Error:", error.response);
+    }catch (error) {
+      const errormessage = handleApiError(error)
+     setServerError(errormessage);
    } finally {
      setIsLoading(false);
     }
@@ -128,8 +129,9 @@ const VerifyOtp = () => {
       }else if(register.rejected.match(result)){
         setServerError(result.payload as string)
       }
-    } catch (error: any) {
-      setServerError(error.response?.data?.message );
+    } catch (error) {
+      const errormessage = handleApiError(error)
+      setServerError(errormessage );
     } finally {
       setIsLoading(false);
     }

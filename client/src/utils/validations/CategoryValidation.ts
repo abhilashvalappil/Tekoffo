@@ -10,6 +10,9 @@ export const categorySchema = z.object({
     })
     .refine((val) => !/\s{2,}/.test(val), {
       message: 'Category name cannot have consecutive spaces',
+    })
+    .refine((val) => val.length >= 3, {
+      message: 'Category name must be at least 3 characters long',
     }),
     subcategories: z
     .string()
@@ -28,8 +31,15 @@ export const categorySchema = z.object({
       return subcategories.every((sub) => sub === sub.trim() && !/\s{2,}/.test(sub));
     }, {
       message: 'Subcategories cannot have leading/trailing spaces or consecutive spaces',
+    })
+    .refine((val) => {
+      const subcategories = val.split(',').map((sub) => sub.trim());
+      return subcategories.every((sub) => sub.length >= 3);
+    }, {
+      message: 'Each subcategory must be at least 3 characters long',
     }),
 });
+export type CategoryFormData = z.infer<typeof categorySchema>;
 //   subcategories: z
 //     .string()
 //     .min(1, 'At least one subcategory is required')
@@ -46,4 +56,3 @@ export const categorySchema = z.object({
 //     ),
 // });
 
-export type CategoryFormData = z.infer<typeof categorySchema>;

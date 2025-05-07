@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Mail, ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {resetPassword} from '../../api/common'
+import { handleApiError } from '../../utils/errors/errorHandler';
 
 const ForgotPasswod = () => {
   const [email, setEmail] = useState('');
@@ -26,8 +27,9 @@ const ForgotPasswod = () => {
         }else{
           setServerError(result.message)
         } 
-    } catch (error:any) {
-        setServerError(error.response?.data?.message || "Error sending OTP");
+    } catch (error) {
+      const errormessage = handleApiError(error)
+        setServerError(errormessage);
     }
     setIsSuccess(true);
     setIsLoading(false);

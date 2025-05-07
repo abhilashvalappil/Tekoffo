@@ -7,6 +7,7 @@ import { signinSchema } from '../../utils/validations/AuthValidation';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import {GoogleLogin,CredentialResponse } from '@react-oauth/google';
+import { handleApiError } from '../../utils/errors/errorHandler';
  
 
 interface FormData {
@@ -118,7 +119,8 @@ const validateForm = (): boolean => {
         setServerError(result.payload as string || 'Google Sign-In failed');
       }
     } catch (error) {
-      setServerError('Google authentication failed: ' + (error.message || 'Unknown error'));
+      const errormessage = handleApiError(error)
+      setServerError(errormessage);
     }
   };
 

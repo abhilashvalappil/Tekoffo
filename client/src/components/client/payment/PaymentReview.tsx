@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Clock, DollarSign, Briefcase, FileText, LayoutDashboard, ClipboardList, MessageSquare } from 'lucide-react';
-import Navbar from '../dashboard/Navbar';
+import Navbar from '../shared/Navbar';
 import { fetchProposal } from '../../../api';  
 import { ProposalData } from '../../../types/proposalTypes';
 import { loadStripe } from '@stripe/stripe-js';

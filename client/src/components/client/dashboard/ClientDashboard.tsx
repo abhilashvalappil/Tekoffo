@@ -9,27 +9,31 @@ import {
   Users,
   FileText,
   Clock,
+  ScrollText,
 } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {logout} from '../../../redux/services/authService'
 import { AppDispatch, RootState } from '../../../redux/store';
-import Navbar from './Navbar';
+import Navbar from '../shared/Navbar';
+import { navItems } from '../shared/NavbarItems';
 
 const ClientDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
  
 
-  const navItems = [
-    { icon: <LayoutDashboard className="h-5 w-5" />, label: 'Overview', id: 'overview' },
-    // { icon: <Briefcase className="h-5 w-5" />, label: 'Post a Job', id: 'post' },
-    { icon: <Briefcase className="h-5 w-5" />, label: 'Post a Job', id: 'post', path: '/client/post-job' },
-    { icon: <ClipboardList className="h-5 w-5" />, label: 'My Job Posts', id: 'my-jobs', path: '/client/myjobs' },
-    { icon: <Users className="h-5 w-5" />, label: 'Talent', id: 'talent', path: '/client/freelancers'  },
-    { icon: <FileText className="h-5 w-5" />, label: 'Proposals', id: 'proposals', path: '/client/proposals' },
-    // { icon: <FileText className="h-5 w-5" />, label: 'Projects', id: 'projects' },
-    { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', id: 'messages' },
-  ];
+  // const navItems = [
+  //   { icon: <LayoutDashboard className="h-5 w-5" />, label: 'Overview', id: 'overview' },
+  //   // { icon: <Briefcase className="h-5 w-5" />, label: 'Post a Job', id: 'post' },
+  //   { icon: <Briefcase className="h-5 w-5" />, label: 'Post a Job', id: 'post', path: '/client/post-job' },
+  //   { icon: <ClipboardList className="h-5 w-5" />, label: 'My Job Posts', id: 'my-jobs', path: '/client/myjobs' },
+  //   { icon: <Users className="h-5 w-5" />, label: 'Talent', id: 'talent', path: '/client/freelancers'  },
+  //   { icon: <FileText className="h-5 w-5" />, label: 'Proposals', id: 'proposals', path: '/client/proposals' },
+  //   // { icon: <FileText className="h-5 w-5" />, label: 'Projects', id: 'projects' },
+  //   { icon: <ScrollText className="h-5 w-5" />, label: 'Contracts', id: 'contracts', path: '/client/contracts' },
+
+  //   // { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', id: 'messages' },
+  // ];
 
   const userId = useSelector((state: RootState) => state.auth.user?._id || null)
   const user = useSelector((state: RootState) => state.auth.user)

@@ -11,6 +11,7 @@ import Stripe from "stripe";
 import dotenv from "dotenv";
 dotenv.config();
 import { v4 as uuidv4 } from 'uuid';
+import { PaginatedResponse } from "../types/commonTypes";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-03-31.basil' });
 
 
@@ -87,14 +88,27 @@ export class JobService implements IJobService{
         return {message:MESSAGES.JOB_DELETED_SUCCESSFULLY}
     }
 
-    async getMyJobPosts(clientId:string): Promise<{jobs:JobDataType[]}> {
+    async getMyJobPosts(clientId:string, page: number, limit: number): Promise<PaginatedResponse<JobDataType>> {
      
         const user = await this.userRepository.findUserById(clientId)
         if(!user){
             throw new NotFoundError(MESSAGES.INVALID_USER)
         }
-        const jobs = await this.jobRepository.findJobsByClientId(clientId);
-        return {jobs} ;
+        const skip = (page - 1) * limit;
+        const [jobs,total] = await Promise.all([
+            this.jobRepository.findJobsByClientId(clientId,skip, limit),
+            this.jobRepository.countJobs()
+        ]) 
+        // return {jobs} ;
+        return{
+            data: jobs,
+            meta:{
+                total,
+                page,
+                pages: Math.ceil(total / limit),
+                limit,
+            }
+        }
    }
 
    async getAllJobs(): Promise<{jobs:JobDataType[]}> {

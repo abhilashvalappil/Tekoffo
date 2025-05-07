@@ -16,10 +16,16 @@ export interface contractResponse {
         _id:string;
         fullName:string;
     }
+    freelancerId:{
+        _id:string;
+        fullName:string;
+    }
     jobId:{
         _id:string;
         title:string;
     }
+    stripePaymentIntentId:string;
+    transactionId:string;
     amount:number;
     contractStatus:'pending'| 'active'| 'submitted'|  'completed'| 'cancelled';
     startedAt:Date;

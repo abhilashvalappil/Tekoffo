@@ -13,6 +13,7 @@ import Proposals from "../components/client/dashboard/Proposals";
 import PaymentReview from "../components/client/payment/PaymentReview";
 // import PaymentForm from "../components/client/PaymentForm";
 import PaymentSuccess from "../pages/PaymentSuccess";
+import Contracts from "../components/client/dashboard/Contracts";
 
  
 const ClientRoutes = () => (
@@ -87,6 +88,14 @@ const ClientRoutes = () => (
       element={
         <ProtectedRoute allowedRoles={["client"]}>
           <Proposals />
+        </ProtectedRoute>
+     } />
+
+    <Route 
+      path="/client/contracts"
+      element={
+        <ProtectedRoute allowedRoles={["client"]}>
+          <Contracts />
         </ProtectedRoute>
      } />
 

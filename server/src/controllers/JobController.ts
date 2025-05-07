@@ -114,8 +114,20 @@ export class JobController {
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            const result = await this.jobService.getMyJobPosts(clientId);
-            res.status(Http_Status.OK).json({ success: true, result });
+
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 8;
+
+            if (isNaN(page) || page < 1){
+                res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid page number" });
+              }
+
+            if (isNaN(limit) || limit < 1){
+                res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
+            }
+
+            const paginatedResponse = await this.jobService.getMyJobPosts(clientId,page, limit);
+            res.status(Http_Status.OK).json({ success: true, paginatedResponse });
         } catch (error) {
             next(error)
         }

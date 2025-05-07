@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { MapPin, Tags, Mail, Globe, ChevronRight, Filter, Search, X, Home, Briefcase, Users, MessageSquare } from 'lucide-react';
 import { getAllFreelancers } from '../../../api';  
-import Navbar from './Navbar'; // Adjust the import path based on your file structure
+import Navbar from '../shared/Navbar';  
+import { navItems } from '../shared/NavbarItems';
 
 interface Freelancer {
   id: string;
@@ -35,12 +36,12 @@ const Freelancers = () => {
   const [activeTab, setActiveTab] = useState('freelancers');
 
   // Define navigation items for the Navbar
-  const navItems: NavItem[] = [
-    { icon: <Home size={20} />, label: 'Home', id: 'home', path: '/' },
-    { icon: <Briefcase size={20} />, label: 'Jobs', id: 'jobs', path: '/jobs' },
-    { icon: <Users size={20} />, label: 'Freelancers', id: 'freelancers', path: '/freelancers' },
-    { icon: <MessageSquare size={20} />, label: 'Messages', id: 'messages', path: '/messages' },
-  ];
+  // const navItems: NavItem[] = [
+  //   { icon: <Home size={20} />, label: 'Home', id: 'home', path: '/' },
+  //   { icon: <Briefcase size={20} />, label: 'Jobs', id: 'jobs', path: '/jobs' },
+  //   { icon: <Users size={20} />, label: 'Freelancers', id: 'freelancers', path: '/freelancers' },
+  //   { icon: <MessageSquare size={20} />, label: 'Messages', id: 'messages', path: '/messages' },
+  // ];
 
   // Fetch freelancers on component mount
   useEffect(() => {

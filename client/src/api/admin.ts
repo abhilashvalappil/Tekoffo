@@ -56,9 +56,7 @@ export const fetchCategories = async (page = 1, limit = 8): Promise<{
       const result = await API.get(adminENDPOINTS.GET_CATEGORIES, {
         params: { page, limit },
       });
-  
       return result.data;
-  
     } catch (error) {
         throw new Error(handleApiError(error));
     }

@@ -80,7 +80,6 @@ export class PaymentController {
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            console.log('console from createcontracttttt',req.body)
             const {transactionId} = req.body;
             await this.paymentService.createContract(transactionId)
         } catch (error) {
@@ -92,7 +91,7 @@ export class PaymentController {
         try {
             const userId = req.userId;
             if(!userId){
-                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
+                res.status(Http_Status.FORBIDDEN).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
             const {notifications} = await this.paymentService.getNotifications(userId)
@@ -110,9 +109,27 @@ export class PaymentController {
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            const {contracts} = await this.paymentService.getUserContracts(userId)
-            // console.log("console from getusercontracts controller", contracts)
-            res.status(Http_Status.OK).json(contracts)
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 8;
+
+            if (isNaN(page) || page < 1) {
+                res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid page number" });
+            }
+            if (isNaN(limit) || limit < 1) {
+                res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
+            }
+            
+            const { search = '', status = 'all', time = 'all' } = req.query;
+            const paginatedResponse = await this.paymentService.getUserContracts( 
+                userId,
+                page,
+                limit,
+                search as string,
+                status as string,
+                time as string
+            )
+            // console.log('console from payment controller contractssss',paginatedResponse)
+            res.status(Http_Status.OK).json(paginatedResponse)
         } catch (error) {
             next(error)
         }
@@ -135,18 +152,30 @@ export class PaymentController {
 
     async releasePayment(req: AuthRequest, res: Response, next: NextFunction): Promise<void>{
         try {
-
             const userId = req.userId;
             if(!userId){
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            console.log('releasepayment 4444444444444444oooofffffffffff',req.body)
-            const {paymentIntentId,transactionId} = req.body;
-
-            const {message} = await this.paymentService.releasePayment(paymentIntentId,transactionId)
-            console.log('console from releasepayment controller7777 :',message)
+            const {contractId,stripePaymentIntentId:paymentIntentId,transactionId} = req.body;
+            const {message} = await this.paymentService.releasePayment(contractId,paymentIntentId,transactionId)
             res.status(Http_Status.OK).json(message)
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async submitReviewAndRating(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const userId = req.userId;
+            if(!userId){
+                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
+                return;
+            }
+            // console.log('console from submit reviewwwwwwwwww',req.body)
+            const {reviewedUserId,reviewData,contractId} = req.body;
+            const {message} = await this.paymentService.submitReviewAndRating(userId,reviewedUserId,reviewData,contractId)
+            res.status(Http_Status.CREATED).json(message)
         } catch (error) {
             next(error)
         }

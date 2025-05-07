@@ -55,7 +55,6 @@ export const fetchAppliedProposalsByFreelancer = async(): Promise<AppliedProposa
 export const submitContract = async(contractId:string): Promise<string> => {
     try {
         const response = await API.post(userENDPOINTS.SUBMIT_CONTRACT,{contractId})
-        console.log('checking response applyapproval888855',response)
         return response.data;
     } catch (error) {
         throw new Error(handleApiError(error));

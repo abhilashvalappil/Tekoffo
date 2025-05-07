@@ -3,6 +3,7 @@ import socket from "../utils/socket";
 import { useDispatch } from "react-redux";
 import { logout } from "../redux/services/authService";   
 import { AppDispatch } from "../redux/store";
+import { useNavigate } from "react-router-dom";
 
 
 export interface User {
@@ -15,6 +16,7 @@ export interface User {
   
   export const useSocketConnection = (user: User | null) => {
     const dispatch = useDispatch<AppDispatch>();
+    const navigate = useNavigate();
   
     useEffect(() => {
       if (user?._id) {
@@ -24,8 +26,6 @@ export interface User {
         socket.emit("user:join", user._id);
   
         socket.on("user:blocked", async () => {
-          alert("Your account has been blocked.");
-  
           try {
             await dispatch(logout(user._id));  
           } catch (err) {
@@ -33,7 +33,8 @@ export interface User {
           }
   
           socket.disconnect();
-          window.location.href = "/signin";
+          // window.location.href = "/signin";
+          navigate("/blocked");
         });
       }
   
@@ -41,5 +42,5 @@ export interface User {
         socket.off("user:blocked");
         socket.disconnect();
       };
-    }, [user, dispatch]);
+    }, [user, dispatch, navigate]);
   };

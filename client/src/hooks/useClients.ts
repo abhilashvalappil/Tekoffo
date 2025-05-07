@@ -1,5 +1,6 @@
 import { useState } from "react";
 import API from "../services/api";
+import { handleApiError } from "../utils/errors/errorHandler";
  
 
 
@@ -20,16 +21,28 @@ import API from "../services/api";
 //     return { client, error, fetchClient };
 // }
 
+  interface Client {
+  id:string;
+  fullName:string;
+  profilePicture:string;
+  companyName:string;
+  country:string;
+  description:string;
+  email:string;
+  avatarUrl:string;
+
+}
+
 export function useClient() {
     const [client, setClient] = useState<Client | null>(null);
     const [error, setError] = useState<string | null>(null);
   
     const fetchClient = async (clientId: string) => {
       try {
-        console.log('checkingggggggggggggggg',clientId._id)
-        const response = await API.get(`/jobs/client?clientId=${clientId._id}`);
+        console.log('checkingg',clientId)
+        const response = await API.get(`/jobs/client?clientId=${clientId}`);
         // Transform API response to match Client interface
-        const clientData= {
+        const clientData : Client= {
           id: response.data._id,
           fullName: response.data.fullName,
           profilePicture: response.data.profilePicture,
@@ -37,15 +50,15 @@ export function useClient() {
           country: response.data.country,
           description: response.data.description,
           email: response.data.email,
-          avatarUrl: response.data.profilePicture, // Map profilePicture to avatarUrl
+          avatarUrl: response.data.profilePicture,  
         };
         setClient(clientData);
         setError(null);
          
         return clientData;  
-      } catch (error: any) {
-        console.error('Error fetching client:', error);
-        setError(error.message || 'Failed to fetch client');
+      } catch (error) {
+        const errormessage = handleApiError(error)
+        setError(errormessage);
         throw error;
       }
     };

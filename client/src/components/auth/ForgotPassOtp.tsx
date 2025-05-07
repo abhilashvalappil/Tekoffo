@@ -3,6 +3,7 @@ import { KeyRound } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import API from '../../redux/services/api/baseUrl';
 import { commonENDPOINTS } from '../../redux/services/api/endpointUrl';
+import { handleApiError } from '../../utils/errors/errorHandler';
 
 const ForgotPasswordOtp =()=> {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -87,9 +88,9 @@ const ForgotPasswordOtp =()=> {
     }else {
       setServerError(response.data.message || "Failed to resend OTP");
     }
-  }catch (error: any) {
-    setServerError(error.response?.data?.message || "Error resending OTP");
-    console.log("Error:", error.response);
+  }catch (error) {
+    const errormessage = handleApiError(error)
+    setServerError(errormessage);
   } finally {
     setIsLoading(false);
   }
@@ -114,8 +115,9 @@ const ForgotPasswordOtp =()=> {
       if (response.data.success) {
         navigate('/reset-password',{ state: { email:email } });
       }
-    } catch (error: any) {
-      setServerError(error.response?.data?.message );
+    } catch (error) {
+      const errormessage = handleApiError(error)
+      setServerError(errormessage);
     } finally {
       setIsLoading(false);
     }

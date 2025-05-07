@@ -1,15 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Filter, Calendar, ChevronDown, ChevronUp,  Clock,
-    Briefcase,
-     
-    LayoutDashboard,
-    Send,
-    MessageSquare,
-    Wallet,
-    FileText,
-      } from 'lucide-react';
+import { Filter, ChevronDown, ChevronUp,Briefcase,LayoutDashboard,MessageSquare,Wallet,FileText,ScrollText} from 'lucide-react';
 import { fetchAppliedProposalsByFreelancer } from '../../../api';
-import Navbar from './Navbar';
+import Navbar from '../shared/Navbar';
+import { navItems } from '../shared/NavbarItems';
 
 // Define types
 type ProposalStatus = 'accepted' | 'rejected' | 'pending';
@@ -145,16 +138,7 @@ const FreelancerProposals: React.FC = () => {
     
     return true;
   });
-
-   //* Navigation items
-    const navItems = [
-      { icon: <LayoutDashboard className="h-5 w-5" />, label: 'Overview', id: 'overview', path: '/freelancer-dashboard' },
-      { icon: <Briefcase className="h-5 w-5" />, label: 'Find Jobs', id: 'jobs', path: '/freelancer/jobs' },
-      { icon: <FileText className="h-5 w-5" />, label: 'Proposals', id: 'proposals' },
-      { icon: <Clock className="h-5 w-5" />, label: 'Active Jobs', id: 'active' },
-      { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', id: 'messages' },
-      { icon: <Wallet className="h-5 w-5" />, label: 'Earnings', id: 'earnings' },
-    ];
+ 
 
   return (
     <div className="w-full   bg-white">
@@ -163,10 +147,6 @@ const FreelancerProposals: React.FC = () => {
         setActiveTab={setActiveTab}
         isMenuOpen={isMenuOpen}
         setIsMenuOpen={setIsMenuOpen}
-        // isProfileOpen={isProfileOpen}
-        // setIsProfileOpen={setIsProfileOpen}
-        // user={user}
-        // handleLogout={handleLogout}
         navItems={navItems}
       />
       <h1 className="mb-8 pt-20 text-2xl font-bold text-[#0A142F]">Sent Proposals</h1>

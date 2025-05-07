@@ -2,8 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { Briefcase, Tags, DollarSign, Calendar, ChevronRight, Filter, Search, X, Trash2, Home, FileText, PlusCircle } from 'lucide-react';
 import { updateJobPost, deleteJobPost, fetchJobs } from '../../../api';
-import Navbar from './Navbar';
+import Navbar from '../shared/Navbar';
+import { navItems } from '../shared/NavbarItems';
 import { JobFormSchema, JobFormData } from '../../../utils/validations/JobFormValidation';
+import { handleApiError } from '../../../utils/errors/errorHandler';
+import Pagination from '@mui/material/Pagination';
+import Stack from '@mui/material/Stack';
 
 interface JobPost {
   id: string;
@@ -36,24 +40,31 @@ const MyJobPosts = () => {
   const [activeTab, setActiveTab] = useState('my-jobs');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobPost | null>(null);
+   const [pagination, setPagination] = useState({
+      total: 0,
+      page: 1,
+      pages: 1,
+      limit: 3,
+    });
 
   const categoryMap: { [key: string]: string } = {
     '1744261565186': 'Data Analysis',
     'Design': 'Design',
   };
 
-  const navItems: NavItem[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: <Home size={16} />, path: '/client-dashboard' },
-    { id: 'my-jobs', label: 'My Jobs', icon: <FileText size={16} />, path: '/client/jobs' },
-    { id: 'post-job', label: 'Post a Job', icon: <PlusCircle size={16} />, path: '/client/post-job' },
-  ];
+  // const navItems: NavItem[] = [
+  //   { id: 'dashboard', label: 'Dashboard', icon: <Home size={16} />, path: '/client-dashboard' },
+  //   { id: 'my-jobs', label: 'My Jobs', icon: <FileText size={16} />, path: '/client/jobs' },
+  //   { id: 'post-job', label: 'Post a Job', icon: <PlusCircle size={16} />, path: '/client/post-job' },
+  // ];
 
   useEffect(() => {
     const loadJobs = async () => {
       try {
         setLoading(true);
-        const data = await fetchJobs();
-        const jobsArray = Array.isArray(data?.result?.jobs) ? data.result.jobs : [];
+        const  paginatedResponse   = await fetchJobs(pagination.page, pagination.limit);
+        // const jobsArray = Array.isArray(data?.result?.jobs) ? data.result.jobs : [];
+        const jobsArray = Array.isArray(paginatedResponse.data) ? paginatedResponse.data : [];
         const mappedJobs: JobPost[] = jobsArray.map((job: any) => ({
           id: job._id || '',
           title: job.title || 'Untitled Job',
@@ -70,14 +81,20 @@ const MyJobPosts = () => {
           status: job.status || 'open',
         }));
         setMyJobPosts(mappedJobs);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load job posts');
+        setPagination((prev) => ({
+          ...prev,
+          total: paginatedResponse.meta.total,
+          pages: paginatedResponse.meta.pages,
+        }));
+      } catch (err) {
+        const errormessage = handleApiError(err)
+        setError(errormessage);
       } finally {
         setLoading(false);
       }
     };
     loadJobs();
-  }, []);
+  }, [pagination.page, pagination.limit]);
 
   const categories = [...new Set(myJobPosts.map(job => job.category))];
   const subCategories = [...new Set(myJobPosts.map(job => job.subCategory))];
@@ -91,8 +108,8 @@ const MyJobPosts = () => {
       await deleteJobPost(id)
       setMyJobPosts(myJobPosts.filter(job => job.id !== id));
       toast.success('Job post deleted successfully!');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete job post');
+    } catch (error) {
+      toast.error(handleApiError(error));
     }
   };
 
@@ -108,8 +125,17 @@ const MyJobPosts = () => {
       setIsModalOpen(false);
       setSelectedJob(null);
       toast.success('Job post updated successfully!');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update job post');
+    } catch (error) {
+      toast.error(handleApiError(error));
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage > 0 && newPage <= pagination.pages) {
+      setPagination((prev) => ({
+        ...prev,
+        page: newPage,
+      }));
     }
   };
 
@@ -476,6 +502,14 @@ const MyJobPosts = () => {
             )}
           </div>
         </div>
+        <Stack spacing={2} alignItems="center" className="mt-4">
+            <Pagination
+              count={pagination.pages}
+              page={pagination.page}
+              onChange={(event, value) => handlePageChange(value)}
+              color="primary"
+            />
+          </Stack>
       </div>
       {isModalOpen && selectedJob && (
         <EditJobModal job={selectedJob} onSave={handleSaveJob} onClose={handleCloseModal} />

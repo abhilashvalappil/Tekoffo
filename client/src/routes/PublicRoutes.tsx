@@ -9,6 +9,7 @@ import ResetPassword from "../components/auth/ResetPassword";
 import Landing from "../components/Home/Landing";
 import PublicLayout from "./PublicLayout";
 import NotFound from "../pages/NotFound";
+import AccountBlockedPage from "../pages/AccountBlockedPage";
  
 
 
@@ -23,6 +24,8 @@ const PublicRoutes = () => (
         <Route path="/forgot-password" element={<ForgotPasswod />} />
         <Route path="/forgot-password-otp" element={<ForgotPasswordOtp />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/blocked" element={<AccountBlockedPage />} />
+
       </Route>
         <Route path="*" element={<NotFound />} />
     </>

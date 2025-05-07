@@ -20,6 +20,7 @@ import Table from './Table';
 import Sidebar from './Sidebar';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
+import { handleApiError } from '../../utils/errors/errorHandler';
 
 interface User {
   _id: string;
@@ -78,8 +79,9 @@ function AdminDash() {
           pages: response.meta.pages,
         }));
         setTotalCount(response.meta.total);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err) {
+        const errormessage = handleApiError(err)
+        setError(errormessage);
       } finally {
         setLoading(false);
       }
@@ -96,8 +98,8 @@ function AdminDash() {
           user._id === updatedUser.userId ? { ...user, isBlocked: updatedUser.isBlocked } : user
         )
       );
-    } catch (error: any) {
-      console.error("Error updating user status:", error.message);
+    } catch (error) {
+      handleApiError(error)
     }
   }
 
@@ -401,15 +403,16 @@ function AdminDash() {
               </table>
             </div> */}
              <Table data={users} columns={columns} />
-             <Stack spacing={2} alignItems="center" className="mt-4">
-  <Pagination
-    count={pagination.pages}
-    page={pagination.page}
-    onChange={(event, value) => handlePageChange(value)}
-    color="primary"
-  />
-</Stack>
+           
           </div>
+          <Stack spacing={2} alignItems="center" className="mt-4">
+          <Pagination
+            count={pagination.pages}
+            page={pagination.page}
+            onChange={(event, value) => handlePageChange(value)}
+            color="primary"
+          />
+        </Stack>
         </div>
       </main>
     </div>

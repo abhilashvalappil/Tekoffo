@@ -22,6 +22,7 @@ import { upload } from '../utils/cloudinary';
 import { uploadProposal } from "../utils/cloudinary";
 import { PaymentService } from "../services/PaymentService";
 import NotificationRepository from "../repositories/NotificationRepository";
+import ReviewRepository from "../repositories/ReviewRepository";
 
 const userRouter = Router();
 
@@ -34,7 +35,7 @@ const userService = new UserService(UserRepository,CategoryRepository,JobReposit
 const userController = new UserController(userService);
 const jobService = new JobService(CategoryRepository,UserRepository,JobRepository,ProposalRepository)
 const jobController = new JobController(jobService)
-const paymentService = new PaymentService(UserRepository,JobRepository,ProposalRepository,PaymentRepository,ContractRepository, NotificationRepository)
+const paymentService = new PaymentService(UserRepository,JobRepository,ProposalRepository,PaymentRepository,ContractRepository, NotificationRepository, ReviewRepository)
 const paymentController = new PaymentController(paymentService)
 
 
@@ -66,7 +67,7 @@ userRouter.get('/check-stripe-account',authMiddleware,authorizeRole('freelancer'
 userRouter.get('/notifications',authMiddleware,authorizeRole('freelancer'),paymentController.getNotifications.bind(paymentController))
 userRouter.put('/notifications/:id/read',authMiddleware,authorizeRole('freelancer'),paymentController.markNotificationAsRead.bind(paymentController))
 userRouter.put('/notifications/read-all',authMiddleware,authorizeRole('freelancer'),paymentController.markAllNotificationsAsRead.bind(paymentController))
-userRouter.get('/contracts',authMiddleware,authorizeRole('freelancer'),paymentController.getUserContracts.bind(paymentController))
+userRouter.get('/contracts',authMiddleware,authorizeRole(['freelancer', 'client']),paymentController.getUserContracts.bind(paymentController))
 userRouter.post('/contracts/submit',authMiddleware,authorizeRole('freelancer'),paymentController.submitContractForApproval.bind(paymentController))
 
 
@@ -94,6 +95,8 @@ userRouter.post('/webhook', express.raw({ type: 'application/json' }),userContro
 userRouter.post('/create-payment-intent',authMiddleware,authorizeRole('client'),paymentController.createPaymentIntend.bind(paymentController))
 userRouter.post('/create-contract',authMiddleware,authorizeRole('client'),paymentController.createContract.bind(paymentController))
 userRouter.post('/release-payment',authMiddleware,authorizeRole('client'),paymentController.releasePayment.bind(paymentController))
+userRouter.post('/api/reviews',authMiddleware,authorizeRole('client'),paymentController.submitReviewAndRating.bind(paymentController))
+ 
 
  
 

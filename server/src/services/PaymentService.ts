@@ -1,17 +1,18 @@
 import bcrypt from "bcrypt";
-import { IUserService,IUserRepository,ProfileFormData,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser, IPaymentService, CreateContractDTO, INotification, IContract, status,  } from "../interfaces";
+import { IUserService,IUserRepository,ProfileFormData,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser, IPaymentService, CreateContractDTO, INotification, IContract, status, CreateReviewDTO  } from "../interfaces";
 import {MESSAGES} from '../constants/messages'
 import { CustomError, NotFoundError, UnauthorizedError } from "../errors/customErrors";
 import { FreelancerData, JobDataType, JobInputData, JobUpdateData } from '../interfaces/entities/IJob';
 import { proposalDataType } from "../types/jobTypes";
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { IProposal } from "../interfaces/entities/IProposal";
-import { IPaymentRepository,IContractRepository,INotificationRepository } from "../interfaces"; 
+import { IPaymentRepository,IContractRepository,INotificationRepository,IReviewRepository } from "../interfaces"; 
 import Stripe from "stripe";
 import dotenv from "dotenv";
 dotenv.config();
 import { v4 as uuidv4 } from 'uuid';
 import { getIO } from '../config/socket';
+import { PaginatedResponse } from "../types/commonTypes";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-03-31.basil' });
 
 export class PaymentService implements IPaymentService {
@@ -21,16 +22,18 @@ export class PaymentService implements IPaymentService {
     private paymentRepository: IPaymentRepository;
     private contractRepository:IContractRepository;
     private notificationRepository:INotificationRepository;
+    private reviewRepository:IReviewRepository;
     private stripe: Stripe;
 
 
-    constructor(userRepository: IUserRepository, jobRepository: IJobRepository, proposalRepository:IProposalRepository, paymentRepository: IPaymentRepository, contractRepository:IContractRepository, notificationRepository:INotificationRepository){
+    constructor(userRepository: IUserRepository, jobRepository: IJobRepository, proposalRepository:IProposalRepository, paymentRepository: IPaymentRepository, contractRepository:IContractRepository, notificationRepository:INotificationRepository, reviewRepository:IReviewRepository){
         this.userRepository = userRepository;
         this.jobRepository = jobRepository;
         this.proposalRepository = proposalRepository;
         this.paymentRepository = paymentRepository;
         this.contractRepository = contractRepository;
         this.notificationRepository = notificationRepository;
+        this.reviewRepository = reviewRepository;
         this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-03-31.basil' });
     }
 
@@ -132,7 +135,7 @@ export class PaymentService implements IPaymentService {
         const payment = await this.paymentRepository.findTransaction(transferId)
 
         if (!payment) {
-            throw new NotFoundError('Payment not found');
+            throw new NotFoundError(MESSAGES.TRANSACTION_NOT_FOUND);
           }
 
         const {
@@ -183,10 +186,8 @@ export class PaymentService implements IPaymentService {
             id: createdNotification._id.toString(),
             message
         })
-
         console.log('Notification sent to freelancer', message);
-
-        return{message:'Contract created and notification sent'}
+        return{message:MESSAGES.CONTRACT_CREATED}
     }
 
     async getNotifications(userId:string): Promise<{notifications:INotification[]}> {
@@ -206,20 +207,35 @@ export class PaymentService implements IPaymentService {
         return {message:'All Notifications are marked as read'}
     }
 
-    async getUserContracts(userId:string): Promise<{contracts:IContract[]}> {
+    async getUserContracts(userId:string, page: number, limit: number, search: string,status: string,time: string): Promise<PaginatedResponse<IContract>> {
         const user = await this.userRepository.findUserById(userId)
-        let contracts: IContract[] = [];
         if(!user){
             throw new NotFoundError(MESSAGES.UNAUTHORIZED)
         }
-        if(user && user.role == 'freelancer'){
-            contracts = await this.contractRepository.findContractsByFreelancerId(userId)
+        const skip = (page - 1) * limit;
+        let contracts: IContract[] = [];
+        let total = 0;
+
+        if(user.role == 'freelancer'){
+            [contracts ,total] = await Promise.all([
+                this.contractRepository.findContractsByFreelancerId(userId,skip, limit, search, status, time),
+                this.contractRepository.countContracts(),
+            ]) 
         }
         
-        if(user && user.role == 'client'){
-            contracts = await this.contractRepository.findContractsByClientId(userId)
+        if(user.role == 'client'){
+            // contracts = await this.contractRepository.findContractsByClientId(userId)
+            [contracts ,total] = await Promise.all([
+                this.contractRepository.findContractsByClientId(userId,skip, limit, search, status, time),
+                this.contractRepository.countContracts(),
+            ]) 
         }
-        return {contracts}
+        
+        
+        return {
+            data: contracts,
+            meta: {total, page, pages: Math.ceil(total / limit), limit,},
+        };
     }
 
     async submitContractForApproval(freelancerId:string,contractId:string): Promise<{message:string}> {
@@ -236,16 +252,47 @@ export class PaymentService implements IPaymentService {
     }
 
 
-
-    async releasePayment(paymentIntentId:string,transactionId:string): Promise<{message:string}>{
+    async releasePayment(contractId:string,paymentIntentId:string,transactionId:string): Promise<{message:string}>{
+        console.log('console from serviceeeee releasepayment',paymentIntentId)
+        const contractExist = await this.contractRepository.findContractById(contractId)
+        if(!contractExist){
+            throw new NotFoundError(MESSAGES.CONTRACT_NOT_FOUND)
+        }
         const transaction = await this.paymentRepository.findTransaction(transactionId)
         if (!transaction) {
-            throw new NotFoundError('Transaction not found');
+            throw new NotFoundError(MESSAGES.TRANSACTION_NOT_FOUND);
           }
 
         await stripe.paymentIntents.capture(paymentIntentId);
         await this.paymentRepository.updatePaymentStatus(transaction._id.toString() ,'released')
-        return{message:"payment released successfully"}
+        await this.contractRepository.updateContractStatus(contractId,status.Completed)
+        await this.jobRepository.updateJobPost(contractExist.jobId.toString(),{status:'completed'})
+        return{message:MESSAGES.PAYMENT_RELEASED}
+    }
+
+    async submitReviewAndRating(userId:string,reviewedUserId:string,reviewData:{ rating: number; review: string },contractId:string): Promise<{message:string}> {
+        console.log('checkinggssssss',reviewedUserId)
+        const reviewedUserIdExist = await this.userRepository.findUserById(reviewedUserId);
+        if(!reviewedUserIdExist){
+            throw new NotFoundError(MESSAGES.INVALID_USER)
+        }
+        const contract = await this.contractRepository.findContractById(contractId)
+        if(!contract){
+            throw new NotFoundError(MESSAGES.CONTRACT_NOT_FOUND)
+        }
+        const jobId = contract.jobId.toString()
+         
+        const reviewDatas:CreateReviewDTO  = {
+            reviewerId: new mongoose.Types.ObjectId(userId),
+            reviewedUserId : new mongoose.Types.ObjectId(reviewedUserId),
+            rating: reviewData.rating,
+            reviewText:reviewData.review,
+            contractId: new mongoose.Types.ObjectId(contractId),
+            jobId:new mongoose.Types.ObjectId(jobId) 
+        }
+
+        await this.reviewRepository.createReviewAndRating(reviewDatas)
+        return{message:MESSAGES.REVIEW_SUBMITTED}
     }
 
 }

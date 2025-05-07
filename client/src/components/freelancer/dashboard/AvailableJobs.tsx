@@ -1,29 +1,13 @@
 
 import React, { useState, useMemo } from 'react';
-import {
-  Clock,
-  Briefcase,
-  Tags,
-  DollarSign,
-  Calendar,
-  ChevronRight,
-  Filter,
-  Search,
-  X,
-  LayoutDashboard,
-  Send,
-  MessageSquare,
-  Wallet,
-  Building2,
-  MapPin,
-  User,
-} from 'lucide-react';
+import {Clock,Briefcase,Tags,DollarSign,Calendar,ChevronRight,Filter,Search,X,Building2,MapPin,User,} from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../../redux/services/authService';
 import { persistor, RootState } from '../../../redux/store';
 import { useJobs } from '../../../hooks/useJobs';
-import Navbar from './Navbar';
+import Navbar from '../shared/Navbar';
+import { navItems } from '../shared/NavbarItems';
 import JobDetailsModal from './JobApply';
 import { userENDPOINTS } from '../../../constants/endpointUrl';
 import { useClient } from '../../../hooks/useClients';
@@ -34,7 +18,14 @@ import { checkStripeAccount } from '../../../api';
 //* Interface for job data
 interface Job {
   id: string;
-  clientId:string;
+  // clientId:string;
+  clientId:{
+    _id:string;
+        fullName:string;
+        profilePicture?:string;
+        companyName?:string;
+        country:string;
+  }
   title: string;
   category: string;
   subcategory: string;
@@ -52,7 +43,14 @@ interface Job {
 //* Interface for raw job data from API
 interface RawJob {
   _id: string;
-  clientId:string;
+  // clientId:string;
+  clientId:{
+    _id:string;
+        fullName:string;
+        profilePicture?:string;
+        companyName?:string;
+        country:string;
+  }
   title: string;
   category: string;
   subCategory: string;
@@ -96,9 +94,7 @@ const getPostedTime = (createdAt: string): string => {
   return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 };
 
-/**
- * AvailableJobs component displays a list of job postings with filters and modal for job details
- */
+ 
 const AvailableJobs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [showFilters, setShowFilters] = useState<boolean>(false);
@@ -118,11 +114,11 @@ const AvailableJobs: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  //* Fetch jobs customhook
+  //* Fetch jobs and client customhooks
   const { jobs: rawJobs, loading, error } = useJobs(userENDPOINTS.GET_POSTED_JOBS);
   const {client,fetchClient} = useClient()
 
-  // console.log('console from available jos.tsx :', rawJobs)
+  
 
   
   // Transform raw job data
@@ -188,7 +184,7 @@ const AvailableJobs: React.FC = () => {
    
   const handleView = async (job: Job) => {
     try {
-      const clientData = await fetchClient(job.clientId);  
+      const clientData = await fetchClient(job.clientId._id);  
       setSelectedClient(clientData);  
       setIsClientModalOpen(true); 
     } catch (error) {
@@ -203,28 +199,16 @@ const AvailableJobs: React.FC = () => {
     e.preventDefault()
 
     const hasStripeAccount = await checkStripeAccount();
-    // console.log('workinggggggggggggggggggggg',hasStripeAccount)
     if(!hasStripeAccount){
       navigate('/freelancer/complete-onboarding');
       return;
-      // const result = await  createConnectedStripeAccount(user?.email)
-      // console.log('createConnectedStripeAccount returned:', result);
-      // window.location.href = result.onboardingLink;
     }
 
     setSelectedJob(job);
     setIsModalOpen(true);
   };
 
-  //* Navigation items
-  const navItems = [
-    { icon: <LayoutDashboard className="h-5 w-5" />, label: 'Overview', id: 'overview', path: '/freelancer-dashboard' },
-    { icon: <Briefcase className="h-5 w-5" />, label: 'Find Jobs', id: 'jobs', path: '/freelancer/jobs' },
-    { icon: <Send className="h-5 w-5" />, label: 'Proposals', id: 'proposals' },
-    { icon: <Clock className="h-5 w-5" />, label: 'Active Jobs', id: 'active' },
-    { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', id: 'messages' },
-    { icon: <Wallet className="h-5 w-5" />, label: 'Earnings', id: 'earnings' },
-  ];
+   
 
   // Loading and error states
   if (loading) {
@@ -399,37 +383,37 @@ const AvailableJobs: React.FC = () => {
                   </div>
 
                    {/* Client Profile Preview */}
-      <div className="bg-gray-50 rounded-lg p-4 mb-4">
-        <div className="flex items-start gap-4">
-          <img 
-            src={job.clientId?.profilePicture || 'https://via.placeholder.com/48'} 
-            // alt={client.name}
-            alt="Client"
-            className="w-12 h-12 rounded-full object-cover"
-          />
-          <div className="flex-1">
-            <h4 className="font-semibold text-[#0A142F]">{job.clientId?.fullName}</h4>
-            {/* <p className="text-sm text-[#0A142F]/70">{client.title}</p> */}
-            <div className="flex flex-wrap gap-3 mt-2 text-sm text-[#0A142F]/70">
-              <div className="flex items-center gap-1">
-                <Building2 size={14} />
-                <span>{job.clientId?.companyName || 'No Company name provided'}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <MapPin size={14} />
-                {/* <span>{client.location}</span> */}
-              </div>
-            </div>
-          </div>
-          <button
-            onClick={() => handleView(job)}
-            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
-          >
-            <User size={16} />
-            <span className="text-sm font-medium">View Profile</span>
-          </button>
-        </div>
-      </div>
+                  <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                    <div className="flex items-start gap-4">
+                      <img 
+                        src={job.clientId?.profilePicture || 'https://via.placeholder.com/48'} 
+                        // alt={client.name}
+                        alt="Client"
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-[#0A142F]">{job.clientId?.fullName}</h4>
+                        {/* <p className="text-sm text-[#0A142F]/70">{client.title}</p> */}
+                        <div className="flex flex-wrap gap-3 mt-2 text-sm text-[#0A142F]/70">
+                          <div className="flex items-center gap-1">
+                            <Building2 size={14} />
+                            <span>{job.clientId.companyName || 'No Company name provided'}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MapPin size={14} />
+                            <span>{job.clientId.country}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleView(job)}
+                        className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
+                      >
+                        <User size={16} />
+                        <span className="text-sm font-medium">View Profile</span>
+                      </button>
+                    </div>
+                  </div>
 
                   <p className="text-[#0A142F]/70 mb-4 line-clamp-2">{job.description}</p>
 

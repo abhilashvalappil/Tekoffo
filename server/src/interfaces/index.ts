@@ -4,6 +4,7 @@ export * from './entities/ICategory'
 export * from './entities/IPayment'
 export * from './entities/IContract'
 export * from './entities/INotification'
+export * from './entities/IReview'
  
 
 
@@ -27,3 +28,4 @@ export * from './repositoryInterfaces/IProposalRepository';
 export * from './repositoryInterfaces/IPaymentRepository';
 export * from './repositoryInterfaces/IContractRepository'
 export * from './repositoryInterfaces/INotificationRepository'
+export * from './repositoryInterfaces/IReviewRepository'
