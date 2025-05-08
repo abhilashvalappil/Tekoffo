@@ -7,7 +7,7 @@ import AdminRoutes from './routes/AdminRoutes'
 import PublicRoutes from './routes/PublicRoutes'
 import ClientRoutes from './routes/ClientRoutes'
 import FreelancerRoutes from './routes/FreelancerRoutes';
-import { useSocketConnection } from './hooks/useSocket';
+import { useSocketConnection } from './hooks/customhooks/useSocket';
 
  
   const App: React.FC = () => {

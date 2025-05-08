@@ -54,6 +54,7 @@ export interface AppliedProposal {
     fullName: string;
   };
   proposedBudget: number;
+  proposalType: string;
   duration: string;
   status: 'accepted' | 'rejected' | 'pending';
   createdAt: string;

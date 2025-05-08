@@ -52,7 +52,7 @@ export class JobController {
               }
               const jobData = validationResult.data;
               const {message} = await this.jobService.createJob(clientId,jobData)
-              res.status(Http_Status.CREATED).json({success:true, message})
+              res.status(Http_Status.CREATED).json(message)
         } catch (error) {
             next(error)
         }
@@ -140,8 +140,18 @@ export class JobController {
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-             const {jobs} = await this.jobService.getAllJobs();
-             res.status(Http_Status.OK).json({success:true, jobs})
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 8;
+
+            if (isNaN(page) || page < 1) {
+                res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid page number" });
+             }
+            if (isNaN(limit) || limit < 1) {
+                res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
+             }
+            
+             const {jobs} = await this.jobService.getAllJobs(page, limit);
+             res.status(Http_Status.OK).json(jobs)
         } catch (error) {
             next(error)
         }
@@ -199,7 +209,18 @@ export class JobController {
                     res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                     return;
                 }
-                const { proposals } = await this.jobService.getClientReceivedProposals(clientId)
+
+                const page = parseInt(req.query.page as string) || 1;
+                const limit = parseInt(req.query.limit as string) || 8;
+
+                if (isNaN(page) || page < 1) {
+                    res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid page number" });
+                }
+                if (isNaN(limit) || limit < 1) {
+                    res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
+                }
+
+                const { proposals } = await this.jobService.getClientReceivedProposals(clientId,page,limit)
                 res.status(Http_Status.OK).json(proposals);
             } catch (error) {
                 next(error)
@@ -251,7 +272,16 @@ export class JobController {
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            const {proposals} = await this.jobService.getFreelancerAppliedProposals(freelancerId)
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 8;
+
+            if (isNaN(page) || page < 1) {
+                res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid page number" });
+            }
+            if (isNaN(limit) || limit < 1) {
+                res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
+            }
+            const {proposals} = await this.jobService.getFreelancerAppliedProposals(freelancerId,page,limit)
             res.status(Http_Status.OK).json({proposals})
         } catch (error) {
             next(error)

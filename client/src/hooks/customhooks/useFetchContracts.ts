@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
-import API from "../services/api";
-import { userENDPOINTS } from "../constants/endpointUrl";
-import { contractResponse } from "../types/paymentTypes";
+import API from "../../services/api";
+import { userENDPOINTS } from "../../constants/endpointUrl";
+import { contractResponse } from "../../types/paymentTypes";
 
 
 export const useFetchContracts = (search: string,page = 1,limit = 3,  statusFilter: string, timeFilter: string) => {

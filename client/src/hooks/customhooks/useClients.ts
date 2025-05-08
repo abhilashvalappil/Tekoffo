@@ -1,6 +1,6 @@
 import { useState } from "react";
-import API from "../services/api";
-import { handleApiError } from "../utils/errors/errorHandler";
+import API from "../../services/api";
+import { handleApiError } from "../../utils/errors/errorHandler";
  
 
 

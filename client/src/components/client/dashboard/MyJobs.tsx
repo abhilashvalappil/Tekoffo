@@ -6,6 +6,7 @@ import Navbar from '../shared/Navbar';
 import { navItems } from '../shared/NavbarItems';
 import { JobFormSchema, JobFormData } from '../../../utils/validations/JobFormValidation';
 import { handleApiError } from '../../../utils/errors/errorHandler';
+import { usePagination } from '../../../hooks/customhooks/usePagination';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 
@@ -40,12 +41,11 @@ const MyJobPosts = () => {
   const [activeTab, setActiveTab] = useState('my-jobs');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<JobPost | null>(null);
-   const [pagination, setPagination] = useState({
-      total: 0,
-      page: 1,
-      pages: 1,
-      limit: 3,
-    });
+  const {
+    pagination,
+    handlePageChange,
+    updateMeta,
+  } = usePagination({ total: 0, page: 1, pages: 1, limit: 4 });
 
   const categoryMap: { [key: string]: string } = {
     '1744261565186': 'Data Analysis',
@@ -81,11 +81,7 @@ const MyJobPosts = () => {
           status: job.status || 'open',
         }));
         setMyJobPosts(mappedJobs);
-        setPagination((prev) => ({
-          ...prev,
-          total: paginatedResponse.meta.total,
-          pages: paginatedResponse.meta.pages,
-        }));
+         updateMeta(paginatedResponse.meta.total,  paginatedResponse.meta.pages);
       } catch (err) {
         const errormessage = handleApiError(err)
         setError(errormessage);
@@ -130,14 +126,7 @@ const MyJobPosts = () => {
     }
   };
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage > 0 && newPage <= pagination.pages) {
-      setPagination((prev) => ({
-        ...prev,
-        page: newPage,
-      }));
-    }
-  };
+   
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -506,7 +495,7 @@ const MyJobPosts = () => {
             <Pagination
               count={pagination.pages}
               page={pagination.page}
-              onChange={(event, value) => handlePageChange(value)}
+              onChange={(_, value) => handlePageChange(value)}
               color="primary"
             />
           </Stack>

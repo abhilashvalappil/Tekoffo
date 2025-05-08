@@ -60,12 +60,15 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
         ]);
     }
     
+    async countProposals(): Promise<number> {
+        return await this.count();   
+      }
     
-    async findProposals(clientId:string): Promise<IProposal[]> {
+    async findProposals(clientId:string,skip: number, limit: number): Promise<IProposal[]> {
         return await this.find({
             clientId:new Types.ObjectId(clientId),
             proposalType:'freelancer-applied'
-        })
+        },{ skip, limit, sort: { createdAt: -1 } })
         .populate({
             path: 'jobId',
             select: 'title description'
@@ -76,11 +79,11 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
         })
     }
 
-    async findAppliedProposalsByFreelancer(freelancerId:string): Promise<IProposal[]> {
+    async findAppliedProposalsByFreelancer(freelancerId:string,skip: number, limit: number): Promise<IProposal[]> {
         return await this.find({
             freelancerId:new Types.ObjectId(freelancerId),
             proposalType:'freelancer-applied'
-        })
+        },{ skip, limit, sort: { createdAt: -1 } })
         .populate({
             path: 'jobId',
             select: 'title'

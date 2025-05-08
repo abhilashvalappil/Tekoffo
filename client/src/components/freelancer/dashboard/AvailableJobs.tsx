@@ -1,18 +1,21 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {Clock,Briefcase,Tags,DollarSign,Calendar,ChevronRight,Filter,Search,X,Building2,MapPin,User,} from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../../redux/services/authService';
 import { persistor, RootState } from '../../../redux/store';
-import { useJobs } from '../../../hooks/useJobs';
+import { useJobs } from '../../../hooks/customhooks/useJobs';
 import Navbar from '../shared/Navbar';
 import { navItems } from '../shared/NavbarItems';
 import JobDetailsModal from './JobApply';
 import { userENDPOINTS } from '../../../constants/endpointUrl';
-import { useClient } from '../../../hooks/useClients';
+import { useClient } from '../../../hooks/customhooks/useClients';
 import ClientProfileModal from '../profile/ClientProfileModal';
 import { checkStripeAccount } from '../../../api';
+import { usePagination } from '../../../hooks/customhooks/usePagination';
+import Pagination from '@mui/material/Pagination';
+import Stack from '@mui/material/Stack';
  
 
 //* Interface for job data
@@ -108,6 +111,12 @@ const AvailableJobs: React.FC = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [isClientModalOpen, setIsClientModalOpen] = useState<boolean>(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const { pagination, handlePageChange, updateMeta } = usePagination({
+    total: 0,
+    page: 1,
+    pages: 1,
+    limit: 3,
+  });
 
   // Redux and navigation
   const user = useSelector((state: RootState) => state.auth.user);
@@ -115,10 +124,12 @@ const AvailableJobs: React.FC = () => {
   const navigate = useNavigate();
 
   //* Fetch jobs and client customhooks
-  const { jobs: rawJobs, loading, error } = useJobs(userENDPOINTS.GET_POSTED_JOBS);
+  const { jobs: rawJobs, loading, error, meta } = useJobs(userENDPOINTS.GET_POSTED_JOBS, pagination.page, pagination.limit);
   const {client,fetchClient} = useClient()
-
   
+  useEffect(() => {
+    updateMeta(meta.total, meta.pages);
+  }, [meta]);
 
   
   // Transform raw job data
@@ -458,6 +469,14 @@ const AvailableJobs: React.FC = () => {
             )}
           </div>
         </div>
+        <Stack spacing={2} alignItems="center" className="mt-4">
+        <Pagination
+          count={pagination.pages}
+          page={pagination.page}
+          onChange={(event, value) => handlePageChange(value)}
+          color="primary"
+        />
+      </Stack>
       </main>
 
       {/* Job Details Modal */}

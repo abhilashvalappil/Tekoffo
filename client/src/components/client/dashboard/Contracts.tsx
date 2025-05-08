@@ -1,22 +1,18 @@
  
 import { useEffect, useState } from 'react';
-import { Search, Calendar, Filter, ChevronDown, Briefcase,
-  LayoutDashboard,
-  MessageSquare,
-  Wallet,
-  FileText,
-  ScrollText, } from 'lucide-react';
-import { useFetchContracts } from '../../../hooks/useFetchContracts';
+import { Search, Calendar, Filter, ChevronDown} from 'lucide-react';
+import { useFetchContracts } from '../../../hooks/customhooks/useFetchContracts';
 import { approveContract, submitReview } from '../../../api';
 import toast, { Toaster } from 'react-hot-toast';
 import Navbar from '../shared/Navbar';
 import { navItems } from '../shared/NavbarItems';
 import { handleApiError } from '../../../utils/errors/errorHandler';
 // import { contractResponse } from '../../../types/paymentTypes';
-import { useDebounce } from '../../../hooks/useDebounce';
+import { useDebounce } from '../../../hooks/customhooks/useDebounce';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import ReviewModal from '../../Home/Rating';
+import { usePagination } from '../../../hooks/customhooks/usePagination';
 
 const Contracts = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -26,26 +22,18 @@ const Contracts = () => {
   const [activeTab, setActiveTab] = useState<string>('contracts');
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [pagination, setPagination] = useState({total: 0,page: 1,pages: 1,limit: 3});
+  const { pagination, handlePageChange, updateMeta } = usePagination({
+    total: 0,
+    page: 1,
+    pages: 1,
+    limit: 5,
+  });
 
   const { contracts, loading, error, meta, refetch } = useFetchContracts(debouncedSearchTerm,pagination.page, pagination.limit ,statusFilter, timeFilter);
   
   useEffect(() => {
-    setPagination((prev) => ({
-        ...prev,
-        total: meta.total,
-        pages: meta.pages,
-    }));
-}, [meta]);
-
-const handlePageChange = (newPage: number) => {
-  if (newPage > 0 && newPage <= pagination.pages) {
-    setPagination((prev) => ({
-      ...prev,
-      page: newPage,
-    }));
-  }
-};
+    updateMeta(meta.total, meta.pages);
+  }, [meta]);
 
   const handleContractWorkApprove = async(contractId:string,stripePaymentIntentId:string,transactionId:string) => {
     try{

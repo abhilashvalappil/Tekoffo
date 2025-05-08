@@ -27,8 +27,6 @@ export class JobService implements IJobService{
         this.userRepository = userRepository;
         this.jobRepository = jobRepository;
         this.proposalRepository = proposalRepository;
-        
-        // this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2024-06-20' });
     }
 
     async fetchCategories(): Promise<{categories: ICategory[]}> {
@@ -111,9 +109,24 @@ export class JobService implements IJobService{
         }
    }
 
-   async getAllJobs(): Promise<{jobs:JobDataType[]}> {
-        const jobs = await this.jobRepository.findAllJobs();
-        return {jobs}
+   async getAllJobs(page: number, limit: number): Promise<{jobs:PaginatedResponse<JobDataType>}> {
+
+        const skip = (page - 1) * limit;
+        const [jobs,total] = await Promise.all([
+             this.jobRepository.findAllJobs(skip, limit),
+             this.jobRepository.countJobs()
+        ]);
+        // return {jobs}
+        return {
+            jobs:{
+            data: jobs,
+            meta: {
+                total,
+                page,
+                pages: Math.ceil(total / limit),
+                limit,
+            },
+        } };
     }
 
     async getClientProfileByJob(clientId:string): Promise<{clientProfile:Partial<IUser> | null}>{
@@ -145,15 +158,26 @@ export class JobService implements IJobService{
         return{message:MESSAGES.PROPOSAL_CREATED}
     }
 
-    async getClientReceivedProposals(clientId:string): Promise<{proposals:IProposal[]}> {
+    async getClientReceivedProposals(clientId:string, page: number, limit: number): Promise<{proposals:PaginatedResponse<IProposal>}> {
 
         const userExist = await this.userRepository.findUserById(clientId)
         if(!userExist){
             throw new NotFoundError(MESSAGES.INVALID_USER)
         }
-        const proposals = await this.proposalRepository.findProposals(clientId)
-        // console.log('console from userservice getClientReceivedProposals',proposals)
-        return{proposals}
+        const skip = (page - 1) * limit;
+        const [proposals,total] = await Promise.all([
+             this.proposalRepository.findProposals(clientId,skip, limit),
+             this.proposalRepository.countProposals(),
+        ])
+        return{proposals:{
+            data:proposals,
+            meta:{
+                total,
+                page,
+                pages: Math.ceil(total / limit),
+                limit,
+            }
+        }}
     }
 
     async getProposal(proposalId: string, clientId: string): Promise<{proposal:IProposal | null}> {
@@ -190,10 +214,24 @@ export class JobService implements IJobService{
             return {proposal}
         }
 
-    async getFreelancerAppliedProposals(freelancerId:string): Promise<{proposals: IProposal[]}> {
+    async getFreelancerAppliedProposals(freelancerId:string,page:number,limit:number): Promise<{proposals: PaginatedResponse<IProposal>}> {
         const userExist = await this.userRepository.findUserById(freelancerId)
-        const proposals = await this.proposalRepository.findAppliedProposalsByFreelancer(freelancerId)
-        return {proposals}
+        const skip = (page - 1) * limit;
+        const [proposals,total] = await Promise.all([
+            this.proposalRepository.findAppliedProposalsByFreelancer(freelancerId,skip,limit),
+            this.proposalRepository.countProposals()
+        ])
+        return{
+            proposals:{
+                data:proposals,
+                meta:{
+                    total,
+                    page,
+                    pages: Math.ceil(total / limit),
+                    limit,
+                }
+            }
+        }
     }
     
 }

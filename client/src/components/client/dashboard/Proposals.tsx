@@ -7,6 +7,9 @@ import { navItems } from '../shared/NavbarItems';
 import { getReceivedProposals } from '../../../api';
 import { ProposalData } from '../../../types/proposalTypes';
 import { useNavigate } from 'react-router-dom';
+import Pagination from '@mui/material/Pagination';
+import Stack from '@mui/material/Stack';
+import { usePagination } from '../../../hooks/customhooks/usePagination';
 
  
 type Proposal = {
@@ -67,22 +70,30 @@ const Proposals = () => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [proposalData, setProposalData] = useState<ProposalData[]>([]);
+   const [totalCount,setTotalCount] = useState(0);
+   const {
+    pagination,
+    handlePageChange,
+    updateMeta,
+  } = usePagination({ total: 0, page: 1, pages: 1, limit: 5 });
+
 
   const navigate = useNavigate();
-
   
   //* Fetch proposals
   useEffect(() => {
     const loadProposals = async () => {
       try {
-        const data = await getReceivedProposals();
-        setProposalData(data);
+        const response = await getReceivedProposals(pagination.page, pagination.limit);
+        setProposalData(response.data);
+        updateMeta(response.meta.total, response.meta.pages);
+         setTotalCount(response.meta.total);
       } catch (error) {
         console.error('Error fetching proposals:', error);
       }
     };
     loadProposals();
-  }, []);
+  }, [pagination.page, pagination.limit]);
 
    
   const mapProposals = (data: ProposalData[]): Proposal[] => {
@@ -209,6 +220,8 @@ const Proposals = () => {
       },
     });
   };
+
+   
 
   const handleRejectProposal = (proposal: Proposal) => {
     setProposalData((prev) =>
@@ -370,6 +383,14 @@ const Proposals = () => {
             <div className="text-center py-12 text-gray-500">No proposals found matching your criteria.</div>
           )}
         </div>
+        <Stack spacing={2} alignItems="center" className="mt-4">
+          <Pagination
+            count={pagination.pages}
+            page={pagination.page}
+            onChange={(_, value) => handlePageChange(value)}
+            color="primary"
+          />
+        </Stack>
       </div>
 
       {/* Proposal Details Modal */}

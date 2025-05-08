@@ -3,6 +3,7 @@ import API from '../services/api'
 import {userENDPOINTS } from '../constants/endpointUrl'
 import { handleApiError } from '../utils/errors/errorHandler'
 import { AppliedProposal } from '../types/proposalTypes';
+import { PaginatedResponse } from '../types/commonTypes';
 
 interface StripeAccountResponse {
     onboardingLink: string;
@@ -43,9 +44,10 @@ export const createConnectedStripeAccount = async(email:string): Promise<StripeA
 }
 
 
-export const fetchAppliedProposalsByFreelancer = async(): Promise<AppliedProposal[]> => {
+export const fetchAppliedProposalsByFreelancer = async(page:number,limit:number): Promise<PaginatedResponse<AppliedProposal>> => {
     try {
-        const response= await API.get(userENDPOINTS.FREELANCER_APPLIED_PROPOSALS)
+        const response= await API.get(userENDPOINTS.FREELANCER_APPLIED_PROPOSALS,{params:{page,limit}})
+        // console.log('console from freelancer applied proposals',response.data.proposals)
         return response.data.proposals;
     } catch (error) {
         throw new Error(handleApiError(error));

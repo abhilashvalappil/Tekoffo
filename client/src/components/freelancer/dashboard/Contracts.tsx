@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Search, Calendar, Filter, ChevronDown } from 'lucide-react';
-import { useFetchContracts } from '../../../hooks/useFetchContracts';
+import { useFetchContracts } from '../../../hooks/customhooks/useFetchContracts';
 import { submitContract, submitReview } from '../../../api';
 import toast, { Toaster } from 'react-hot-toast';
 import Navbar from '../shared/Navbar';
 import { navItems } from '../shared/NavbarItems';
 import { handleApiError } from '../../../utils/errors/errorHandler';
 // import { contractResponse } from '../../../types/paymentTypes';
-import { useDebounce } from '../../../hooks/useDebounce';
+import { useDebounce } from '../../../hooks/customhooks/useDebounce';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import ReviewModal from '../../Home/Rating';
+import { usePagination } from '../../../hooks/customhooks/usePagination';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 
 const Contracts = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,27 +22,26 @@ const Contracts = () => {
   const [timeFilter, setTimeFilter] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<string>('contracts');
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
+  
+  
   const [isOpen, setIsOpen] = useState(false);
-  const [pagination, setPagination] = useState({total: 0, page: 1, pages: 1,limit: 3,});
+  // const [pagination, setPagination] = useState({total: 0, page: 1, pages: 1,limit: 6,});
+  const { pagination, handlePageChange, updateMeta } = usePagination({
+    total: 0,
+    page: 1,
+    pages: 1,
+    limit: 6,
+  });
+
+  const user = useSelector((state: RootState) => state.auth.user);
+
 
   const { contracts, loading, error, meta, refetch } = useFetchContracts(debouncedSearchTerm,pagination.page, pagination.limit ,statusFilter, timeFilter);
-  
-  useEffect(() => {
-    setPagination((prev) => ({
-        ...prev,
-        total: meta.total,
-        pages: meta.pages,
-    }));
-}, [meta]);
 
-const handlePageChange = (newPage: number) => {
-  if (newPage > 0 && newPage <= pagination.pages) {
-    setPagination((prev) => ({
-      ...prev,
-      page: newPage,
-    }));
-  }
-};
+  useEffect(() => {
+    updateMeta(meta.total, meta.pages);
+  }, [meta]);
 
   const handleApplyForApproval = async(contractId:string) => {
     try{
@@ -71,6 +73,9 @@ const handlePageChange = (newPage: number) => {
         setActiveTab={setActiveTab}
         isMenuOpen={isMenuOpen}
         setIsMenuOpen={setIsMenuOpen}
+        isProfileOpen={isProfileOpen}
+        setIsProfileOpen={setIsProfileOpen}
+        user={user}
         navItems={navItems}
       />
       <Toaster position="top-center" reverseOrder={false}/>

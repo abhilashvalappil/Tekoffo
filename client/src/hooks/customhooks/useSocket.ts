@@ -1,8 +1,8 @@
 import { useEffect } from "react";
-import socket from "../utils/socket"; 
+import socket from "../../utils/socket"; 
 import { useDispatch } from "react-redux";
-import { logout } from "../redux/services/authService";   
-import { AppDispatch } from "../redux/store";
+import { logout } from "../../redux/services/authService";   
+import { AppDispatch } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
 
 

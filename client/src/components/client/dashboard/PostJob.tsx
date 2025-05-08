@@ -10,11 +10,13 @@ import {
   DollarSign, 
   Clock 
 } from 'lucide-react';
+import { Toaster, toast } from 'react-hot-toast';
 import Navbar from '../shared/Navbar';
 import { navItems } from '../shared/NavbarItems';
 import { createJob } from '../../../api';
 import { JobFormSchema, JobFormData } from '../../../utils/validations/JobFormValidation';
 import { fetchListedCategories } from '../../../api';
+import { useNavigate } from 'react-router-dom';
 
 interface Category {
   _id?: string;
@@ -39,6 +41,8 @@ const PostJob: React.FC = () => {
     duration: '',
   });
   const [errors, setErrors] = useState<FormErrors>({});
+
+  const navigate = useNavigate()
 
   const loadCategories = async () => {
     try {
@@ -130,7 +134,11 @@ const PostJob: React.FC = () => {
     }
 
     try {
-      await createJob(formData);
+      const message = await createJob(formData);
+      toast.success(message)
+      setTimeout(() => {
+        navigate('/client/myjobs')
+      },1000)
       console.log('Job posted:', formData);
       setFormData({
         title: '',
@@ -168,6 +176,7 @@ const PostJob: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="bg-white rounded-b-2xl shadow-lg p-8 space-y-6">
           <div className="space-y-2">
+          <Toaster position="top-center" reverseOrder={false} />
             <label htmlFor="title" className="block text-sm font-medium text-[#0A142F]">
               Job Title
             </label>

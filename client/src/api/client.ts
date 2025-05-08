@@ -18,9 +18,10 @@ export const fetchListedCategories = async(): Promise<fetchedCategories[]> => {
 }
 
 
-export const createJob = async(jobDetails:JobFormData) => {
+export const createJob = async(jobDetails:JobFormData): Promise<string> => {
     try {
-        await API.post(userENDPOINTS.CREATE_JOB,jobDetails)
+        const response = await API.post(userENDPOINTS.CREATE_JOB,jobDetails)
+        return response.data;
     } catch (error) {
         throw new Error(handleApiError(error));
     }
@@ -62,9 +63,9 @@ export const getAllFreelancers = async(): Promise<FreelancerData[]> =>{
     }
 }
 
-export const getReceivedProposals = async(): Promise<ProposalData[]> => {
+export const getReceivedProposals = async(page:number, limit:number): Promise<PaginatedResponse<ProposalData>> => {
     try {
-        const response = await API.get(userENDPOINTS.GET_RECEIVED_PROPOSALS)
+        const response = await API.get(userENDPOINTS.GET_RECEIVED_PROPOSALS,{params:{page,limit}})
         return response.data
     } catch (error) {
         throw new Error(handleApiError(error));

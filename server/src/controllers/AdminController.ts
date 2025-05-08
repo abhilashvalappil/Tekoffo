@@ -94,14 +94,13 @@ export class AdminController {
 
           if (isNaN(page) || page < 1) {
               res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid page number" });
-        }
-        if (isNaN(limit) || limit < 1) {
+            }
+          if (isNaN(limit) || limit < 1) {
               res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
-        }
+             }
       
           const paginatedResponse = await this.adminService.fetchCategories(userId,page, limit);
-      
-        //   res.status(Http_Status.OK).json({ success: true, ...paginatedResponse });
+    
         res.status(Http_Status.OK).json(paginatedResponse);
         } catch (error) {
             next(error);

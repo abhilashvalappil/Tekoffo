@@ -34,10 +34,10 @@ class JobRepository extends BaseRepository<JobDataType> implements IJobRepositor
       }
  
 
-    async findAllJobs(): Promise<JobDataType[]> {
+    async findAllJobs(skip: number, limit: number): Promise<JobDataType[]> {
         return (
           (await this 
-            .find({ isBlocked: false, status: 'open' })  
+            .find({ isBlocked: false, status: 'open' }, { skip, limit, sort: { createdAt: -1 } })  
             .populate('clientId', 'fullName profilePicture companyName country') 
             .exec()) || []
         );

@@ -13,11 +13,11 @@ export interface IJobService {
     deleteJobPost(clientId:string,id:string): Promise<{message:string}>
     // getMyJobPosts(clientId:string, page: number, limit: number): Promise<{jobs:JobDataType[]}> 
     getMyJobPosts(clientId:string, page: number, limit: number): Promise<PaginatedResponse<JobDataType>>
-    getAllJobs(): Promise<{jobs:JobDataType[]}>
+    getAllJobs(page: number, limit: number): Promise<{jobs:PaginatedResponse<JobDataType>}>
     getClientProfileByJob(clientId:string): Promise<{clientProfile:Partial<IUser> | null}>
     createJobProposal(freelancerId:string,proposalDetails:proposalDataType): Promise<{message:string}>
-    getClientReceivedProposals(clientId:string): Promise<{proposals:IProposal[]}> 
+    getClientReceivedProposals(clientId:string, page: number, limit: number): Promise<{proposals:PaginatedResponse<IProposal>}>
     getProposal(proposalId: string, clientId: string): Promise<{proposal:IProposal | null}>
     updateProposalStatus(proposalId: string, clientId: string): Promise<{proposal:IProposal | null}>
-    getFreelancerAppliedProposals(freelancerId:string): Promise<{proposals: IProposal[]}>
+    getFreelancerAppliedProposals(freelancerId:string,page:number,limit:number): Promise<{proposals: PaginatedResponse<IProposal>}>
 }

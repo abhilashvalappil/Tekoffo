@@ -169,6 +169,7 @@ export class AuthService implements IAuthService {
         throw new NotFoundError(MESSAGES.INVALID_USER)
       }
       const storedToken = await redisClient.get(userId)
+      console.log('console from authserviceeee generateaccesstoekn',storedToken)
       if(!storedToken){
         throw new NotFoundError(MESSAGES.NO_TOKEN_FOUND)
       }

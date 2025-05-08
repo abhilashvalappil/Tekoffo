@@ -1,6 +1,6 @@
 import { useEffect,useState } from "react";
-import API from "../services/api";
-import { handleApiError } from "../utils/errors/errorHandler";
+import API from "../../services/api";
+import { handleApiError } from "../../utils/errors/errorHandler";
 
 export interface jobData {
     _id:string;
@@ -23,17 +23,24 @@ export interface jobData {
 }
 
 
-export function useJobs(endpoint: string){
+export function useJobs(endpoint: string,page:number,limit:number){
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [meta, setMeta] = useState<MetaType>({
+        total: 0,
+        page: 1,
+        pages: 1,
+        limit: 4,
+      });
 
     useEffect(() => {
         const fetchJobs = async () => {
         try {
-            const response = await API.get(endpoint)
-            console.log('console from customhook usejobssssss',response.data.jobs)
-            setJobs(response.data.jobs)
+            const response = await API.get(endpoint,{ params: { page, limit }})
+            console.log('console from customhook usejobssssss',response.data.data)
+            setJobs(response.data.data)
+            setMeta(response.data.meta);
         } catch (error) {
             const errormessage = handleApiError(error)
             setError(errormessage);
@@ -42,6 +49,6 @@ export function useJobs(endpoint: string){
         }
     }
     fetchJobs();
-    }, [endpoint])
-    return { jobs, loading, error };
+    }, [endpoint,page,limit])
+    return { jobs, loading, error, meta };
 }
