@@ -68,7 +68,6 @@ export class AdminController {
 
     async updaCategory(req:Request, res:Response, next: NextFunction): Promise<void> {
         try {
-            // console.log('console from admincontroller.ts',req.body)
             const {_id: id, name, subCategories} = req.body;
             if(!id || !name || !subCategories){
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.MISSING_CREDENTIALS})
@@ -111,11 +110,7 @@ export class AdminController {
     async updateCategoryStatus(req:Request, res:Response, next: NextFunction): Promise<void> {
         try {
             const {categoryId, isListed} = req.body;
-            // if(!categoryId || !isListed){
-            //     res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.MISSING_CREDENTIALS})
-            // }
             if (!categoryId || typeof isListed !== 'boolean') {
-                console.log('console from admincontrolllll - Validation failed');
                 res.status(Http_Status.BAD_REQUEST).json({ error: MESSAGES.MISSING_CREDENTIALS });
                 return;
               }

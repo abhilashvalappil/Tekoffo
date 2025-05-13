@@ -45,8 +45,13 @@ export const commonENDPOINTS = {
     CREATE_REVIEW:'/api/reviews',
     CHECK_REVIEW:'/api/reviews/check',
     APPROVE_CONTRACT:'/release-payment',
+    CREATE_GIG: '/create-gig',
+    UPDATE_GIG: '/update-gig',
+    DELETE_GIG: '/delete-gig',
+    GET_GIGS: '/gigs',
     GET_CONTRACTS:'/contracts',
     SUBMIT_CONTRACT:'/contracts/submit',
     CREATE_CHECKOUT: "/create-checkout-session",
-    FREELANCER_APPLIED_PROPOSALS: "/api/proposals"
+    FREELANCER_APPLIED_PROPOSALS: "/api/proposals",
+    GET_RECEIVER: "/api/user"
   }

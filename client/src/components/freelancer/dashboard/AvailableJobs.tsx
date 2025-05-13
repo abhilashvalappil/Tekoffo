@@ -4,7 +4,7 @@ import {Clock,Briefcase,Tags,DollarSign,Calendar,ChevronRight,Filter,Search,X,Bu
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../../redux/services/authService';
-import { persistor, RootState } from '../../../redux/store';
+import { AppDispatch, persistor, RootState } from '../../../redux/store';
 import { useJobs } from '../../../hooks/customhooks/useJobs';
 import Navbar from '../shared/Navbar';
 import { navItems } from '../shared/NavbarItems';
@@ -16,7 +16,8 @@ import { checkStripeAccount } from '../../../api';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
- 
+import Footer from '../../shared/Footer';
+import { handleApiError } from '../../../utils/errors/errorHandler';
 
 //* Interface for job data
 interface Job {
@@ -120,7 +121,7 @@ const AvailableJobs: React.FC = () => {
 
   // Redux and navigation
   const user = useSelector((state: RootState) => state.auth.user);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
   //* Fetch jobs and client customhooks
@@ -188,7 +189,7 @@ const AvailableJobs: React.FC = () => {
         navigate('/signin');
       }
     } catch (error) {
-      console.error('Logout failed:', error);
+      handleApiError(error)
     }
   };
 
@@ -499,6 +500,7 @@ const AvailableJobs: React.FC = () => {
         }}
         client={selectedClient}
       />
+       <Footer />
     </div>
   );
 };

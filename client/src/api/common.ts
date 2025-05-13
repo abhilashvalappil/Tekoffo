@@ -33,6 +33,16 @@ export const changePassword = async(passwords:Passwords) => {
     }
 }
 
+
+export const fetchReceiver = async(receiverId: string) => {
+    try {
+        const response = await API.post(userENDPOINTS.GET_RECEIVER,{receiverId})
+        // console.log('console from fetch receiverrrrrrr',response.data)
+        return response.data;
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
  
 
 

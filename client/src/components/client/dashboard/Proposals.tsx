@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
+import Footer from '../../shared/Footer';
 
  
 type Proposal = {
@@ -578,6 +579,7 @@ const Proposals = () => {
           </div>
         </div>
       )}
+       <Footer />
     </div>
   );
 };

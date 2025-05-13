@@ -10,16 +10,17 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { passwordSchema,PasswordFormData } from '../../../utils/validations/AuthValidation';
+import { handleApiError } from '../../../utils/errors/errorHandler';
 
-interface ChangePasswordProps {
-  onCancel: () => void;
-}
+// interface ChangePasswordProps {
+//   onCancel?: () => void;
+// }
 // interface Passwords {
 //     currentPassword:string;
 //     newPassword:string;
 // }
 
-function ChangePassword({ onCancel }: ChangePasswordProps) {
+const ChangePassword: React.FC  = () => {
   const userProfile = useSelector((state: RootState) => state.auth.user);
   const navigate = useNavigate();
 
@@ -61,8 +62,10 @@ function ChangePassword({ onCancel }: ChangePasswordProps) {
           navigate('/client-dashboard');
         }, 1000);
       }
-    } catch (err: any) {
-      setServerError(err.message);
+    } catch (err) {
+      const errormessage = handleApiError(err)
+      setServerError(errormessage);
+      toast.error(serverError)
       console.error('Change password failed:', err);
     }
   };
@@ -170,7 +173,8 @@ function ChangePassword({ onCancel }: ChangePasswordProps) {
                   </button>
                   <button
                     type="button"
-                    onClick={onCancel}
+                    // onClick={onCancel}
+                    onClick={() => navigate('/')}
                     className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Cancel

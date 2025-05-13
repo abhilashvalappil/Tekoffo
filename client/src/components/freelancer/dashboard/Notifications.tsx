@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Bell, Briefcase, MessageSquare, DollarSign, BellRing } from 'lucide-react';
 
 interface Notification {
@@ -11,32 +11,7 @@ interface Notification {
 }
 
 function NotificationPage() {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      type: 'job',
-      title: 'New Job Opportunity',
-      message: 'A client has just posted a job matching your skills.',
-      timestamp: new Date(Date.now() - 15 * 60 * 1000),
-      status: 'unread'
-    },
-    {
-      id: '2',
-      type: 'message',
-      title: 'New Message',
-      message: 'Sarah sent you a message about the project.',
-      timestamp: new Date(Date.now() - 30 * 60 * 1000),
-      status: 'unread'
-    },
-    {
-      id: '3',
-      type: 'payment',
-      title: 'Payment Received',
-      message: 'You received a payment of $500 for the website project.',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-      status: 'read'
-    }
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);

@@ -5,6 +5,8 @@ export * from './entities/IPayment'
 export * from './entities/IContract'
 export * from './entities/INotification'
 export * from './entities/IReview'
+export * from './entities/IMessage'
+export * from './entities/IGig'
  
 
 
@@ -29,3 +31,4 @@ export * from './repositoryInterfaces/IPaymentRepository';
 export * from './repositoryInterfaces/IContractRepository'
 export * from './repositoryInterfaces/INotificationRepository'
 export * from './repositoryInterfaces/IReviewRepository'
+export * from './repositoryInterfaces/IGigRepository'

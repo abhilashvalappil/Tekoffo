@@ -23,6 +23,7 @@ import { uploadProposal } from "../utils/cloudinary";
 import { PaymentService } from "../services/PaymentService";
 import NotificationRepository from "../repositories/NotificationRepository";
 import ReviewRepository from "../repositories/ReviewRepository";
+import GigRepository from "../repositories/GigRepository";
 
 const userRouter = Router();
 
@@ -33,7 +34,7 @@ const authService = new AuthService(UserRepository, jwtService,googleClient);
 const authController = new AuthController(authService,cookieHandlerService);
 const userService = new UserService(UserRepository,CategoryRepository,JobRepository,ProposalRepository,PaymentRepository )
 const userController = new UserController(userService);
-const jobService = new JobService(CategoryRepository,UserRepository,JobRepository,ProposalRepository)
+const jobService = new JobService(CategoryRepository,UserRepository,JobRepository,ProposalRepository,GigRepository)
 const jobController = new JobController(jobService)
 const paymentService = new PaymentService(UserRepository,JobRepository,ProposalRepository,PaymentRepository,ContractRepository, NotificationRepository, ReviewRepository)
 const paymentController = new PaymentController(paymentService)
@@ -69,6 +70,11 @@ userRouter.put('/notifications/:id/read',authMiddleware,authorizeRole('freelance
 userRouter.put('/notifications/read-all',authMiddleware,authorizeRole('freelancer'),paymentController.markAllNotificationsAsRead.bind(paymentController))
 userRouter.get('/contracts',authMiddleware,authorizeRole(['freelancer', 'client']),paymentController.getUserContracts.bind(paymentController))
 userRouter.post('/contracts/submit',authMiddleware,authorizeRole('freelancer'),paymentController.submitContractForApproval.bind(paymentController))
+userRouter.post('/api/user',authMiddleware,authorizeRole('freelancer'),userController.getReceiver.bind(userController))
+userRouter.post('/create-gig',authMiddleware,authorizeRole('freelancer'),jobController.createGig.bind(jobController))
+userRouter.put('/update-gig',authMiddleware,authorizeRole('freelancer'),jobController.updateFreelancerGig.bind(jobController))
+userRouter.get('/gigs',authMiddleware,authorizeRole('freelancer'),jobController.getFreelancerGigs.bind(jobController))
+userRouter.delete('/delete-gig',authMiddleware,authorizeRole('freelancer'),jobController.deleteFreelancerGig.bind(jobController))
 
 
 
@@ -79,7 +85,7 @@ userRouter.post('/create-profile',upload.single('profilePicture'),authMiddleware
 userRouter.put('/update-profile',upload.single('profilePicture'),authMiddleware,authorizeRole('client'),userController.updateProfile.bind(userController))
 userRouter.put('/change-password',authMiddleware,userController.changePassword.bind(userController))
 
-userRouter.get('/categories/listed',authMiddleware,authorizeRole('client'),jobController.getCategories.bind(jobController))
+userRouter.get('/categories/listed',authMiddleware,authorizeRole(['client','freelancer']),jobController.getCategories.bind(jobController))
 userRouter.post('/jobs',authMiddleware,authorizeRole('client'),jobController.createJob.bind(jobController))
 userRouter.put('/update-job',authMiddleware,authorizeRole('client'),jobController.updateJobPost.bind(jobController))
 userRouter.delete('/delete-job',authMiddleware,authorizeRole('client'),jobController.deleteJobPost.bind(jobController))
@@ -90,7 +96,6 @@ userRouter.get('/proposals/received',authMiddleware,authorizeRole('client'),jobC
 userRouter.post('/proposals/proposal',authMiddleware,authorizeRole('client'),jobController.getProposal.bind(jobController))
 userRouter.put('/proposals/update',authMiddleware,authorizeRole('client'),jobController.updateProposalStatus.bind(jobController))
 userRouter.post('/create-checkout-session',authMiddleware,authorizeRole('client'),userController.createCheckout.bind(userController))
-userRouter.post('/webhook', express.raw({ type: 'application/json' }),userController.handleWebhook.bind(userController))
 
 userRouter.post('/create-payment-intent',authMiddleware,authorizeRole('client'),paymentController.createPaymentIntend.bind(paymentController))
 userRouter.post('/create-contract',authMiddleware,authorizeRole('client'),paymentController.createContract.bind(paymentController))

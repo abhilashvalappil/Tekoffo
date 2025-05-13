@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from "react-router-dom";
-import { Search, Briefcase, Users, Trophy, ChevronRight, Star, Code, PenTool, Calculator, GraduationCap, Scale, Menu, X } from 'lucide-react';
+import { Search, Briefcase, Users, Trophy, ChevronRight, Code, PenTool, Calculator, GraduationCap, Scale, Menu, X } from 'lucide-react';
 
 function Landing() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

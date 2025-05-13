@@ -3,9 +3,10 @@ import {Briefcase,Send,Wallet,Search,Star,CheckCircle,Filter,ExternalLink,Dollar
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../../redux/services/authService';
 import { useNavigate } from 'react-router-dom';
-import { persistor, RootState } from '../../../redux/store';
+import { AppDispatch, persistor, RootState } from '../../../redux/store';
 import Navbar from '../shared/Navbar'; 
 import { navItems } from '../shared/NavbarItems';
+import Footer from '../../shared/Footer';
 
 function FreelancerHome() {
   const [activeTab, setActiveTab] = useState('overview');
@@ -14,7 +15,7 @@ function FreelancerHome() {
 
   const userId = useSelector((state: RootState) => state.auth.user?._id || null);
   const user = useSelector((state: RootState) => state.auth.user);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -71,16 +72,6 @@ function FreelancerHome() {
       posted: '5h ago',
     },
   ];
-
-  // const navItems = [
-  //   { icon: <LayoutDashboard className="h-5 w-5" />, label: 'Overview', id: 'overview' },
-  //   { icon: <Briefcase className="h-5 w-5" />, label: 'Find Jobs', id: 'jobs', path: '/freelancer/jobs' },
-  //   { icon: <FileText className="h-5 w-5" />, label: 'Proposals', id: 'proposals', path: '/freelancer/proposals' },
-  //   { icon: <ScrollText className="h-5 w-5" />, label: 'Contracts', id: 'contracts', path: '/freelancer/contracts' },
-  //   // { icon: <Clock className="h-5 w-5" />, label: 'Active Jobs', id: 'active' },
-  //   { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', id: 'messages' },
-  //   { icon: <Wallet className="h-5 w-5" />, label: 'Earnings', id: 'earnings' },
-  // ];
 
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
@@ -230,6 +221,7 @@ function FreelancerHome() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

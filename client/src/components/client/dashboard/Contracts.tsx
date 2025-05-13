@@ -11,8 +11,9 @@ import { handleApiError } from '../../../utils/errors/errorHandler';
 import { useDebounce } from '../../../hooks/customhooks/useDebounce';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
-import ReviewModal from '../../Home/Rating';
+import ReviewModal from '../../shared/Rating';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
+import Footer from '../../shared/Footer';
 
 const Contracts = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -216,6 +217,7 @@ const Contracts = () => {
         />
       </Stack>
       </div>
+       <Footer />
     </div>
     
   );

@@ -9,6 +9,7 @@ import { handleApiError } from '../../../utils/errors/errorHandler';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
+import Footer from '../../shared/Footer';
 
 interface JobPost {
   id: string;
@@ -503,6 +504,7 @@ const MyJobPosts = () => {
       {isModalOpen && selectedJob && (
         <EditJobModal job={selectedJob} onSave={handleSaveJob} onClose={handleCloseModal} />
       )}
+       <Footer />
     </div>
   );
 };

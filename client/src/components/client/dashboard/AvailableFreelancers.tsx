@@ -3,6 +3,7 @@ import { MapPin, Tags, Mail, Globe, ChevronRight, Filter, Search, X, Home, Brief
 import { getAllFreelancers } from '../../../api';  
 import Navbar from '../shared/Navbar';  
 import { navItems } from '../shared/NavbarItems';
+import Footer from '../../shared/Footer';
 
 interface Freelancer {
   id: string;
@@ -303,6 +304,7 @@ const Freelancers = () => {
           </div>
         </div>
       </div>
+       <Footer />
     </div>
   );
 };

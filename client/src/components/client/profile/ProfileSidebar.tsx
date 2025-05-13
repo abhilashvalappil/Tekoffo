@@ -23,6 +23,7 @@ interface Client {
 
 interface Props {
   client: Client;
+  activeTab?: string;
 }
 
 function ProfileSidebar({ client }: Props) {

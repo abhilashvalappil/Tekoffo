@@ -3,6 +3,7 @@ import { IJobService } from "../interfaces";
 import { Http_Status } from "../constants/statusCodes";
 import { MESSAGES } from '../constants/messages';
 import { JobFormSchema,UpdateJobInputSchema } from "../validations/jobValidation";
+import { GigFormSchema } from "../validations/gigValidation";
 import { ZodIssue } from 'zod';
 import dotenv from "dotenv";
 dotenv.config();
@@ -283,6 +284,75 @@ export class JobController {
             }
             const {proposals} = await this.jobService.getFreelancerAppliedProposals(freelancerId,page,limit)
             res.status(Http_Status.OK).json({proposals})
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async createGig(req:AuthRequest, res:Response, next:NextFunction): Promise<void>{
+        try {
+            const freelancerId = req.userId;
+            if(!freelancerId){
+                res.status(Http_Status.FORBIDDEN).json({error:MESSAGES.UNAUTHORIZED})
+                return;
+            }
+             const validationResult = GigFormSchema.safeParse(req.body);
+              if (!validationResult.success) {
+                const errors = validationResult.error.issues.map((issue: ZodIssue) => ({
+                  field: issue.path[0],
+                  message: issue.message,
+                }));
+                res.status(Http_Status.BAD_REQUEST).json({error: 'Validation failed',
+                  details: errors,
+                });
+                return;
+              }
+              const gigData = validationResult.data;
+              const {message} = await this.jobService.createGig(freelancerId,gigData)
+            res.status(Http_Status.OK).json({message})
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async getFreelancerGigs(req:AuthRequest, res:Response, next:NextFunction): Promise<void> {
+        try {
+            const freelancerId = req.userId;
+            if(!freelancerId){
+                res.status(Http_Status.FORBIDDEN).json({error:MESSAGES.UNAUTHORIZED})
+                return;
+            }
+            const {gigs} = await this.jobService.getFreelancerGigs(freelancerId)
+            res.status(Http_Status.OK).json({gigs})
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async updateFreelancerGig(req:AuthRequest, res:Response, next:NextFunction): Promise<void> {
+        try {
+            const freelancerId = req.userId;
+            if(!freelancerId){
+                res.status(Http_Status.FORBIDDEN).json({error:MESSAGES.UNAUTHORIZED})
+                return;
+            }
+            const {message} = await this.jobService.updateFreelancerGig(freelancerId,req.body)
+            res.status(Http_Status.OK).json({message})
+        } catch (error) {
+            next(error)
+        }
+    }
+
+    async deleteFreelancerGig(req:AuthRequest, res:Response, next:NextFunction): Promise<void> {
+        try {
+            const freelancerId = req.userId;
+            if(!freelancerId){
+                res.status(Http_Status.FORBIDDEN).json({error:MESSAGES.UNAUTHORIZED})
+                return;
+            }
+            const { gigId } = req.body; 
+            const {message} = await this.jobService.deleteFreelancerGig(freelancerId,gigId)
+            res.status(Http_Status.OK).json({message})
         } catch (error) {
             next(error)
         }

@@ -6,7 +6,7 @@ import SignInPage from "../components/auth/Signin";
 import ForgotPasswod from '../components/auth/ForgotPass'
 import ForgotPasswordOtp from '../components/auth/ForgotPassOtp'
 import ResetPassword from "../components/auth/ResetPassword";
-import Landing from "../components/Home/Landing";
+import Landing from "../components/shared/Landing";
 import PublicLayout from "./PublicLayout";
 import NotFound from "../pages/NotFound";
 import AccountBlockedPage from "../pages/AccountBlockedPage";

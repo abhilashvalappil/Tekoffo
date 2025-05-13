@@ -1,22 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import {
-  LayoutDashboard,
-  Briefcase,
-  ClipboardList,
-  MessageSquare,
-  ExternalLink,
-  DollarSign,
-  Users,
-  FileText,
-  Clock,
-  ScrollText,
-} from 'lucide-react';
+import {Briefcase,ExternalLink,DollarSign,Users,Clock} from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {logout} from '../../../redux/services/authService'
 import { AppDispatch, RootState } from '../../../redux/store';
 import Navbar from '../shared/Navbar';
 import { navItems } from '../shared/NavbarItems';
+import Footer from '../../shared/Footer';
 
 const ClientDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -221,6 +211,7 @@ const ClientDashboard = () => {
           </div>
         </div>
       </main>
+       <Footer />
     </div>
   );
 }

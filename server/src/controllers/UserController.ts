@@ -65,9 +65,6 @@ export class UserController {
 
     async updateProfile(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
         try {
-            console.log("console from updateprofile usercontroller.ts",req.body)
-            console.log('Uploaded file from updateprofile:', req.file)
-
             const userId = req.userId;
             if(!userId){
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
@@ -186,9 +183,7 @@ export class UserController {
             });
             return;
             }
-
             const result = await this.userService.createUserProfile(userId, validation.data);
-
             res.status(Http_Status.CREATED).json({
                 success:true,
                 message:result.message,
@@ -254,6 +249,16 @@ export class UserController {
         }
     }
 
+    async getReceiver(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
+        try {
+            const {receiverId} = req.body;
+            const {receiver} = await this.userService.getReceiver(receiverId)
+            res.status(Http_Status.OK).json(receiver)
+        } catch (error) {
+            next(error)
+        }
+    }
+
     async createCheckout(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
         try {
           const { totalAmount, proposalId, clientId, freelancerId } = req.body;
@@ -272,31 +277,8 @@ export class UserController {
     
           res.status(200).json({ url });
         } catch (error) {
-          console.error('Error creating checkout session:', error);
-          res.status(500).json({ error: 'Failed to create checkout session' });
+            next(error)
         }
       }
-
-      async handleWebhook(req: Request, res: Response): Promise<void> {
-        const sig: string = req.headers['stripe-signature'] as string;
-        console.log('reddddddddddd',req.body)
-        try {
-            const event = this.stripe.webhooks.constructEvent(
-                req.body,
-                sig,
-                process.env.STRIPE_WEBHOOK_SECRET!
-            );
-    
-            if (event.type === 'checkout.session.completed') {
-                const session = event.data.object as Stripe.Checkout.Session;
-                await this.userService.handlePaymentSuccess(session.id);
-            }
-    
-            res.status(200).json({ received: true });
-        } catch (error) {
-            console.error('Webhook error:', error);
-            res.status(400).json({ error: 'Webhook error' });
-        }
-    }
 
 }

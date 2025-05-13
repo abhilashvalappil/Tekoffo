@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  LayoutDashboard,
-  Users,
-  MessageSquare,
-  Briefcase, 
-  FileText, 
-  FolderTree, 
-  ScrollText, 
-  DollarSign, 
-  Clock 
-} from 'lucide-react';
+import { Briefcase, FileText, FolderTree, ScrollText, DollarSign, Clock} from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import Navbar from '../shared/Navbar';
 import { navItems } from '../shared/NavbarItems';
@@ -17,6 +7,7 @@ import { createJob } from '../../../api';
 import { JobFormSchema, JobFormData } from '../../../utils/validations/JobFormValidation';
 import { fetchListedCategories } from '../../../api';
 import { useNavigate } from 'react-router-dom';
+import Footer from '../../shared/Footer';
 
 interface Category {
   _id?: string;
@@ -60,14 +51,6 @@ const PostJob: React.FC = () => {
     }, 10000);
     return () => clearInterval(interval);
   }, []);
-
-  // const navItems = [
-  //   { icon: <LayoutDashboard className="h-5 w-5" />, label: 'Overview', id: 'overview' },
-  //   { icon: <Briefcase className="h-5 w-5" />, label: 'Post a Job', id: 'post' },
-  //   { icon: <Users className="h-5 w-5" />, label: 'Talent', id: 'talent' },
-  //   { icon: <FileText className="h-5 w-5" />, label: 'Projects', id: 'projects' },
-  //   { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', id: 'messages' },
-  // ];
 
   const handleChange = (field: keyof JobFormData, value: string | number | string[]) => {
     setFormData((prev) => ({
@@ -373,6 +356,7 @@ const PostJob: React.FC = () => {
           </div>
         </form>
       </div>
+       <Footer />
     </>
   );
 };

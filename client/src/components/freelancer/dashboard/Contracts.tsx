@@ -10,10 +10,14 @@ import { handleApiError } from '../../../utils/errors/errorHandler';
 import { useDebounce } from '../../../hooks/customhooks/useDebounce';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
-import ReviewModal from '../../Home/Rating';
+import ReviewModal from '../../shared/Rating';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../redux/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, persistor, RootState } from '../../../redux/store';
+import ChatButton from '../shared/ChatButton';
+import Footer from '../../shared/Footer';
+import { useNavigate } from 'react-router-dom';
+import { logout } from '../../../redux/services/authService';
 
 const Contracts = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,6 +39,8 @@ const Contracts = () => {
   });
 
   const user = useSelector((state: RootState) => state.auth.user);
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
 
 
   const { contracts, loading, error, meta, refetch } = useFetchContracts(debouncedSearchTerm,pagination.page, pagination.limit ,statusFilter, timeFilter);
@@ -63,6 +69,20 @@ const Contracts = () => {
     }
   }
 
+   //* Handle logout
+    const handleLogout = async () => {
+      try {
+        if (user?._id) {
+          const result = await dispatch(logout(user._id)).unwrap();
+          console.log('Logout successful:', result);
+          persistor.purge();
+          navigate('/signin');
+        }
+      } catch (error) {
+        handleApiError(error)
+      }
+    };
+
   if (loading) return <p>Loading contracts...</p>;
   if (error) return <p>Error loading contracts: {error.message}</p>;
 
@@ -76,6 +96,7 @@ const Contracts = () => {
         isProfileOpen={isProfileOpen}
         setIsProfileOpen={setIsProfileOpen}
         user={user}
+         handleLogout={handleLogout}
         navItems={navItems}
       />
       <Toaster position="top-center" reverseOrder={false}/>
@@ -142,6 +163,7 @@ const Contracts = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">chat</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -171,12 +193,6 @@ const Contracts = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                      {/* <button
-                        onClick={() => handleApplyForApproval(contract._id)}
-                        className="bg-blue-900 text-white text-xs px-2 py-1 rounded hover:bg-blue-800 transition"
-                      >
-                        Apply for Approval
-                      </button> */}
                        {contract.contractStatus === 'active' ? (
                         <button
                           onClick={() => handleApplyForApproval(contract._id)}
@@ -189,12 +205,8 @@ const Contracts = () => {
                           Waiting for Approval
                         </span>
                       ) : (
-                        // <span className="inline-block text-xs px-3 py-1 rounded-full bg-gradient-to-r from-green-400 to-emerald-600 text-white shadow-md">
-                        //   ✅ Completed
-                        // </span>
                         <>
                         <button
-                        // onClick={() => handleLeaveReview(contract._id)}
                         onClick={() => setIsOpen(true)}
                         className="text-xs px-3 py-1 rounded-md bg-gradient-to-r from-green-400 to-emerald-600 text-white shadow-sm transition"
                       >
@@ -208,6 +220,11 @@ const Contracts = () => {
                     />
                     </>
                       )}
+                    </td>
+                    <td>
+                      <button>
+                      <ChatButton receiverId={contract.clientId._id} />
+                      </button>
                     </td>
                     </tr>
                   ))}
@@ -227,6 +244,7 @@ const Contracts = () => {
         />
       </Stack>
       </div>
+       <Footer />
     </div>
     
   );

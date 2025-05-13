@@ -182,7 +182,7 @@ export class UserService implements IUserService {
         freelancerId: string;
       }): Promise<{ url: string | null; sessionId: string }> {
         
-          // Validate input data
+           
           if (!data.totalAmount || data.totalAmount <= 0 || !Number.isInteger(data.totalAmount)) {
             throw new CustomError('Invalid totalAmount: Must be a positive integer in cents' );
           }
@@ -225,12 +225,9 @@ export class UserService implements IUserService {
           return { url: session.url, sessionId: session.id };
     }
 
-    async handlePaymentSuccess(sessionId:string): Promise<void>{
-        console.log('console from userservice handlepayment :', sessionId)
-        const session = await this.stripe.checkout.sessions.retrieve(sessionId);
-        if (session.payment_status === 'paid'){
-            // await this.paymentRepository.savePayment()
-        }
+    async getReceiver(receiverId:string): Promise<{receiver:IUser | null}> {
+      const receiver = await this.userRepository.findUserById(receiverId)
+      return{receiver}
     }
 
 }

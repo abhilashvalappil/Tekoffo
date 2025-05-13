@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
-import {IJobService, IUserRepository,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser,  } from "../interfaces";
+import {IJobService, IUserRepository,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser, CreateGigDTO, IGigRepository, IGig, UpdateGigDTO,  } from "../interfaces";
 import {MESSAGES} from '../constants/messages'
-import { CustomError, NotFoundError, UnauthorizedError } from "../errors/customErrors";
+import { ConflictError, CustomError, NotFoundError, UnauthorizedError } from "../errors/customErrors";
 import { FreelancerData, JobDataType, JobInputData, JobUpdateData } from '../interfaces/entities/IJob';
 import { proposalDataType } from "../types/jobTypes";
 import { Types } from "mongoose";
@@ -20,13 +20,15 @@ export class JobService implements IJobService{
     private userRepository: IUserRepository;
     private jobRepository: IJobRepository;
     private proposalRepository:IProposalRepository;
+    private gigRepository: IGigRepository;
 
 
-    constructor(categoryRepository:ICategoryRepository, userRepository: IUserRepository, jobRepository: IJobRepository, proposalRepository:IProposalRepository){
+    constructor(categoryRepository:ICategoryRepository, userRepository: IUserRepository, jobRepository: IJobRepository, proposalRepository:IProposalRepository, gigRepository:IGigRepository){
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.jobRepository = jobRepository;
         this.proposalRepository = proposalRepository;
+        this.gigRepository = gigRepository;
     }
 
     async fetchCategories(): Promise<{categories: ICategory[]}> {
@@ -40,7 +42,7 @@ export class JobService implements IJobService{
         if(!user){
             throw new NotFoundError(MESSAGES.INVALID_USER)
         }
-        const savedJob = await this.jobRepository.createJobPost(clientId,jobData)
+        await this.jobRepository.createJobPost(clientId,jobData)
         return {message:MESSAGES.JOB_CREATED_SUCCESSFULLY}
     }
 
@@ -234,4 +236,51 @@ export class JobService implements IJobService{
         }
     }
     
+    async createGig(freelancerId:string,gigData:CreateGigDTO): Promise<{message:string}> {
+        const freelancer = await this.userRepository.findUserById(freelancerId);
+        if(!freelancer){
+            throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
+        }
+        const gigCount = await this.gigRepository.findGigCountByFreelancerId(freelancerId)
+        if(gigCount >= 3){
+            throw new ConflictError(MESSAGES.GIG_MAX_LIMIT_REACHED)
+        }
+        await this.gigRepository.createGig(freelancerId,gigData)
+        return{message:MESSAGES.GIG_CREATED}
+    }
+
+    async getFreelancerGigs(freelancerId:string): Promise<{gigs:IGig[] | null}> {
+        const freelancer = await this.userRepository.findUserById(freelancerId);
+        if(!freelancer){
+            throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
+        }
+        const gigs = await this.gigRepository.findGigsByFreelancerId(freelancerId)
+        return {gigs}
+    }
+
+    async updateFreelancerGig(freelancerId:string,gigData:UpdateGigDTO): Promise<{message:string}> {
+        const freelancer = await this.userRepository.findUserById(freelancerId);
+        if(!freelancer){
+            throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
+        }
+        const existingGig = await this.gigRepository.findGigById(gigData._id)
+        if(!existingGig){
+            throw new NotFoundError(MESSAGES.GIG_NOT_FOUND)
+        }
+        await this.gigRepository.findByIdAndUpdate(gigData._id,gigData)
+        return{message:MESSAGES.GIG_UPDATED}
+    }
+
+    async deleteFreelancerGig(freelancerId:string, gigId:string): Promise<{message:string}> {
+        const freelancer = await this.userRepository.findUserById(freelancerId);
+        if(!freelancer){
+            throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
+        }
+        const existingGig = await this.gigRepository.findGigById(gigId)
+        if(!existingGig){
+            throw new NotFoundError(MESSAGES.GIG_NOT_FOUND)
+        }
+        await this.gigRepository.findGigByIdAndDelete(gigId)
+        return{message:MESSAGES.GIG_DELETED}
+    }
 }
