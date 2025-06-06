@@ -9,6 +9,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { updateUserProfile } from '../../../redux/services/userService';
 import { z } from 'zod';
 import { profileFormSchema,ProfileFormData } from '../../../utils/validations/ProfileValidation';
+import ClientNavbar from '../shared/Navbar';
+import { clientNavItems } from '../shared/NavbarItems';
+import Footer from '../../shared/Footer';
 // import { profileFormSchema, ProfileFormData } from './profileFormSchema'; // Assuming schema is in a separate file
 
 interface FormErrors {
@@ -129,7 +132,12 @@ const DisplayProfile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white text-gray-800">
-      <div className="container mx-auto px-4 py-8">
+      <ClientNavbar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        navItems={clientNavItems}
+      />
+      <div className="container mx-auto px-4 py-22">
         <div className="flex flex-col lg:flex-row gap-8">
           <ProfileSidebar
             client={{
@@ -329,6 +337,7 @@ const DisplayProfile = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

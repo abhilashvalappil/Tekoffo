@@ -129,7 +129,7 @@ const validateForm = (): boolean => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-">
+    <div className="min-h-screen bg-[#3a4b82] flex items-center justify-center p-">
       <div className="w-full max-w-md bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-8 space-y-6">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>

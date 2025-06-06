@@ -43,6 +43,7 @@ export interface IUserResponse {
     country?: string;
     skills?: string[];
     preferredJobFields?: string[];
+    total_Spent?: number;
     linkedinUrl?: string;
     githubUrl?: string;
     portfolioUrl?: string;

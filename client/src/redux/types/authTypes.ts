@@ -1,12 +1,4 @@
-// export interface User {
-//   _id?:string;
-//     username: string;
-//     email: string;
-//     password?: string;
-//     role:UserRole
-//     // role:'client' | 'freelancer'| 'admin';
-
-// }
+ 
 export interface User {
   _id?: string;
   fullName?: string; 
@@ -18,6 +10,7 @@ export interface User {
   preferredJobFields?: string[];
   username: string;
   email: string;
+  total_Spent?: number;
   linkedinUrl?: string;
   githubUrl?: string;
   portfolioUrl?: string;
@@ -47,17 +40,7 @@ export interface SignInCredentials {
     password: string;
 }
 
-// export interface SignInResponse {
-//     message: string;
-//     user: {
-//       _id: string;
-//       email: string;
-//       username: string;
-//       role:UserRole
-//     //   role: 'freelancer' | 'client' | 'admin';
-//     };
-//     accessToken: string;
-//   }
+ 
 export interface SignInResponse {
   message: string;
   user: {
@@ -72,6 +55,7 @@ export interface SignInResponse {
     profilePicture?: string;
     skills?: string[];
     preferredJobFields?: string[];
+    total_Spent?: number;
     linkedinUrl?: string;
     githubUrl?: string;
     portfolioUrl?: string;

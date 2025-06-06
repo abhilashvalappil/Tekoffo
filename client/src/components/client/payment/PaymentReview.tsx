@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Clock, DollarSign, Briefcase, FileText, LayoutDashboard, ClipboardList, MessageSquare } from 'lucide-react';
-import Navbar from '../shared/Navbar';
+import ClientNavbar from '../shared/Navbar';
 import { fetchProposal } from '../../../api';  
 import { ProposalData } from '../../../types/proposalTypes';
 import { loadStripe } from '@stripe/stripe-js';
@@ -73,7 +73,7 @@ export default function PaymentReview() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Navbar navItems={navItems} activeTab={activeTab} setActiveTab={setActiveTab} />
+      <ClientNavbar navItems={navItems} activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="pt-20 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md mx-auto rounded-xl overflow-hidden bg-white text-[#0A142F] shadow-md border border-gray-200 relative">
           <div className="py-4 px-6 bg-[#0A142F]">

@@ -1,72 +1,76 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {Clock,Briefcase,Tags,DollarSign,Calendar,ChevronRight,Filter,Search,X,Building2,MapPin,User,} from 'lucide-react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { logout } from '../../../redux/services/authService';
-import { AppDispatch, persistor, RootState } from '../../../redux/store';
-import { useJobs } from '../../../hooks/customhooks/useJobs';
+import { useAuth } from '../../../hooks/customhooks/useAuth';
+import { RootState } from '../../../redux/store';
+import { JobDataType, useJobs } from '../../../hooks/customhooks/useJobs';
 import Navbar from '../shared/Navbar';
 import { navItems } from '../shared/NavbarItems';
 import JobDetailsModal from './JobApply';
 import { userENDPOINTS } from '../../../constants/endpointUrl';
 import { useClient } from '../../../hooks/customhooks/useClients';
 import ClientProfileModal from '../profile/ClientProfileModal';
-import { checkStripeAccount } from '../../../api';
+import { checkStripeAccount, fetchListedCategories } from '../../../api';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import Footer from '../../shared/Footer';
-import { handleApiError } from '../../../utils/errors/errorHandler';
+import { Toaster, toast } from 'react-hot-toast';
+import { fetchAppliedProposalsByFreelancer } from '../../../api';
+import { AppliedProposal } from '../../../types/proposalTypes';
+import { useDebounce } from '../../../hooks/customhooks/useDebounce';
+import { Category } from '../../../types/jobTypes';
 
 //* Interface for job data
-interface Job {
-  id: string;
-  // clientId:string;
-  clientId:{
-    _id:string;
-        fullName:string;
-        profilePicture?:string;
-        companyName?:string;
-        country:string;
-  }
-  title: string;
-  category: string;
-  subcategory: string;
-  description: string;
-  requirements: string[];
-  budget: string;
-  duration: string;
-  posted: string;
-  clientName: string;
-  clientLocation: string;
-  clientRating: number;
-  postedDate: string;
-}
+// interface Job {
+//   id: string;
+//   // clientId:string;
+//   clientId:{
+//     _id:string;
+//         fullName:string;
+//         profilePicture?:string;
+//         companyName?:string;
+//         country:string;
+//   }
+//   title: string;
+//   category: string;
+//   subcategory: string;
+//   description: string;
+//   requirements: string[];
+//   budget: string;
+//   duration: string;
+//   posted: string;
+//   clientName: string;
+//   clientLocation: string;
+//   clientRating: number;
+//   postedDate: string;
+// }
 
 //* Interface for raw job data from API
-interface RawJob {
-  _id: string;
-  // clientId:string;
-  clientId:{
-    _id:string;
-        fullName:string;
-        profilePicture?:string;
-        companyName?:string;
-        country:string;
-  }
-  title: string;
-  category: string;
-  subCategory: string;
-  description: string;
-  requirements: string[];
-  budget: number;
-  duration: string;
-  updatedAt: string;
-  clientName: string;
-  clientLocation: string;
-  clientRating?: number;
-}
+// interface RawJob {
+//   _id: string;
+//   // clientId:string;
+//   clientId:{
+//     _id:string;
+//         fullName:string;
+//         profilePicture?:string;
+//         companyName?:string;
+//         country:string;
+//   }
+//   title: string;
+//   category: string;
+//   subCategory: string;
+//   description: string;
+//   requirements: string[];
+//   budget: number;
+//   duration: string;
+//   updatedAt: string;
+//   clientName: string;
+//   clientLocation: string;
+//   clientRating?: number;
+// }
 
 interface Client {
   id: string;
@@ -85,23 +89,30 @@ interface BudgetRange {
   max: string;
 }
 
-// Utility function to calculate "posted" time
-const getPostedTime = (createdAt: string): string => {
-  const now = new Date();
-  const posted = new Date(createdAt);
-  const diffMs = now.getTime() - posted.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffHours / 24);
+export interface JobFilters {
+  category?: string;
+  subCategory?: string;
+  budgetRange?: string;
+}
 
-  if (diffHours < 1) return 'Just now';
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-  return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-};
+// Utility function to calculate "posted" time
+// const getPostedTime = (createdAt: string): string => {
+//   const now = new Date();
+//   const posted = new Date(createdAt);
+//   const diffMs = now.getTime() - posted.getTime();
+//   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+//   const diffDays = Math.floor(diffHours / 24);
+
+//   if (diffHours < 1) return 'Just now';
+//   if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+//   return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+// };
 
  
 const AvailableJobs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [showFilters, setShowFilters] = useState<boolean>(false);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
   const [budgetRange, setBudgetRange] = useState<BudgetRange>({ min: '', max: '' });
@@ -109,92 +120,125 @@ const AvailableJobs: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [selectedJob, setSelectedJob] = useState<JobDataType | null>(null);
   const [isClientModalOpen, setIsClientModalOpen] = useState<boolean>(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  // const [appliedProposals, setAppliedProposals] = useState<{ data: Proposal[] }>({ data: [] });
+  const [appliedProposals, setAppliedProposals] = useState<{ data: AppliedProposal[] }>({ data: [] });
+  const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
+  const [filters, setFilters] = useState<JobFilters>({});
+  
   const { pagination, handlePageChange, updateMeta } = usePagination({
     total: 0,
     page: 1,
     pages: 1,
-    limit: 3,
+    limit: 4,
   });
 
-  // Redux and navigation
+  const { handleLogout } = useAuth();
   const user = useSelector((state: RootState) => state.auth.user);
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
+  const debouncedSearchTerm = useDebounce(searchTerm,500)
+
   //* Fetch jobs and client customhooks
-  const { jobs: rawJobs, loading, error, meta } = useJobs(userENDPOINTS.GET_POSTED_JOBS, pagination.page, pagination.limit);
+  const { jobs, loading, error, meta } = useJobs(userENDPOINTS.GET_POSTED_JOBS, pagination.page, pagination.limit, debouncedSearchTerm, filters);
   const {client,fetchClient} = useClient()
   
   useEffect(() => {
     updateMeta(meta.total, meta.pages);
-  }, [meta]);
+  }, [meta, updateMeta]);
 
+  useEffect(() => {
+    const loadProposals = async() => {
+      const appliedJobs = await fetchAppliedProposalsByFreelancer();
+      console.log('console from available jobs =======',appliedJobs.data)
+      setAppliedProposals(appliedJobs)
+      const jobIds = appliedJobs.data.map((proposal) => proposal.jobId);
+      setAppliedJobIds(jobIds)
+    }
+    loadProposals()
+
+  },[])
+
+  const hasApplied = (jobId: string) => {
+    return appliedProposals.data.some((proposal) => proposal.jobId === jobId);
+  };
+
+   useEffect(() => {
+    const newFilters: typeof filters = {};
+    if (selectedCategory) newFilters.category = selectedCategory;
+    if (selectedSubcategory) newFilters.subCategory = selectedSubcategory;
   
-  // Transform raw job data
-  const jobs: Job[] = rawJobs.map((job: RawJob) => ({
-    id: job._id,
-    clientId:job.clientId,
-    title: job.title  ,
-    category: job.category,
-    subcategory: job.subCategory,
-    description: job.description,
-    requirements: job.requirements || [],
-    budget: job.budget.toString(),
-    duration: job.duration,
-    posted: getPostedTime(job.updatedAt),
-    clientName: job.clientName,
-    clientLocation: job.clientLocation,
-    clientRating: job.clientRating || 4.5,
-    postedDate: job.updatedAt || new Date().toISOString(),
-  }));
+  if (budgetRange.min && budgetRange.max) {
+  const min = Math.min(Number(budgetRange.min), Number(budgetRange.max));
+  const max = Math.max(Number(budgetRange.min), Number(budgetRange.max));
+  newFilters.budgetRange = `${min}-${max}`;
+}
+    setFilters(newFilters);
+  }, [selectedCategory, selectedSubcategory, budgetRange]);
+
+  // const jobs: Job[] = rawJobs.map((job: JobDataType) => ({
+  //   id: job._id,
+  //   clientId:job.clientId,
+  //   title: job.title  ,
+  //   category: job.category,
+  //   subcategory: job.subCategory,
+  //   description: job.description,
+  //   requirements: job.requirements || [],
+  //   budget: job.budget.toString(),
+  //   duration: job.duration,
+  //   posted: getPostedTime(job.updatedAt),
+  //   clientName: job.clientId.fullName,
+  //   clientLocation: job.clientId.country,
+  //   // clientRating: job.clientId || 4.5,
+  //   postedDate: job.updatedAt || new Date().toISOString(),
+  // }));
 
   // Get unique categories and subcategories
-  const categories = [...new Set(jobs.map((job) => job.category))];
-  const subcategories = [...new Set(jobs.map((job) => job.subcategory))];
+
+   const loadCategories = async () => {
+      try {
+        const fetchedCategories = await fetchListedCategories();
+        setCategories(fetchedCategories);
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+      }
+    };
+
+    useEffect(() => {
+      loadCategories()
+    },[])
+  
+  // const categories = [...new Set(jobs.map((job) => job.category))];
+  // const subcategories = [...new Set(jobs.map((job) => job.subCategory))];
 
   // Memoized filtered jobs
-  const filteredJobs = useMemo(() => {
-    return jobs.filter((job) => {
-      const matchesSearch =
-        job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.description.toLowerCase().includes(searchTerm.toLowerCase());
+  // const filteredJobs = useMemo(() => {
+  //   return jobs.filter((job) => {
+  //     const matchesSearch =
+  //       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //       job.description.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesCategory = !selectedCategory || job.category === selectedCategory;
-      const matchesSubcategory = !selectedSubcategory || job.subcategory === selectedSubcategory;
-      const matchesBudget =
-        (!budgetRange.min || parseInt(job.budget) >= parseInt(budgetRange.min)) &&
-        (!budgetRange.max || parseInt(job.budget) <= parseInt(budgetRange.max));
+  //     const matchesCategory = !selectedCategory || job.category === selectedCategory;
+  //     const matchesSubcategory = !selectedSubcategory || job.subCategory === selectedSubcategory;
+  //     const matchesBudget =
+  //       (!budgetRange.min || parseInt(job.budget) >= parseInt(budgetRange.min)) &&
+  //       (!budgetRange.max || parseInt(job.budget) <= parseInt(budgetRange.max));
 
-      return matchesSearch && matchesCategory && matchesSubcategory && matchesBudget;
-    });
-  }, [jobs, searchTerm, selectedCategory, selectedSubcategory, budgetRange]);
+  //     return matchesSearch && matchesCategory && matchesSubcategory && matchesBudget;
+  //   });
+  // }, [jobs, searchTerm, selectedCategory, selectedSubcategory, budgetRange]);
 
  
   const resetFilters = () => {
     setSelectedCategory('');
     setSelectedSubcategory('');
     setBudgetRange({ min: '', max: '' });
+    setFilters({})
   };
 
-  //* Handle logout
-  const handleLogout = async () => {
-    try {
-      if (user?._id) {
-        const result = await dispatch(logout(user._id)).unwrap();
-        console.log('Logout successful:', result);
-        persistor.purge();
-        navigate('/signin');
-      }
-    } catch (error) {
-      handleApiError(error)
-    }
-  };
-
-   
-  const handleView = async (job: Job) => {
+  const handleView = async (job: JobDataType) => {
     try {
       const clientData = await fetchClient(job.clientId._id);  
       setSelectedClient(clientData);  
@@ -206,7 +250,7 @@ const AvailableJobs: React.FC = () => {
   };
 
    
-  const handleApplyNow = async(e: React.MouseEvent<HTMLButtonElement>,job: Job) => {
+  const handleApplyNow = async(e: React.MouseEvent<HTMLButtonElement>,job: JobDataType) => {
     console.log('console from availablejobss.tsx',job)
     e.preventDefault()
 
@@ -220,6 +264,9 @@ const AvailableJobs: React.FC = () => {
     setIsModalOpen(true);
   };
 
+  const handleSubmitSuccess = (message: string) => {
+    toast.success(message, { duration: 3000 });
+  };
    
 
   // Loading and error states
@@ -233,6 +280,7 @@ const AvailableJobs: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white text-[#0A142F]">
+       <Toaster position="top-center" reverseOrder={false} />
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -303,8 +351,8 @@ const AvailableJobs: React.FC = () => {
                     >
                       <option value="">All Categories</option>
                       {categories.map((category) => (
-                        <option key={category} value={category}>
-                          {category}
+                        <option key={category._id} value={category.name}>
+                          {category.name}
                         </option>
                       ))}
                     </select>
@@ -319,11 +367,13 @@ const AvailableJobs: React.FC = () => {
                       className="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0A142F]/20"
                     >
                       <option value="">All Subcategories</option>
-                      {subcategories.map((subcategory) => (
-                        <option key={subcategory} value={subcategory}>
-                          {subcategory}
-                        </option>
-                      ))}
+                      {categories.flatMap((category) =>
+                        category.subCategories.map((subcategory) => (
+                          <option key={`${category._id}-${subcategory}`} value={subcategory}>
+                            {subcategory}
+                          </option>
+                        ))
+                      )}
                     </select>
                   </div>
                   <div>
@@ -358,14 +408,14 @@ const AvailableJobs: React.FC = () => {
 
           {/* Jobs Grid */}
           <div className="grid gap-6">
-            {filteredJobs.length === 0 ? (
+            {jobs && jobs.length === 0 ? (
               <div className="text-center py-8 text-[#0A142F]/70">
                 No jobs found matching your criteria
               </div>
             ) : (
-              filteredJobs.map((job) => (
+              jobs.map((job) => (
                 <div
-                  key={job.id}
+                  key={job._id}
                   className="bg-white rounded-xl p-4 md:p-6 shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 group"
                 >
                   <div className="flex justify-between items-start mb-4">
@@ -380,11 +430,11 @@ const AvailableJobs: React.FC = () => {
                         </div>
                         <div className="flex items-center gap-1">
                           <Tags size={16} />
-                          <span>{job.subcategory}</span>
+                          <span>{job.subCategory}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock size={16} />
-                          <span>{job.posted}</span>
+                          <span>{new Date(job.createdAt).toLocaleDateString()}</span>
                         </div>
                       </div>
                     </div>
@@ -458,12 +508,22 @@ const AvailableJobs: React.FC = () => {
                         <span>{job.duration}</span>
                       </div>
                     </div>
-                    <button
-                      onClick={(e) => handleApplyNow(e,job)}
-                      className="w-full md:w-auto px-4 py-2 bg-[#0A142F] text-white rounded-lg hover:bg-[#0A142F]/90 transition-colors"
-                    >
-                      Apply Now
-                    </button>
+                    
+                    {hasApplied(job._id) || appliedJobIds.includes(job._id) ? (
+                  <button
+                    className="w-full md:w-auto px-4 py-2 bg-gray-300 text-gray-700 rounded-lg cursor-not-allowed"
+                    disabled
+                  >
+                    Applied
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => handleApplyNow(e, job)}
+                    className="w-full md:w-auto px-4 py-2 bg-[#0A142F] text-white rounded-lg hover:bg-[#0A142F]/90 transition-colors"
+                  >
+                    Apply Now
+                  </button>
+                )}
                   </div>
                 </div>
               ))
@@ -474,13 +534,14 @@ const AvailableJobs: React.FC = () => {
         <Pagination
           count={pagination.pages}
           page={pagination.page}
-          onChange={(event, value) => handlePageChange(value)}
+          onChange={(_, value) => handlePageChange(value)}
           color="primary"
         />
       </Stack>
       </main>
 
       {/* Job Details Modal */}
+      {selectedJob && (
       <JobDetailsModal
         isOpen={isModalOpen}
         onClose={() => {
@@ -489,8 +550,12 @@ const AvailableJobs: React.FC = () => {
         }}
         job={selectedJob}
         client={client}
+        onSubmitSuccess={handleSubmitSuccess}
+         onSuccessfulApply={(jobId) => {
+    setAppliedJobIds((prev) => [...prev, jobId]);
+  }}
       />
-
+      )}
       {/* Client Profile Modal */}
       <ClientProfileModal
         isOpen={isClientModalOpen}

@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AppDispatch } from '../../../redux/store';
 import { createFreelancerProfile } from '../../../redux/services/userService';
 import { freelancerProfileSchema, FreelancerProfileFormData } from '../../../utils/validations/ProfileValidation';
+import { handleApiError } from '../../../utils/errors/errorHandler';
 
 function CreateFreelancerProfile() {
   const dispatch = useDispatch<AppDispatch>();
@@ -74,8 +75,9 @@ function CreateFreelancerProfile() {
       } else {
         throw new Error(result.error.message || 'Failed to create profile');
       }
-    } catch (error: any) {
-      setServerError(error.message || 'An error occurred while creating the profile');
+    } catch (error) {
+      const err = handleApiError(error)
+      setServerError(err || 'An error occurred while creating the profile');
     }
   };
 

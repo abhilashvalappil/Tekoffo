@@ -61,7 +61,7 @@ export const GigFormSchema = z.object({
     .array(
       z
         .string()
-        .min(5, 'Requirement must be at least 5 characters')
+        .min(3, 'Requirement must be at least 3 characters')
         .max(100, 'Requirement cannot exceed 100 characters')
         .refine(noLeadingTrailingSpaces, {
           message: 'Requirement must not have leading or trailing spaces',

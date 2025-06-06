@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import Navbar from '../shared/Navbar';
 import { navItems } from '../shared/NavbarItems';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import { useNavigate } from 'react-router-dom';
 import { GigFormData,GigFormSchema } from '../../../utils/validations/GigFormValidation';
 import Footer from '../../shared/Footer';
 import { createGig, fetchListedCategories } from '../../../api';
+import { useAuth } from '../../../hooks/customhooks/useAuth';
 import { handleApiError } from '../../../utils/errors/errorHandler';
 
 interface Category {
@@ -37,8 +38,8 @@ const CreateGig: React.FC = () => {
     });
 
   const user = useSelector((state: RootState) => state.auth.user);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { handleLogout } = useAuth();
 
      const [errors, setErrors] = useState<FormErrors>({});
 
@@ -101,21 +102,6 @@ const CreateGig: React.FC = () => {
     toast.error(handleApiError(error));
   }
 }
-
-
-   //* Handle logout
-    const handleLogout = async () => {
-      try {
-        if (user?._id) {
-          const result = await dispatch(logout(user._id)).unwrap();
-          console.log('Logout successful:', result);
-          persistor.purge();
-          navigate('/signin');
-        }
-      } catch (error) {
-        console.error('Logout failed:', error);
-      }
-    };
 
   return (
     <>

@@ -27,10 +27,12 @@ export interface UserProfileResponse {
     preferredJobFields?: string[];
     username: string;
     email: string;
+    total_Spent?:number;
     linkedinUrl?: string;
     githubUrl?: string;
     portfolioUrl?: string;
     role: UserRole;
+    createdAt:string;
   };
   export enum UserRole {
     Client = 'client',
@@ -38,13 +40,34 @@ export interface UserProfileResponse {
     Admin = 'admin',
 }
 
+export interface Job {
+  _id: string;
+  clientId: string;
+  title: string;
+  category: string;
+  subCategory: string;
+  description: string;
+  budget: number;
+  duration: string;
+  requirements: string[];
+  status: string;
+  isBlocked: boolean;
+  createdAt: string;  // ISO date string
+  updatedAt: string;  // ISO date string
+  __v: number;
+}
+
+export interface JobDataResponse {
+  data: Job[];
+}
+
+
   export interface JobFormData {
     id?: string;
     title: string;
     category: string;
     subCategory:string;
     description:string;
-    // requirements:string;
     requirements: string[];
     budget:number;
     duration:string;

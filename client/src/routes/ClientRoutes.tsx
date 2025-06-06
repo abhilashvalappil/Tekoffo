@@ -11,9 +11,10 @@ import MyJobPosts from "../components/client/dashboard/MyJobs";
 import Freelancers from "../components/client/dashboard/AvailableFreelancers";
 import Proposals from "../components/client/dashboard/Proposals";
 import PaymentReview from "../components/client/payment/PaymentReview";
-// import PaymentForm from "../components/client/PaymentForm";
 import PaymentSuccess from "../pages/PaymentSuccess";
 import Contracts from "../components/client/dashboard/Contracts";
+import FreelancerGigsList from "../components/client/dashboard/GigPosts";
+import JobTabs from "../components/shared/Sample";
 
  
 const ClientRoutes = () => (
@@ -45,8 +46,6 @@ const ClientRoutes = () => (
         </ProtectedRoute>
     } 
     />
-
-
 
     <Route 
       path="/client/change-password"
@@ -84,10 +83,26 @@ const ClientRoutes = () => (
      } />
 
     <Route 
+      path="/client/freelancer-gigs"
+      element={
+        <ProtectedRoute allowedRoles={["client"]}>
+          <FreelancerGigsList />
+        </ProtectedRoute>
+     } />
+
+    <Route 
       path="/client/proposals"
       element={
         <ProtectedRoute allowedRoles={["client"]}>
           <Proposals />
+        </ProtectedRoute>
+     } />
+
+    <Route 
+      path="/client/proposalss"
+      element={
+        <ProtectedRoute allowedRoles={["client"]}>
+          <JobTabs />
         </ProtectedRoute>
      } />
 

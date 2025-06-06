@@ -1,11 +1,13 @@
 import API from '../services/api'
 import { userENDPOINTS } from '../constants/endpointUrl'
 import { fetchedCategories } from '../types/admin'
-import { FreelancerData, JobFormData } from '../types/userTypes'
+import { FreelancerData, Job, JobFormData } from '../types/userTypes'
 import { ProposalData } from '../types/proposalTypes'
 import { handleApiError } from '../utils/errors/errorHandler'
 import { PaymentIntentPayload } from '../types/paymentTypes'
 import { PaginatedResponse } from '../types/commonTypes'
+import { FreelancerGigListDTO } from '../types/gigTypes'
+import { JobDataType } from '../types/invitationTypes'
 
 
 export const fetchListedCategories = async(): Promise<fetchedCategories[]> => {
@@ -17,7 +19,6 @@ export const fetchListedCategories = async(): Promise<fetchedCategories[]> => {
     }
 }
 
-
 export const createJob = async(jobDetails:JobFormData): Promise<string> => {
     try {
         const response = await API.post(userENDPOINTS.CREATE_JOB,jobDetails)
@@ -27,7 +28,7 @@ export const createJob = async(jobDetails:JobFormData): Promise<string> => {
     }
 }
 
-export const updateJobPost = async(jobData:JobFormData) => {
+export const updateJobPost = async(jobData:Job) => {
     try {
         const response = await API.put(userENDPOINTS.UPDATE_JOB_POST,jobData);
         return response.data;
@@ -44,10 +45,9 @@ export const deleteJobPost = async(id:string) => {
     }
 }
 
-export const fetchJobs = async (page = 1, limit = 3): Promise<PaginatedResponse<JobFormData>> => {
+export const fetchJobs = async (page?:number, limit?:number,search?: string, filters?: Record<string, string>): Promise<PaginatedResponse<Job>> => {
     try {
-        const result = await API.get(userENDPOINTS.GET_MY_JOBS,{ params: { page, limit }});
-        console.log('console from fetchjobsssss',result.data)
+        const result = await API.get(userENDPOINTS.GET_MY_JOBS,{ params: { page, limit,search, ...filters }});
         return result.data.paginatedResponse || [];
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -72,9 +72,9 @@ export const getReceivedProposals = async(page:number, limit:number): Promise<Pa
     }
 }
 
-export const fetchAndUpdateProposal = async(proposalId:string): Promise<ProposalData> => {
+export const fetchAndUpdateProposal = async(proposalId:string,status:string): Promise<ProposalData> => {
     try {
-        const response = await API.put(userENDPOINTS.UPDATE_PROPOSAL,{proposalId})
+        const response = await API.put(userENDPOINTS.UPDATE_PROPOSAL,{proposalId,status})
         return response.data;
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -118,7 +118,6 @@ export const approveContract = async(contractId:string,stripePaymentIntentId:str
 
 export const submitReview = async(reviewedUserId:string,reviewData:{ rating: number; review: string },contractId:string): Promise<string> => {
     try {
-        console.log('console from submit reviewwwwwwwwww',reviewedUserId,reviewData,contractId)
         const response = await API.post(userENDPOINTS.CREATE_REVIEW,{reviewedUserId,reviewData,contractId})
         return response.data
     } catch (error) {
@@ -126,19 +125,43 @@ export const submitReview = async(reviewedUserId:string,reviewData:{ rating: num
     }
 }
 
- 
+export const fetchFreelancersGigs = async(page?:number, limit?:number): Promise<PaginatedResponse<FreelancerGigListDTO>> => {
+    try {
+        const response = await API.get(userENDPOINTS.GET_GIGS,{ params: { page, limit}})
+        return response.data.gigs;
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
 
-// export const createCheckout = async (data: {
-//     totalAmount: number;
-//     proposalId: string;
-//     clientId: string;
-//     freelancerId: string;
-//   }) => {
-//     try {
-//       const response = await API.post(userENDPOINTS.CREATE_CHECKOUT, data);
-//       return response.data; 
-//     } catch (error) {
-//       console.error('Error creating checkout session:', error);
-//       throw new Error('Failed to create checkout session');
-//     }
-//   };
+export const inviteFreelancerToJob = async(jobId:string, freelancerId:string): Promise<string> => {
+    try {
+        const response = await API.post(userENDPOINTS.CREATE_JOB_INVITE,{jobId,freelancerId})
+        return response.data.message;
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
+
+export const fetchInvitationsSent = async(): Promise<ProposalData[]> => {
+    try {
+        const response = await API.get(userENDPOINTS.GET_INVITATIONS_SENT)
+        return response.data.invitations;
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
+
+export const fetchActiveJobPosts = async(): Promise<{ count: number, jobs: JobDataType[], completed: number, activeContracts:number }> => {
+    try {
+        const response = await API.get(userENDPOINTS.GET_ACTIVE_JOBS)
+         return {
+            count: response.data.count,
+            jobs: response.data.jobs,
+            completed:response.data.completed,
+            activeContracts:response.data.activeContracts
+        };
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}

@@ -1,16 +1,8 @@
- 
 
-
-//************************************* */
-
-import React, { useState } from 'react';
 import {
   User,
   Building2,
-  Wallet,
   Lock,
-  Settings,
-  Bell,
   LogOut,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -27,7 +19,6 @@ interface Props {
 }
 
 function ProfileSidebar({ client }: Props) {
-  const [activeTab, setActiveTab] = useState('profile');
 
   return (
     <div className="lg:w-1/4 sticky top-8 h-fit">
@@ -52,18 +43,19 @@ function ProfileSidebar({ client }: Props) {
 
         <nav className="mt-8">
           <ul className="space-y-2">
-            <li
-              onClick={() => setActiveTab('profile')}
-              className={`${
-                activeTab === 'profile'
-                  ? 'bg-[#0A142F] text-white'
-                  : 'hover:bg-gray-50 text-gray-700'
-              } rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors`}
-            >
-              <User size={20} />
-              <span>My Profile</span>
-            </li>
-            <li
+            <Link to="/client/profile" className="block">
+              <li
+                className={`${
+                  location.pathname === '/client/profile'
+                    ? 'bg-[#0A142F] text-white'
+                    : 'hover:bg-gray-50 text-gray-700'
+                } rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors`}
+              >
+                <User size={20} />
+                <span>My Profile</span>
+              </li>
+            </Link>
+            {/* <li
               onClick={() => setActiveTab('wallet')}
               className={`${
                 activeTab === 'wallet'
@@ -73,7 +65,8 @@ function ProfileSidebar({ client }: Props) {
             >
               <Wallet size={20} />
               <span>Wallet</span>
-            </li>
+            </li> */}
+            
             {/* <li
               onClick={() => setActiveTab('password')}
               className={`${
@@ -86,31 +79,20 @@ function ProfileSidebar({ client }: Props) {
               <span>Change Password</span>
             </li> */}
             <li>
-        <Link
-          to="/client/change-password"
-          onClick={() => setActiveTab('password')} // Preserve tab-switching behavior
-          className={`${
-            activeTab === 'password'
-              ? 'bg-[#0A142F] text-white'
-              : 'hover:bg-gray-50 text-gray-700'
-          } rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors`}
-        >
-          <Lock size={20} />
-          <span>Change Password</span>
-        </Link>
-      </li>
-            <li
-              onClick={() => setActiveTab('settings')}
-              className={`${
-                activeTab === 'settings'
-                  ? 'bg-[#0A142F] text-white'
-                  : 'hover:bg-gray-50 text-gray-700'
-              } rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors`}
-            >
-              <Settings size={20} />
-              <span>Settings</span>
-            </li>
-            <li
+            <Link
+                to="/client/change-password"
+                className={`${
+                  location.pathname === '/client/change-password'
+                    ? 'bg-[#0A142F] text-white'
+                    : 'hover:bg-gray-50 text-gray-700'
+                } rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors`}
+              >
+                <Lock size={20} />
+                <span>Change Password</span>
+              </Link>
+              </li>
+             
+            {/* <li
               onClick={() => setActiveTab('notifications')}
               className={`${
                 activeTab === 'notifications'
@@ -120,7 +102,7 @@ function ProfileSidebar({ client }: Props) {
             >
               <Bell size={20} />
               <span>Notifications</span>
-            </li>
+            </li> */}
             <li className="hover:bg-red-50 text-red-500 rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors mt-8">
               <LogOut size={20} />
               <span>Logout</span>

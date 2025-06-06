@@ -1,7 +1,8 @@
 import API from '../services/api'
-import { adminENDPOINTS } from '../constants/endpointUrl'
+import { adminENDPOINTS, userENDPOINTS } from '../constants/endpointUrl'
 import { FetchUserResponse, fetchedCategories, AddCategoryPayload, EditCategoryPayload } from '../types/admin'
 import { handleApiError } from '../utils/errors/errorHandler'
+import { TransactionWithUsername } from '../types/transaction'
 
 export const fetchUsers = async(page = 1, limit = 3): Promise<{
     data:FetchUserResponse,
@@ -77,3 +78,50 @@ export const updateCategoryStatus = async(categoryId:string, isListed:boolean): 
         throw new Error(handleApiError(error));
     }
 }
+
+export const fetchTotalActiveJobsCount = async() : Promise<number> => {
+    try {
+        const response = await API.get(adminENDPOINTS.GET_ACTIVEJOBS_COUNT)
+        return response.data.count;
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
+
+export const fetchPlatformRevenue = async(): Promise<number> => {
+    try {
+        const response = await API.get(adminENDPOINTS.GET_TOTAL_REVENUE)
+        return response.data.totalRevenue;
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
+
+export const fetchMonthlyRevenueStats = async(): Promise<{ month: string; earnings: number }[]> => {
+    try {
+        const response = await API.get('/admin/total-earnings')
+        return response.data.data;
+    } catch (error) {
+         throw new Error(handleApiError(error));
+    }
+}
+
+export const fetchEscrowFunds = async(): Promise<number> => {
+    try {
+        const response = await API.get(adminENDPOINTS.GET_TOTAL_ESCROW_FUNDS)
+        return response.data.data;
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
+
+export const fetchAllTransactions = async(): Promise<TransactionWithUsername[]> => {
+    try {
+        const response = await API.get(adminENDPOINTS.GET_ALL_TRANSACTIONS)
+        console.log('console from fetchTransactions * ==== *',response.data.transactions)
+        return response.data.transactions;
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
+

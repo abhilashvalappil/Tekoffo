@@ -35,7 +35,6 @@ export class UserService implements IUserService {
     async createUserProfile(userId:string, ProfileData:ProfileFormData): Promise<{message:string,userProfile:UserProfileResponse}> {
        
             const user = await this.userRepository.findUserById(userId)
-             
             if(!user){
                 throw new NotFoundError(MESSAGES.INVALID_USER)
             }
@@ -88,6 +87,14 @@ export class UserService implements IUserService {
                     portfolioUrl: saveProfile.portfolioUrl,
                 }
             }
+    }
+
+    async getUserProfile(userId:string): Promise<{userProfile:IUser | null}> {
+      const userProfile = await this.userRepository.findUserById(userId);
+      if(!userProfile){
+        throw new NotFoundError(MESSAGES.INVALID_USER)
+      }
+      return{userProfile}
     }
 
     async updateUserProfile(userId:string,updateProfileData:ProfileFormData): Promise<{message:string,userProfile:UserProfileResponse}>{

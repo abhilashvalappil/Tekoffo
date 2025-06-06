@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import {Briefcase, Star, ChevronRight, DollarSign, Clock, Repeat } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch,persistor, RootState } from '../../../redux/store';
+import { Toaster } from 'react-hot-toast';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 import Navbar from '../shared/Navbar';
 import { navItems } from '../shared/NavbarItems';
 import Footer from '../../shared/Footer';
 import { Gig } from '../../../types/gigTypes';
-import { deleteGig, fetchGigs } from '../../../api';
+import { fetchGigs } from '../../../api';
 import { useNavigate } from 'react-router-dom';
-import { logout } from '../../../redux/services/authService';
 import EditGigModal from './EditGigModal';
-import { handleApiError } from '../../../utils/errors/errorHandler';
+import { createGigHandlers } from '../../../handlers/freelancerHandlers/gigHandlers';
+import { useAuth } from '../../../hooks/customhooks/useAuth';
 
 
 const MyGigs: React.FC = () => {
@@ -25,8 +25,9 @@ const MyGigs: React.FC = () => {
   const [gigToDelete, setGigToDelete] = useState<Gig | null>(null);
 
   const user = useSelector((state: RootState) => state.auth.user);
-  const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+
+   const { handleLogout } = useAuth();
 
   useEffect(() => {
     const loadGigs = async () => {
@@ -40,52 +41,22 @@ const MyGigs: React.FC = () => {
   setGigToDelete(gig);
   setIsDeleteModalOpen(true);
 };
+ 
+  const {
+  handleEditGig,
+  handleDeleteGig,
+  handleSaveGig,
+} = createGigHandlers({
+  gigs,
+  gigToDelete,
+  setGigs,
+  setIsModalOpen,
+  setSelectedGig,
+  setIsDeleteModalOpen,
+  setGigToDelete,
+  navigate,
+});
 
-  const handleLogout = async () => {
-    try {
-      if (user?._id) {
-        const result = await dispatch(logout(user._id)).unwrap();
-        console.log('Logout successful:', result);
-        persistor.purge();
-        navigate('/signin');
-      }
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
-
-  const handleEditGig = (gig: Gig) => {
-    setSelectedGig(gig);
-    setIsModalOpen(true);
-  };
-
-  const handleDeleteGig = async() => {
-    if (!gigToDelete) return;
-    try {
-      const message = await deleteGig(gigToDelete._id);
-      setGigs(gigs.filter((g) => g._id !== gigToDelete._id))
-      setIsDeleteModalOpen(false);
-      setGigToDelete(null);
-      toast.success(message)
-      setTimeout(() => {
-        navigate('/freelancer/gigs')
-      },1000)
-    } catch (error) {
-      toast.error(handleApiError(error))
-      setIsDeleteModalOpen(false);
-      setGigToDelete(null);
-    }
-  }
-
-  const handleSaveGig = async (updatedGig: Gig) => {
-    try {
-      // Assuming you have an updateGig API function
-      // const response = await updateGig(updatedGig);
-      setGigs(gigs.map((g) => (g._id === updatedGig._id ? updatedGig : g)));
-    } catch (error) {
-      console.error('Failed to update gig:', error);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-white text-[#0A142F]">

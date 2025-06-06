@@ -46,10 +46,6 @@ export const signIn = createAsyncThunk <SignInResponse, SignInCredentials>(
     } catch (error) {
       console.log('Full error response:',error)
       if (error instanceof AxiosError) {
-        // console.log('Error message:', error.response?.data?.message);
-        // return rejectWithValue(
-        //   error.response?.data?.message || "Sign in failed"
-        // );
         const errorMessage =
           error.response?.data?.message || "Sign in failed";
         console.log("Backend error message:", errorMessage);

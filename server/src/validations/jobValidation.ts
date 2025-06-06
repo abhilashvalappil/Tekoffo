@@ -71,7 +71,7 @@ export const JobFormSchema = z.object({
 
 
   export const UpdateJobInputSchema = z.object({
-    id: z.string().min(1, 'Job ID is required'),
+    _id: z.string().min(1, 'Job ID is required'),
     title: z
     .string()
     .min(5, 'Job title must be at least 5 characters')

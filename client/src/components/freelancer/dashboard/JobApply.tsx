@@ -1,26 +1,29 @@
 import React, { useState } from 'react';
 import { submitProposal } from '../../../api';  
+import { handleApiError } from '../../../utils/errors/errorHandler';
+import { Toaster, toast } from 'react-hot-toast';
+import { JobDataType } from '../../../hooks/customhooks/useJobs';
 
-interface JobDetails {
-  id: string;
-  // clientId:string;
-  clientId:{
-    _id:string;
-    fullName:string;
-    profilePicture?:string;
-    companyName?:string;
-    country:string;
-  }
-  title: string;
-  clientName: string;
-  clientLocation: string;
-  clientRating: number;
-  postedDate: string;
-  description: string;
-  requirements: string[];
-  budget: string;
-  duration: string;
-}
+// interface JobDetails {
+//   id: string;
+//   // clientId:string;
+//   clientId:{
+//     _id:string;
+//     fullName:string;
+//     profilePicture?:string;
+//     companyName?:string;
+//     country:string;
+//   }
+//   title: string;
+//   clientName: string;
+//   clientLocation: string;
+//   clientRating: number;
+//   postedDate: string;
+//   description: string;
+//   requirements: string[];
+//   budget: string;
+//   duration: string;
+// }
 
 interface Client {
     fullName: string;
@@ -34,11 +37,13 @@ interface JobDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   // job: JobDetails | null;
-  job: JobDetails;
+  job: JobDataType;
   client: Client | null;
+  onSubmitSuccess: (message: string) => void;
+  onSuccessfulApply: (jobId: string) => void;
 }
 
-const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ isOpen, onClose, job }) => {
+const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ isOpen, onClose, job, onSuccessfulApply }) => {
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [message, setMessage] = useState('');
   const [expectedBudget, setExpectedBudget] = useState('');
@@ -64,29 +69,32 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ isOpen, onClose, job 
 
   const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
-    
-    console.log({ cvFile, message, expectedBudget, duration });
 
     const proposalDetails = new FormData()
-    console.log('job apply deta propoooooooooo',proposalDetails)
 
-    proposalDetails.append("jobId",job.id);
+    proposalDetails.append("jobId",job._id);
     proposalDetails.append("clientId",job.clientId._id) 
 
     if(cvFile){
       proposalDetails.append("attachments",cvFile)
     }
     if(message){
-      proposalDetails.append("coverLetter",message)
+      proposalDetails.append("coverLetter",message) 
     }
-    proposalDetails.append('proposedBudget', expectedBudget || job.budget);
+    proposalDetails.append('proposedBudget', expectedBudget || job.budget.toString());
     proposalDetails.append('duration', duration || job.duration);
- 
-    console.log('FormData contents:', Object.fromEntries(proposalDetails.entries()));
     try {
-      await submitProposal(proposalDetails);
+      const message =await submitProposal(proposalDetails);
+      toast.success(message)
+      onSuccessfulApply(job._id);
+
+      //  onSubmitSuccess(message);
+       setTimeout(() => {
+        onClose();  
+      }, 1000);
     } catch (error) {
-      console.log(error)
+      handleApiError(error)
+      // console.log(error)
     }
     onClose();
   };
@@ -96,6 +104,7 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ isOpen, onClose, job 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 overflow-hidden transform transition-all">
+        <Toaster position="top-center" reverseOrder={false} />
         {/* Header */}
         <div className="bg-gradient-to-r from-[#0A142F] to-[#1a2a5f] p-6 text-white">
           <div className="flex justify-between items-center">

@@ -20,6 +20,67 @@ class GigRepository extends BaseRepository<IGig> implements IGigRepository {
         return await this.findById(id)
     }
 
+    async findGigs(skip: number, limit: number): Promise<IGig[]> {
+        return await Gig.aggregate([
+            {
+                $match: {
+                    isActive: true
+                }
+            },
+            {
+                $lookup: {
+                    from: 'users',  
+                    localField: 'freelancerId',
+                    foreignField: '_id',
+                    as: 'freelancer'
+                }
+            },
+            {
+                $unwind: '$freelancer'
+            },
+            {
+                $lookup: {
+                    from: 'reviews',
+                    localField: 'freelancerId',
+                    foreignField: 'reviewedUserId',
+                    as: 'reviews'
+                }
+            },
+            {
+                $addFields: {
+                    averageRating: { $avg: '$reviews.rating' },
+                    totalReviews: { $size: '$reviews' }
+                }
+            },
+            {
+                $project: {
+                    title: 1,
+                    description: 1,
+                    category: 1,
+                    price: 1,
+                    revisions: 1,
+                    deliveryTime: 1,
+                    skills: 1,
+                    requirements: 1,
+                    freelancer: {
+                        _id: 1,
+                        fullName: 1,
+                        profilePicture: 1
+                    },
+                    averageRating: { $ifNull: ['$averageRating', 0] },
+                    totalReviews: 1
+                    }
+                },
+                { $skip: skip }, 
+                { $limit: limit }, 
+            ]);
+     }
+
+     async countGigs(): Promise<number>{
+        return await this.count();
+     }
+
+
     async findByIdAndUpdate(id:string,gig:Partial<IGig>): Promise<IGig | null> {
         return await this.updateById(id,gig)
     }

@@ -194,6 +194,20 @@ export class UserController {
         }
     }
 
+    async getUserProfile(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
+        try {
+            const userId = req.query.userId;
+            if(!userId || typeof userId !== 'string'){
+                res.status(Http_Status.BAD_REQUEST).json({error: MESSAGES.UNAUTHORIZED})
+                return;
+            }
+            const {userProfile} = await this.userService.getUserProfile(userId)
+            res.status(Http_Status.OK).json({userProfile})
+        } catch (error) {
+            next(error)
+        }
+    }
+
     async updateFreelancerProfile(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
         try {
 

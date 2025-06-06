@@ -32,16 +32,12 @@ const SignupPage: React.FC = () => {
     },
   });
 
-  
-
-  
   const [serverError, setServerError] = useState<string | null>(null);
   // const [otpSent, setOtpSent] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { loading,error,successMessage } = useSelector((state: RootState) => state.auth);
-
 
   useEffect(() => {
     dispatch(clearMessages());
@@ -51,7 +47,6 @@ const SignupPage: React.FC = () => {
   const handleSignup = async (data: SignUpFormData) => {
     try {
         setServerError(null);
-        // setOtpSent(false)
         localStorage.setItem('otpEmail',data.email)
 
       const { confirmPassword:_, ...userData } = data;
@@ -61,9 +56,7 @@ const SignupPage: React.FC = () => {
         role: role,
       };
 
-      // const result = await dispatch(signUp(signupData)).unwrap();
-
-      const result = await signUp((signupData))
+      const result = await signUp(signupData)
       if (result.success) {
         localStorage.setItem('otpTimer', result.expiresIn.toString());
         setTimeout(() => {
@@ -73,8 +66,6 @@ const SignupPage: React.FC = () => {
     } catch (err) {
       const errorMessage = handleApiError(err);
       setServerError(errorMessage);
-      // setServerError((err as Error).message);
-      // console.error('Signup failed:', err);
     }
   };
  
@@ -173,11 +164,6 @@ const SignupPage: React.FC = () => {
                 )}
               </div>
             </div>
-
-            {/* Server Error Display */}
-            {/* {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-            {serverError && <p className="text-red-500 text-sm text-center">{serverError}</p>}
-            {otpSent && <p className="text-green-500 text-sm text-center">{serverMessage}</p>} */}
 
             {successMessage && <p className="text-green-500 text-sm text-center">{successMessage}</p>}
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}

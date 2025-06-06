@@ -19,3 +19,19 @@ export interface CreateReviewDTO {
     contractId: Types.ObjectId;
     jobId: Types.ObjectId;
 }
+
+export interface IPopulatedReview {
+  _id: Types.ObjectId;
+  reviewerId: {
+    _id: Types.ObjectId;
+    fullName: string;
+    profilePicture?: string;
+  }  
+  reviewedUserId: Types.ObjectId;
+  rating: number;
+  reviewText: string;
+  contractId: Types.ObjectId;
+  jobId: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}

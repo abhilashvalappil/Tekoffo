@@ -6,6 +6,7 @@ import { ProposalData } from '../../../types/proposalTypes';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createContract, createPaymentIntent, fetchAndUpdateProposal } from '../../../api';  
+import { handleApiError } from '../../../utils/errors/errorHandler';
 
 interface PaymentFormProps {
   proposalData: ProposalData | null;
@@ -38,7 +39,6 @@ export default function PaymentForm({
       setError('Invalid proposal data, amount, or Stripe initialization. Please try again.');
       return;
     }
-
     setIsProcessing(true);
     setError(null);
 
@@ -56,10 +56,8 @@ export default function PaymentForm({
         serviceFee:serviceFee,
         clientId: clientId._id,
         jobId: jobId._id,
-
       }
       const { clientSecret, transactionId } = await createPaymentIntent(paymentIntentData)
-
       console.log('console from paymentform',clientSecret, transactionId)
 
       if (!clientSecret) {
@@ -87,13 +85,13 @@ export default function PaymentForm({
         setError(stripeError.message || 'An error occurred during payment confirmation.');
       } else if (paymentIntent?.status === 'requires_capture') {
         setSuccess?.('Payment authorized. Funds are held in the stripe.');
-        await fetchAndUpdateProposal(proposalId)
-        navigate('/payment-success');
+        await fetchAndUpdateProposal(proposalId,'accepted')
+        navigate('/payment-success', { replace: true });
         await createContract(transactionId)
       }
-    } catch (error) {
-      console.error('Payment error:', error);
-      setError(error.response?.data?.message || error.message || 'Something went wrong.');
+    } catch (err) {
+      const error = handleApiError(err)
+      setError(error|| 'Something went wrong.');
     } finally {
       setIsProcessing(false);
     }

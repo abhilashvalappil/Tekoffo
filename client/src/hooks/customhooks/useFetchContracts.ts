@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import API from "../../services/api";
 import { userENDPOINTS } from "../../constants/endpointUrl";
 import { contractResponse } from "../../types/paymentTypes";
+import { MetaType } from "../../types/commonTypes";
 
 
-export const useFetchContracts = (search: string,page = 1,limit = 3,  statusFilter: string, timeFilter: string) => {
+export const useFetchContracts = (page:number,limit:number, search?: string, status?:string ) => {
     const [contracts, setContracts] = useState<contractResponse[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null)
@@ -14,18 +15,12 @@ export const useFetchContracts = (search: string,page = 1,limit = 3,  statusFilt
         pages: 1,
         limit: 4,
       });
-    
 
-    const fetchContracts = async() => {
+    const fetchContracts = useCallback(async() => {
         try {
-           
-            // const response = await API.get(
-            //     `${userENDPOINTS.GET_CONTRACTS}?search=${search}&status=${statusFilter}&time=${timeFilter}`
-            //   );
             const response = await API.get(userENDPOINTS.GET_CONTRACTS, {
-                params: { page, limit, search, status: statusFilter, time: timeFilter },
+                params: { page, limit, search, status},
               });
-            console.log('console from useFetchcontractssssseeee',response.data)
             setContracts(response.data.data)
             setMeta(response.data.meta);
         } catch (err) {
@@ -33,11 +28,11 @@ export const useFetchContracts = (search: string,page = 1,limit = 3,  statusFilt
         } finally{
             setLoading(false)
         }
-    }
+    }, [page, limit, search, status]);
 
     useEffect(() => {
         fetchContracts()
-    },[search, statusFilter, timeFilter, page, limit])
+    },[ fetchContracts])
     
     return {contracts, loading, error, meta, refetch:fetchContracts}
 }

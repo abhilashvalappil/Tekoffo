@@ -1,17 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import {
-  Briefcase,
-  User,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  Bell,
-  MessageSquare,
-  DollarSign,
-  BellRing,
-} from 'lucide-react';
+import {Briefcase,User,Settings,LogOut,Menu,X,Bell,MessageSquare,DollarSign,BellRing} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import socket from '../../../utils/socket';
 import API from '../../../services/api';
@@ -67,8 +56,8 @@ const Navbar: React.FC<NavbarProps> = ({
         const response = await API.get('/notifications');
         const fetchedNotifications: Notification[] = response.data.map((n: any) => ({
           id: n._id,
-          type: 'payment', // Adjust based on notification type if stored in DB
-          title: ' Payment Authorized', // Adjust based on notification type
+          type: 'payment',  
+          title: ' Payment Authorized', 
           message: n.message,
           timestamp: new Date(n.createdAt),
           status: n.read ? 'read' : 'unread',
@@ -181,7 +170,7 @@ const Navbar: React.FC<NavbarProps> = ({
     <nav className="bg-[#0A142F] text-white fixed w-full z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
+          <div className="flex items-center -ml-8">
             <a href="/" className="flex items-center">
               <Briefcase className="h-8 w-8 text-white" />
               <span className="ml-2 text-xl font-bold">Tekoffo</span>

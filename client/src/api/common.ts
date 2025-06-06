@@ -4,6 +4,8 @@ import API from '../services/api'
 import { commonENDPOINTS,userENDPOINTS } from '../constants/endpointUrl'
 import {SingUpFormData,Passwords} from '../types/auth'
 import { handleApiError } from '../utils/errors/errorHandler'
+import { IFrontendPopulatedReview, IReview } from '../types/review'
+import { SocketMessage } from '../types/messageTypes'
  
 
 export const signUp = async(userData:SingUpFormData) => {
@@ -37,12 +39,50 @@ export const changePassword = async(passwords:Passwords) => {
 export const fetchReceiver = async(receiverId: string) => {
     try {
         const response = await API.post(userENDPOINTS.GET_RECEIVER,{receiverId})
-        // console.log('console from fetch receiverrrrrrr',response.data)
         return response.data;
     } catch (error) {
         throw new Error(handleApiError(error));
     }
 }
+
+//* fetch by reviewerId
+export const fetchSubmittedReviews = async(): Promise<IReview[]> =>{
+    try {
+        const response = await API.get(userENDPOINTS.GET_SUBMITTED_REVIEWS)
+        return response.data.reviews;
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
+
+export const fetchReviews = async(userId:string): Promise<IFrontendPopulatedReview[]> => {
+    try {
+        const response = await API.get(userENDPOINTS.GET_REVIEWS,{params:{userId}})
+        return response.data.reviews;
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
+
+export const deleteMessageApi = async(messageId:string): Promise<SocketMessage> => {
+    try {
+        const response = await API.put(userENDPOINTS.DELETE_MSG,{messageId})
+        return response.data.message;
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
+
+export const fetchUnreadChatCount = async(): Promise<number> => {
+    try {
+        const response = await API.get(userENDPOINTS.GET_UNREAD_MESSAGES)
+        return response.data.count;
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
+
+
  
 
 

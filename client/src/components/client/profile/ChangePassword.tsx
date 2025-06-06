@@ -5,6 +5,9 @@ import { RootState } from '../../../redux/store';
 import ProfileSidebar from './ProfileSidebar';  
 import { changePassword } from '../../../api/common';
 // import { Passwords } from '../../types/auth';
+import ClientNavbar from '../shared/Navbar';
+import { clientNavItems } from '../shared/NavbarItems';
+import Footer from '../../shared/Footer';
 import {Toaster, toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -12,15 +15,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { passwordSchema,PasswordFormData } from '../../../utils/validations/AuthValidation';
 import { handleApiError } from '../../../utils/errors/errorHandler';
 
-// interface ChangePasswordProps {
-//   onCancel?: () => void;
-// }
-// interface Passwords {
-//     currentPassword:string;
-//     newPassword:string;
-// }
+ 
 
 const ChangePassword: React.FC  = () => {
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [serverError, setServerError] = useState('');
+  const [activeTab, setActiveTab] = useState<string>('profile');
+
+  
   const userProfile = useSelector((state: RootState) => state.auth.user);
   const navigate = useNavigate();
 
@@ -29,11 +33,6 @@ const ChangePassword: React.FC  = () => {
     companyName: userProfile?.companyName,
     profilePicture: userProfile?.profilePicture,
   };
-
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [serverError, setServerError] = useState('');
 
   const {
     register,
@@ -72,8 +71,13 @@ const ChangePassword: React.FC  = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white text-gray-800">
+       <ClientNavbar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        navItems={clientNavItems}
+      />
       <Toaster position="top-center" reverseOrder={false} />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-22">
         <div className="flex flex-col lg:flex-row gap-8">
           <ProfileSidebar client={client} activeTab="password" />
           <div className="lg:w-3/4">
@@ -185,6 +189,7 @@ const ChangePassword: React.FC  = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

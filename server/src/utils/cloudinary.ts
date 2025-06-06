@@ -32,3 +32,21 @@ const storage = new CloudinaryStorage({
   });
   export const uploadProposal = multer({ storage: proposalStorage });
   
+
+  const chatMediaStorage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => {
+    const fileType = file.mimetype.split('/')[0]; // image, video, application, etc.
+
+    let folder = 'chat_media';
+    let allowedFormats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'mov', 'pdf', 'docx'];
+
+    return {
+      folder,
+      allowed_formats: allowedFormats,
+      resource_type: fileType === 'video' ? 'video' : 'auto', // important!
+    };
+  },
+});
+
+export const uploadChatMedia = multer({ storage: chatMediaStorage });

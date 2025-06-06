@@ -1,69 +1,24 @@
- 
-
 import { useState, useEffect } from 'react';
-import { Search, Calendar, Filter, Eye, Check, X, ChevronDown, User, LayoutDashboard, Briefcase, ClipboardList, Users, FileText, MessageSquare } from 'lucide-react';
-import Navbar from '../shared/Navbar';
-import { navItems } from '../shared/NavbarItems';
-import { getReceivedProposals } from '../../../api';
-import { ProposalData } from '../../../types/proposalTypes';
+import { Search, Calendar, Filter, Eye, Check, X, ChevronDown, User } from 'lucide-react';
+import { Toaster, toast } from 'react-hot-toast';
+import ClientNavbar from '../shared/Navbar';
+import { clientNavItems } from '../shared/NavbarItems';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
 import Footer from '../../shared/Footer';
+import { fetchAndUpdateProposal, fetchInvitationsSent, getReceivedProposals } from '../../../api';
+import { ProposalData, Proposal, Profile } from '../../../types/proposalTypes';
+import { Button } from '@mui/material';
+import { FaCheckCircle } from 'react-icons/fa';
 
- 
-type Proposal = {
-  id: string;
-  _id: string; 
-  jobId: {
-    _id: string;
-    title: string;
-    description: string;
-  };  
-  freelancerId: {
-    _id: string;
-    fullName: string;
-    email:string;
-  }; 
-  title: string;
-  sender: string;
-  receiver: string;
-  date: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  viewed: boolean;
-  proposedBudget: number;
-  amount:number;
-  description: string;
-  duration?: string;  
-  senderEmail?: string;
-  senderProfilePicture?: string;
-  senderCountry?: string;
-  senderDescription?: string;
-  senderSkills?: string[];
-  senderPreferredJobFields?: string[];
-  senderLinkedinUrl?: string;
-  senderGithubUrl?: string;
-  senderPortfolioUrl?: string;
-};
-
-type Profile = {
-  name: string;
-  email: string;
-  country: string;
-  description: string;
-  profilePicture: string;
-  skills: string[];
-  preferredJobFields: string[];
-  linkedinUrl?: string;
-  githubUrl?: string;
-  portfolioUrl?: string;
-};
 
 const Proposals = () => {
-  const [activeTab, setActiveTab] = useState<'received' | 'sent'>('received');
+  const [activeeTab, setActiveeTab] = useState<'received' | 'sent'>('received');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<string>('proposals');
   const [timeFilter, setTimeFilter] = useState<string>('all');
   const [filteredProposals, setFilteredProposals] = useState<Proposal[]>([]);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
@@ -71,43 +26,67 @@ const Proposals = () => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [proposalData, setProposalData] = useState<ProposalData[]>([]);
-   const [totalCount,setTotalCount] = useState(0);
-   const {
+  const [sentInvitations, setSentInvitations] = useState<ProposalData[]>([]);
+   
+  const {
     pagination,
     handlePageChange,
     updateMeta,
   } = usePagination({ total: 0, page: 1, pages: 1, limit: 5 });
 
-
   const navigate = useNavigate();
-  
-  //* Fetch proposals
+
+  // Fetch received proposals
   useEffect(() => {
     const loadProposals = async () => {
       try {
         const response = await getReceivedProposals(pagination.page, pagination.limit);
         setProposalData(response.data);
         updateMeta(response.meta.total, response.meta.pages);
-         setTotalCount(response.meta.total);
+        // setTotalCount(response.meta.total);
       } catch (error) {
         console.error('Error fetching proposals:', error);
       }
     };
     loadProposals();
-  }, [pagination.page, pagination.limit]);
+  }, [pagination.page, pagination.limit,updateMeta]);
 
-   
-  const mapProposals = (data: ProposalData[]): Proposal[] => {
+  // Fetch sent invitations
+  useEffect(() => {
+    const loadSentInvitations = async () => {
+      try {
+        const invitations = await fetchInvitationsSent();
+        setSentInvitations(invitations);
+      } catch (error) {
+        console.error('Error fetching sent invitations:', error);
+      }
+    };
+    loadSentInvitations();
+  }, []);
+
+  const mapProposals = (data: ProposalData[], isSent: boolean): Proposal[] => {
     return data.map((item) => ({
       id: item._id.toString(),
+      _id: item._id,
+      jobId: {
+        _id: item.jobId._id,
+        title: item.jobId.title,
+        description: item.jobId.description,
+      },
+      freelancerId: {
+        _id: item.freelancerId._id,
+        fullName: item.freelancerId.fullName,
+        email: item.freelancerId.email,
+      },
       title: item.jobId.title,
-      sender: item.freelancerId.fullName,
-      receiver: 'Your Company',
+      sender: isSent ? 'Your Company' : item.freelancerId.fullName,
+      receiver: isSent ? item.freelancerId.fullName : 'Your Company',
       date: new Date(item.createdAt).toISOString().split('T')[0],
       status: item.status as 'pending' | 'accepted' | 'rejected',
-      // viewed: item.viewedByReceiver,
       amount: item.proposedBudget,
-      description: item.coverLetter,
+      proposedBudget: item.proposedBudget,
+      description: isSent ? item.jobId.description : item.coverLetter || 'No cover letter provided',
+      duration: item.duration,
       senderEmail: item.freelancerId.email,
       senderProfilePicture: item.freelancerId.profilePicture,
       senderCountry: item.freelancerId.country,
@@ -122,9 +101,8 @@ const Proposals = () => {
 
   // Filter proposals
   useEffect(() => {
-    const proposals = mapProposals(proposalData).filter((p) =>
-      activeTab === 'received' ? p.receiver === 'Your Company' : p.sender === 'Your Company'
-    );
+    const data = activeeTab === 'received' ? proposalData : sentInvitations;
+    const proposals = mapProposals(data, activeeTab === 'sent');
 
     let filtered = proposals;
 
@@ -173,10 +151,10 @@ const Proposals = () => {
     }
 
     setFilteredProposals(filtered);
-  }, [activeTab, searchQuery, statusFilter, timeFilter, proposalData]);
+  }, [activeeTab, searchQuery, statusFilter, timeFilter, proposalData, sentInvitations]);
 
   const viewProposal = (proposal: Proposal) => {
-    if (activeTab === 'received' && !proposal.viewed) {
+    if (activeeTab === 'received' && !proposal.viewed) {
       setProposalData((prev) =>
         prev.map((item) =>
           item._id.toString() === proposal.id ? { ...item, viewedByReceiver: true } : item
@@ -204,7 +182,8 @@ const Proposals = () => {
     setIsProfileModalOpen(true);
   };
 
-  const handleAcceptProposal = async(proposal: Proposal) => {
+  const handleAcceptProposal = async (proposal: Proposal) => {
+    console.log('console from handleacceptproposal <<<<===>>>>>>>',proposal)
     setProposalData((prev) =>
       prev.map((item) =>
         item._id.toString() === proposal.id ? { ...item, status: 'accepted' } : item
@@ -214,7 +193,7 @@ const Proposals = () => {
       prev.map((p) => (p.id === proposal.id ? { ...p, status: 'accepted' } : p))
     );
     setIsModalOpen(false);
-    
+
     navigate('/client/payment-review', {
       state: {
         proposalId: proposal.id,
@@ -222,9 +201,9 @@ const Proposals = () => {
     });
   };
 
-   
-
-  const handleRejectProposal = (proposal: Proposal) => {
+  const handleRejectProposal = async(proposal: Proposal) => {
+    await fetchAndUpdateProposal(proposal._id,'rejected')
+     toast.success('Proposal rejected successfully')
     setProposalData((prev) =>
       prev.map((item) =>
         item._id.toString() === proposal.id ? { ...item, status: 'rejected' } : item
@@ -238,23 +217,24 @@ const Proposals = () => {
 
   return (
     <div className="min-h-screen bg-white text-[#0A142F]">
-      <Navbar navItems={navItems} activeTab={activeTab} setActiveTab={setActiveTab} />
+      <ClientNavbar navItems={clientNavItems} activeTab={activeTab} setActiveTab={setActiveTab} />
+       <Toaster position="top-center" />
       <div className="container mx-auto px-30 py-20">
         <h1 className="text-3xl font-bold mb-8">Proposal Management</h1>
 
         {/* Tabs */}
         <div className="flex mb-6 border-b">
           <button
-            className={`pb-2 px-4 font-medium ${activeTab === 'received' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
-            onClick={() => setActiveTab('received')}
+            className={`pb-2 px-4 font-medium ${activeeTab === 'received' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+            onClick={() => setActiveeTab('received')}
           >
             Received Proposals
           </button>
           <button
-            className={`pb-2 px-4 font-medium ${activeTab === 'sent' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
-            onClick={() => setActiveTab('sent')}
+            className={`pb-2 px-4 font-medium ${activeeTab === 'sent' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+            onClick={() => setActiveeTab('sent')}
           >
-            Sent Proposals
+            Sent Invitations
           </button>
         </div>
 
@@ -313,11 +293,16 @@ const Proposals = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{activeTab === 'received' ? 'From' : 'To'}</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{activeeTab === 'received' ? 'From' : 'To'}</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    {activeeTab === 'received' && (
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    )}
+                    {activeeTab === 'sent' && (
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -327,7 +312,7 @@ const Proposals = () => {
                         <div className="flex items-center">
                           <div className="text-sm font-medium">
                             {proposal.title}
-                            {activeTab === 'sent' && proposal.viewed && (
+                            {activeeTab === 'sent' && proposal.viewed && (
                               <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">Viewed</span>
                             )}
                           </div>
@@ -335,7 +320,7 @@ const Proposals = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div className="flex items-center">
-                          {activeTab === 'received' ? (
+                          {activeeTab === 'received' ? (
                             <>
                               <span>{proposal.sender}</span>
                               <button
@@ -347,7 +332,7 @@ const Proposals = () => {
                               </button>
                             </>
                           ) : (
-                            proposal.receiver
+                            <span>{proposal.receiver}</span>
                           )}
                         </div>
                       </td>
@@ -366,32 +351,76 @@ const Proposals = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">${proposal.amount.toLocaleString()}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                        <button
-                          onClick={() => viewProposal(proposal)}
-                          className="inline-flex items-center px-3 py-1.5 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50"
-                        >
-                          <Eye size={16} className="mr-1" />
-                          View
-                        </button>
-                      </td>
+                      {activeeTab === 'received' && (
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                          <button
+                            onClick={() => viewProposal(proposal)}
+                            className="inline-flex items-center px-3 py-1.5 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50"
+                          >
+                            <Eye size={16} className="mr-1" />
+                            View
+                          </button>
+                        </td>
+                      )}
+                  
+                {activeeTab === 'sent' && (
+  <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+    {proposal.status === 'pending' ? (
+      <Button
+        variant="contained"
+        size="small"
+        onClick={() => handleAcceptProposal(proposal)}
+        sx={{
+          background: 'linear-gradient(to right, #4ade80, #059669)', // green gradient
+          color: 'white',
+          fontSize: '0.75rem',
+          padding: '4px 12px',
+          borderRadius: '6px',
+          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+          textTransform: 'none',
+          transition: 'all 0.2s ease-in-out',
+          '&:hover': {
+            background: 'linear-gradient(to right, #34d399, #047857)',
+          },
+        }}
+      >
+        Make Payment
+      </Button>
+    ) : proposal.status === 'accepted' ? (
+      <span
+        className="inline-flex items-center gap-2 px-3 py-1 text-white text-xs font-semibold rounded-md
+                   bg-gradient-to-r from-blue-500 to-indigo-600 shadow-md"
+      >
+        <FaCheckCircle className="text-white" />
+        Paid
+      </span>
+    ) : (
+      <span className="text-gray-500">-</span>
+    )}
+  </td>
+)}
+                
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-500">No proposals found matching your criteria.</div>
+            <div className="text-center py-12 text-gray-500">
+              {activeeTab === 'received' ? 'No proposals received matching your criteria.' : 'No invitations sent matching your criteria.'}
+            </div>
           )}
         </div>
-        <Stack spacing={2} alignItems="center" className="mt-4">
-          <Pagination
-            count={pagination.pages}
-            page={pagination.page}
-            onChange={(_, value) => handlePageChange(value)}
-            color="primary"
-          />
-        </Stack>
+        {activeeTab === 'received' && (
+          <Stack spacing={2} alignItems="center" className="mt-4">
+            <Pagination
+              count={pagination.pages}
+              page={pagination.page}
+              onChange={(_, value) => handlePageChange(value)}
+              color="primary"
+            />
+          </Stack>
+        )}
       </div>
 
       {/* Proposal Details Modal */}
@@ -408,12 +437,12 @@ const Proposals = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <p className="text-sm text-gray-500">From</p>
-                  <p className="font-medium">{selectedProposal.sender}</p>
+                  <p className="text-sm text-gray-500">{activeeTab === 'received' ? 'From' : 'To'}</p>
+                  <p className="font-medium">{activeeTab === 'received' ? selectedProposal.sender : selectedProposal.receiver}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">To</p>
-                  <p className="font-medium">{selectedProposal.receiver}</p>
+                  <p className="text-sm text-gray-500">{activeeTab === 'received' ? 'To' : 'From'}</p>
+                  <p className="font-medium">{activeeTab === 'received' ? selectedProposal.receiver : selectedProposal.sender}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Date</p>
@@ -437,20 +466,20 @@ const Proposals = () => {
                     {selectedProposal.status.charAt(0).toUpperCase() + selectedProposal.status.slice(1)}
                   </span>
                 </div>
+                {selectedProposal.duration && (
+                  <div>
+                    <p className="text-sm text-gray-500">Duration</p>
+                    <p className="font-medium">{selectedProposal.duration}</p>
+                  </div>
+                )}
               </div>
 
-              {selectedProposal.description && (
-            <div className="mb-6">
-              <p className="text-sm text-gray-500 mb-1">Cover Letter</p>
-              <p className="text-sm">{selectedProposal.description}</p>
-            </div>
-          )}       
-              {/* <div className="mb-6">
-                <p className="text-sm text-gray-500 mb-1">Cover Letter</p>
+              <div className="mb-6">
+                <p className="text-sm text-gray-500 mb-1">{activeeTab === 'received' ? 'Cover Letter' : 'Job Description'}</p>
                 <p className="text-sm">{selectedProposal.description}</p>
-              </div> */}
+              </div>
 
-              {activeTab === 'received' && selectedProposal.status === 'pending' && (
+              {activeeTab === 'received' && selectedProposal.status === 'pending' && (
                 <div className="flex justify-end space-x-3">
                   <button
                     onClick={() => handleRejectProposal(selectedProposal)}
@@ -579,7 +608,7 @@ const Proposals = () => {
           </div>
         </div>
       )}
-       <Footer />
+      <Footer />
     </div>
   );
 };

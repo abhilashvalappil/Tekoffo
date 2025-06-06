@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import   { useState } from 'react';
 import {
   User,
   Wallet,
@@ -43,28 +43,35 @@ function ProfileSidebar({ freelancer }: Props) {
                           <User size={20} />
                           <span>My Profile</span>
                         </li>
-                        <li className="hover:bg-gray-50 rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors">
-                          <Wallet size={20} className="text-gray-600" />
-                          <span>Wallet</span>
-                        </li>
-                        {/* <li className="hover:bg-gray-50 rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors">
-                          <Lock size={20} className="text-gray-600" />
-                          <span>Change Password</span>
-                        </li> */}
                         <li>
-                                <Link
-                                  to="/client/change-password"
-                                  onClick={() => setActiveTab('password')} // Preserve tab-switching behavior
-                                  className={`${
-                                    activeTab === 'password'
-                                      ? 'bg-[#0A142F] text-white'
-                                      : 'hover:bg-gray-50 text-gray-700'
-                                  } rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors`}
-                                >
-                                  <Lock size={20} />
-                                  <span>Change Password</span>
-                                </Link>
-                              </li>
+                           <Link
+                            to="/freelancer/wallet"
+                            onClick={() => setActiveTab('wallet')}
+                           className={`${
+                              activeTab === 'wallet'
+                                ? 'bg-[#0A142F] text-white'
+                                : 'hover:bg-gray-50 text-gray-700'
+                            }  rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors`}
+                            >
+                          <Wallet size={20}   />
+                          <span>Wallet</span>
+                          </Link>
+                        </li>
+                       
+                        <li>
+                          <Link
+                            to="/client/change-password"
+                            onClick={() => setActiveTab('password')} // Preserve tab-switching behavior
+                            className={`${
+                              activeTab === 'password'
+                                ? 'bg-[#0A142F] text-white'
+                                : 'hover:bg-gray-50 text-gray-700'
+                            } rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors`}
+                          >
+                            <Lock size={20} />
+                            <span>Change Password</span>
+                          </Link>
+                        </li>
                         <li className="hover:bg-gray-50 rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors">
                           <Settings size={20} className="text-gray-600" />
                           <span>Settings</span>

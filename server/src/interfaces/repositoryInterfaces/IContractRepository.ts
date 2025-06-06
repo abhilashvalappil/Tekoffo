@@ -4,8 +4,14 @@ export interface IContractRepository {
    createContract(contract:CreateContractDTO): Promise<IContract>
    findContractById(id:string): Promise<IContract|null> 
    // findContractsByFreelancerId(userId:string): Promise<IContract[]>
-   findContractsByFreelancerId(userId: string, skip: number, limit: number ,search: string,status: string,time: string): Promise<IContract[]>
-   findContractsByClientId(userId:string,skip: number, limit: number,  search: string,status: string,time: string): Promise<IContract[]>
+   findContractsByFreelancerId(userId: string, skip: number, limit: number ,search?: string, status?: string): Promise<IContract[]>
+   countContractsByFreelancerId(userId:string): Promise<number>
+   countActiveContractsByFreelancerId(userId: string): Promise<number>
+   countCompletedContractsByFreelancerId(userId: string): Promise<number>
+   findContractsByClientId(userId:string,skip: number, limit: number,  search?: string, status?: string): Promise<IContract[]>
+   countContractsByClientId(userId:string): Promise<number>
+   countActiveContractsByClientId(userId:string): Promise<number>
    countContracts(): Promise<number>
    updateContractStatus(id:string, status: status): Promise<IContract|null>
+   getEscrowFunds(): Promise<number>
 }

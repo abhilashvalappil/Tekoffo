@@ -125,4 +125,45 @@ export class AdminController {
             next(error);
         }
     }
+
+    async getActiveJobsCount(req:Request, res:Response, next: NextFunction): Promise<void>{
+        const {count} = await this.adminService.getActiveJobsCount();
+        res.status(Http_Status.OK).json({count})
+    }
+
+    async getPlatformRevenue(req:Request, res:Response, next: NextFunction): Promise<void> {
+        try {
+            const {totalRevenue} = await this.adminService.getPlatformRevenue()
+            res.status(Http_Status.OK).json({totalRevenue})
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getPlatformEarnings(req:Request, res:Response, next: NextFunction): Promise<void> {
+        try {
+            const earningsByMonth  = await this.adminService.getPlatformEarnings()
+            res.status(Http_Status.OK).json({data: earningsByMonth})
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getEscrowFunds(req:Request, res:Response, next: NextFunction): Promise<void> {
+        try {
+            const totalEscrowFunds = await this.adminService.getEscrowFunds()
+            res.status(Http_Status.OK).json({data: totalEscrowFunds})
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getAllTransactions(req:Request, res:Response, next: NextFunction): Promise<void> {
+        try {
+            const transactions = await this.adminService.getAllTransactions()
+             res.status(Http_Status.OK).json({transactions})
+        } catch (error) {
+            next(error);
+        }
+    }
 }

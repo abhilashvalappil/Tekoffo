@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { MapPin, Tags, Mail, Globe, ChevronRight, Filter, Search, X, Home, Briefcase, Users, MessageSquare } from 'lucide-react';
+import { MapPin, Tags, Mail, Globe, ChevronRight, Filter, Search, X } from 'lucide-react';
 import { getAllFreelancers } from '../../../api';  
 import Navbar from '../shared/Navbar';  
-import { navItems } from '../shared/NavbarItems';
+import { clientNavItems } from '../shared/NavbarItems';
 import Footer from '../../shared/Footer';
+import { handleApiError } from '../../../utils/errors/errorHandler';
 
 interface Freelancer {
   id: string;
@@ -36,15 +37,6 @@ const Freelancers = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('freelancers');
 
-  // Define navigation items for the Navbar
-  // const navItems: NavItem[] = [
-  //   { icon: <Home size={20} />, label: 'Home', id: 'home', path: '/' },
-  //   { icon: <Briefcase size={20} />, label: 'Jobs', id: 'jobs', path: '/jobs' },
-  //   { icon: <Users size={20} />, label: 'Freelancers', id: 'freelancers', path: '/freelancers' },
-  //   { icon: <MessageSquare size={20} />, label: 'Messages', id: 'messages', path: '/messages' },
-  // ];
-
-  // Fetch freelancers on component mount
   useEffect(() => {
     const loadFreelancers = async () => {
       try {
@@ -67,8 +59,8 @@ const Freelancers = () => {
           portfolioUrl: freelancer.portfolioUrl,
         }));
         setFreelancers(mappedFreelancers);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load freelancers');
+      } catch (err) {
+        setError(handleApiError(err));
       } finally {
         setLoading(false);
       }
@@ -101,7 +93,7 @@ const Freelancers = () => {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       {/* Navbar */}
-      <Navbar navItems={navItems} activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Navbar navItems={clientNavItems} activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* Main Content with padding to account for fixed navbar */}
       <div className="pt-16 text-[#0A142F] p-4 md:p-20">

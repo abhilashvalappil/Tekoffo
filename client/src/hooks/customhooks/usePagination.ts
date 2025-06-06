@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 type PaginationState = {
   total: number;
@@ -19,13 +19,13 @@ export const usePagination = (initial: PaginationState) => {
     }
   };
 
-  const updateMeta = (total: number, pages: number) => {
+  const updateMeta = useCallback((total: number, pages: number) => {
     setPagination((prev) => ({
       ...prev,
       total,
       pages,
     }));
-  };
+  },[]);
 
   return { pagination, setPagination, handlePageChange, updateMeta };
 };

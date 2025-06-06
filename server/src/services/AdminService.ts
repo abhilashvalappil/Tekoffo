@@ -1,5 +1,5 @@
 
-import {IUserResponse,IAdminService,IUserRepository,ICategoryRepository,ICategory, FetchUserResponse } from '../interfaces';
+import {IUserResponse,IAdminService,IUserRepository,ICategoryRepository,ICategory, FetchUserResponse, IJobRepository, IPlatformRepository, IContractRepository, ITransactionRepository, ITransactionWithUsername } from '../interfaces';
 import { MESSAGES } from '../constants/messages';
 import { CustomError,ValidationError,ConflictError,NotFoundError,UnauthorizedError } from "../errors/customErrors";
 import { onlineUsers } from '../utils/socketManager';
@@ -10,11 +10,20 @@ import { PaginatedResponse } from '../types/commonTypes';
 export class AdminService implements IAdminService {
     private userRepository: IUserRepository;
     private categoryRepository: ICategoryRepository;
+    private jobRepository: IJobRepository;
+    private platformRepository: IPlatformRepository;
+    private contractRepository: IContractRepository;
+    private transactionRepository: ITransactionRepository;
+
     
  
-   constructor(userRepository: IUserRepository, categoryRepository: ICategoryRepository ){
+   constructor(userRepository: IUserRepository, categoryRepository: ICategoryRepository, jobRepository: IJobRepository, platformRepository: IPlatformRepository, contractRepository: IContractRepository, transactionRepository: ITransactionRepository){
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
+        this.jobRepository = jobRepository;
+        this.platformRepository = platformRepository;
+        this.contractRepository = contractRepository;
+        this.transactionRepository = transactionRepository;
     }
 
         async fetchUsers(userId:string, page: number, limit: number): Promise<{
@@ -160,6 +169,28 @@ export class AdminService implements IAdminService {
                     isListed: updateCategory.isListed
                 }
             }
+        }
+
+        async getActiveJobsCount(): Promise<{count:number}>{
+            const count = await this.jobRepository.findActiveJobsCount()
+            return{count}
+        }
+
+        async getPlatformRevenue(): Promise<{totalRevenue:number}> {
+            const totalRevenue = await this.platformRepository.findTotalRevenue()
+            return{totalRevenue}
+        }
+
+        async getPlatformEarnings(): Promise<{ month: string, earnings: number }[]> {
+            return await this.platformRepository.findTotalEarningsGroupedByMonth();
+        }
+
+        async getEscrowFunds(): Promise<number>{
+            return await this.contractRepository.getEscrowFunds()
+        }
+
+        async getAllTransactions(): Promise< ITransactionWithUsername[]>{
+            return await this.transactionRepository.findAllTransactions()
         }
 
     }

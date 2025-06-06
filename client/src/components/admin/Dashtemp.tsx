@@ -10,7 +10,7 @@ import {
   Menu,
 } from 'lucide-react';
 
-function App() {
+function DashboardApp() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
@@ -181,4 +181,4 @@ function App() {
   );
 }
 
-export default App;
+export default DashboardApp;

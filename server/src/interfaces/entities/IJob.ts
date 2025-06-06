@@ -7,7 +7,6 @@ import { Document, Types, ObjectId } from 'mongoose'
     category: string;
     subCategory:string;
     description:string;
-    // requirements:string;
     requirements: string[];
     budget:number;
     duration:string;
@@ -32,7 +31,7 @@ import { Document, Types, ObjectId } from 'mongoose'
     duration: string;
 }
   export interface JobUpdateData {
-    id:string;
+    _id:string;
     title: string;
     category: string;
     subCategory: string;

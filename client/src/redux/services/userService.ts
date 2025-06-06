@@ -19,7 +19,7 @@ export const createUserProfile = createAsyncThunk<
           'Content-Type': 'multipart/form-data',  
         },
       });
-      console.log('API response from create userprofileeeeeeee,reduxxxxxxxxxxxx:', response.data);
+      console.log('API response from create userprofileeeeeeee,reduxxx:', response.data);
       return {
         message: response.data.message,
         userProfile: response.data.userProfile,

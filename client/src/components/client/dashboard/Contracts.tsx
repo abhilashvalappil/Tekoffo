@@ -1,45 +1,48 @@
  
 import { useEffect, useState } from 'react';
-import { Search, Calendar, Filter, ChevronDown} from 'lucide-react';
-import { useFetchContracts } from '../../../hooks/customhooks/useFetchContracts';
-import { approveContract, submitReview } from '../../../api';
+import { Search, Filter, ChevronDown} from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
-import Navbar from '../shared/Navbar';
-import { navItems } from '../shared/NavbarItems';
+import { useFetchContracts } from '../../../hooks/customhooks/useFetchContracts';
+import { approveContract, fetchSubmittedReviews, submitReview } from '../../../api';
+import ClientNavbar from '../shared/Navbar';
+import { clientNavItems } from '../shared/NavbarItems';
 import { handleApiError } from '../../../utils/errors/errorHandler';
-// import { contractResponse } from '../../../types/paymentTypes';
 import { useDebounce } from '../../../hooks/customhooks/useDebounce';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import ReviewModal from '../../shared/Rating';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
 import Footer from '../../shared/Footer';
+import { IReview } from '../../../types/review';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 
 const Contracts = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const debouncedSearchTerm = useDebounce(searchQuery,500)
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [timeFilter, setTimeFilter] = useState<string>('all');
+  // const [timeFilter, setTimeFilter] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<string>('contracts');
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [reviews,setReviews] = useState<IReview[]>([])
   const { pagination, handlePageChange, updateMeta } = usePagination({
     total: 0,
     page: 1,
-    pages: 1,
+    pages: 1, 
     limit: 5,
   });
 
-  const { contracts, loading, error, meta, refetch } = useFetchContracts(debouncedSearchTerm,pagination.page, pagination.limit ,statusFilter, timeFilter);
+  const debouncedSearchTerm = useDebounce(searchQuery,500)
+
+  const user = useSelector((state: RootState) => state.auth.user);
+  const { contracts, loading, error, meta, refetch } = useFetchContracts(pagination.page, pagination.limit ,debouncedSearchTerm, statusFilter);
   
   useEffect(() => {
     updateMeta(meta.total, meta.pages);
-  }, [meta]);
+  }, [meta, updateMeta]);
 
   const handleContractWorkApprove = async(contractId:string,stripePaymentIntentId:string,transactionId:string) => {
     try{
     const message  = await approveContract(contractId,stripePaymentIntentId,transactionId)
-    // console.log('checking contratmssggggggg',message)
     toast.success(message)
     refetch();
     }catch(error){
@@ -51,26 +54,30 @@ const Contracts = () => {
     try {
       const message = await submitReview(reviewedUserId,reviewData,contractId)   
       toast.success(message)
+      await getreviews()
     } catch (error) {
       toast.error(handleApiError(error));
     }
   }
 
-    
+  useEffect(() => {
+    getreviews()
+  },[])
 
-   
+  const getreviews = async() => {
+    const reviews = await fetchSubmittedReviews()
+    setReviews(reviews)
+  }
 
   if (loading) return <p>Loading contracts...</p>;
   if (error) return <p>Error loading contracts: {error.message}</p>;
 
   return (
     <div className="min-h-screen bg-white text-[#0A142F]">
-       <Navbar
+       <ClientNavbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-        navItems={navItems}
+        navItems={clientNavItems}
       />
       <Toaster position="top-center" reverseOrder={false}/>
       <div className="container mx-auto px-30 py-20">
@@ -105,7 +112,7 @@ const Contracts = () => {
               <ChevronDown className="absolute right-2 top-2.5 text-gray-400" size={18} />
             </div>
 
-            <div className="relative">
+            {/* <div className="relative">
               <select
                 className="appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={timeFilter}
@@ -117,7 +124,7 @@ const Contracts = () => {
               </select>
               <Calendar className="absolute left-3 top-2.5 text-gray-400" size={18} />
               <ChevronDown className="absolute right-2 top-2.5 text-gray-400" size={18} />
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -164,41 +171,56 @@ const Contracts = () => {
                           {contract.contractStatus.charAt(0).toUpperCase() + contract.contractStatus.slice(1)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                       
-                       {contract.contractStatus === 'submitted' ? (
-                        <button
-                        onClick={() => handleContractWorkApprove(contract._id,contract.stripePaymentIntentId,contract.transactionId)}
-                        className="bg-green-600 text-white text-xs px-3 py-1 rounded-md hover:bg-green-700 shadow-sm transition"
-                      >
-                        Approve
-                      </button>
                       
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {contract.contractStatus === 'submitted' ? (
+                        <button
+                          onClick={() =>
+                            handleContractWorkApprove(
+                              contract._id,
+                              contract.stripePaymentIntentId,
+                              contract.transactionId
+                            )
+                          }
+                          className="bg-green-600 text-white text-xs px-3 py-1 rounded-md hover:bg-green-700 shadow-sm transition"
+                        >
+                          Approve
+                        </button>
                       ) : contract.contractStatus === 'active' ? (
                         <span className="inline-block text-xs px-3 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white shadow-md animate-pulse">
                           Waiting for submission
                         </span>
                       ) : (
-                        // <span className="inline-block text-xs px-3 py-1 rounded-full bg-gradient-to-r from-green-400 to-emerald-600 text-white shadow-md">
-                        //   ✅ Completed
-                        // </span>
                         <>
-                        <button
-                        // onClick={() => handleLeaveReview(contract._id)}
-                        onClick={() => setIsOpen(true)}
-                        className="text-xs px-3 py-1 rounded-md bg-gradient-to-r from-green-400 to-emerald-600 text-white shadow-sm transition"
-                      >
-                        Leave a review
-                      </button>
-                      <ReviewModal
-                      open={isOpen}
-                      onClose={() => setIsOpen(false)}
-                      // onSubmit={handleReviewSubmit}
-                      onSubmit={(reviewData) => handleReviewSubmit(contract.freelancerId._id, reviewData,contract._id)}
-                    />
-                      </>
+                          {reviews.some(
+                            (review) =>
+                              review.reviewerId === user?._id &&
+                              review.reviewedUserId === contract.freelancerId._id &&
+                              review.contractId === contract._id
+                          ) ? (
+                            <span className="text-xs text-green-600 font-medium">Review Submitted</span>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => setIsOpen(true)}
+                                className="text-xs px-3 py-1 rounded-md bg-gradient-to-r from-green-400 to-emerald-600 text-white shadow-sm transition"
+                              >
+                                Leave a review
+                              </button>
+
+                              <ReviewModal
+                                open={isOpen}
+                                onClose={() => setIsOpen(false)}
+                                onSubmit={(reviewData) =>
+                                  handleReviewSubmit(contract.freelancerId._id, reviewData, contract._id)
+                                }
+                              />
+                            </>
+                          )}
+                        </>
                       )}
                     </td>
+
                     </tr>
                   ))}
                 </tbody>
@@ -212,7 +234,8 @@ const Contracts = () => {
         <Pagination
           count={pagination.pages}
           page={pagination.page}
-          onChange={(event, value) => handlePageChange(value)}
+          // onChange={(value) => handlePageChange(value)}
+          onChange={(_e, page) => handlePageChange(page)}
           color="primary"
         />
       </Stack>

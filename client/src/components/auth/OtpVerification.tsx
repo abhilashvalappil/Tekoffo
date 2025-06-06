@@ -20,9 +20,9 @@ const VerifyOtp = () => {
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
   const navigate = useNavigate();
-  const { email, role } = location.state || {}; 
+  const { email } = location.state || {}; 
   
-  const storedEmail = localStorage.getItem('otpEmail');
+  // const storedEmail = localStorage.getItem('otpEmail');
   const otpTimer = localStorage.getItem('otpTimer')
   // console.log("console from otpveificationnnnnnnnn",otpTimer)
 
@@ -112,8 +112,6 @@ const VerifyOtp = () => {
     setIsLoading(true);
     setServerError(null);
     setInputError('');
-    
-
     try{
       const result = await dispatch(register({email,otp}));
 
@@ -121,10 +119,8 @@ const VerifyOtp = () => {
         const role = result.payload.user.role;
         if(role == 'freelancer'){
           navigate('/freelancer-dashboard')
-          // navigate('/freelancer/createprofile')
         }else if(role == 'client'){
           navigate('/client-dashboard')
-          // navigate('/client/createprofile')
         }
       }else if(register.rejected.match(result)){
         setServerError(result.payload as string)
@@ -136,12 +132,6 @@ const VerifyOtp = () => {
       setIsLoading(false);
     }
   };
-
-  // Redirect to signup if no email is provided
-//   if (!email) {
-//     navigate('/signup');
-//     return null;
-//   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">

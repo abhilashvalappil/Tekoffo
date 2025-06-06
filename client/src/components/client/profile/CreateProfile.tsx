@@ -1,17 +1,18 @@
 import React, { useRef, useState } from 'react';
 import { Camera, Building2, MapPin, Settings, Upload } from 'lucide-react';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../../redux/store';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '../../../redux/store';
 import { createUserProfile } from '../../../redux/services/userService';
 import { useNavigate } from 'react-router-dom';
 import { profileFormSchema, ProfileFormData } from '../../../utils/validations/ProfileValidation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { handleApiError } from '../../../utils/errors/errorHandler';
 
 function CreateProfile() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const user = useSelector((state: RootState) => state.auth.user);
+  // const user = useSelector((state: RootState) => state.auth.user);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(
@@ -81,8 +82,9 @@ function CreateProfile() {
       } else {
         throw new Error(result.error.message || 'Failed to create profile');
       }
-    } catch (error: any) {
-      setServerError(error.message || 'Failed to create profile');
+    } catch (error) {
+      const err = handleApiError(error)
+      setServerError(err)
     }
   };
 

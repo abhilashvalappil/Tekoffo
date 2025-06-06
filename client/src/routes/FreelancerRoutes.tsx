@@ -10,9 +10,13 @@ import CompleteOnboarding from "../components/freelancer/dashboard/CompleteOnboa
 import OnboardingSuccess from "../components/freelancer/dashboard/OnboardingSuccess";
 import FreelancerProposals from "../components/freelancer/dashboard/Proposals";
 import Contracts from "../components/freelancer/dashboard/Contracts";
-import Chat from "../components/freelancer/dashboard/Messages";
+// import Chat from "../components/freelancer/dashboard/Messages";
 import CreateGig from "../components/freelancer/dashboard/GigForm";
 import MyGigs from "../components/freelancer/dashboard/Gigs";
+import JobInvitationsPage from "../components/freelancer/dashboard/invitations/JobInvitations";
+import ChatBox from "../components/freelancer/dashboard/Chat";
+import Wallet from "../components/freelancer/profile/Wallet";
+import CallPage from "../components/freelancer/video/VideoCall";
 
  
 const FreelancerRoutes = () => (
@@ -38,6 +42,14 @@ const FreelancerRoutes = () => (
         element={
           <ProtectedRoute allowedRoles={["freelancer"]}>
         <CreateFreelancerProfile />
+          </ProtectedRoute>
+        } />
+
+    <Route 
+      path="/freelancer/wallet" 
+        element={
+          <ProtectedRoute allowedRoles={["freelancer"]}>
+        <Wallet />
           </ProtectedRoute>
         } />
 
@@ -82,10 +94,26 @@ const FreelancerRoutes = () => (
      } />
 
     <Route 
+    path="/freelancer/invitations" 
+     element={
+        <ProtectedRoute allowedRoles={["freelancer"]}>
+     <JobInvitationsPage />
+      </ProtectedRoute>
+     } />
+
+    <Route 
     path="/messages" 
      element={
         <ProtectedRoute allowedRoles={["freelancer","client"]}>
-     <Chat />
+     <ChatBox />
+      </ProtectedRoute>
+     } />
+
+    <Route 
+    path="/call" 
+     element={
+        <ProtectedRoute allowedRoles={["freelancer","client"]}>
+     <CallPage />
       </ProtectedRoute>
      } />
 

@@ -1,11 +1,12 @@
 import bcrypt from "bcrypt";
-import {IJobService, IUserRepository,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser, CreateGigDTO, IGigRepository, IGig, UpdateGigDTO,  } from "../interfaces";
+import {IJobService, IUserRepository,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser, CreateGigDTO, IGigRepository, IGig, UpdateGigDTO, IContractRepository,  } from "../interfaces";
 import {MESSAGES} from '../constants/messages'
 import { ConflictError, CustomError, NotFoundError, UnauthorizedError } from "../errors/customErrors";
 import { FreelancerData, JobDataType, JobInputData, JobUpdateData } from '../interfaces/entities/IJob';
 import { proposalDataType } from "../types/jobTypes";
 import { Types } from "mongoose";
-import { IProposal } from "../interfaces/entities/IProposal";
+import { IAppliedProposal, IProposal, JobInvitationView, SortOption } from "../interfaces/entities/IProposal";
+import { ProposalStatus } from "../interfaces/entities/IProposal";
 import { IPaymentRepository } from "../interfaces/repositoryInterfaces/IPaymentRepository";
 import Stripe from "stripe";
 import dotenv from "dotenv";
@@ -21,14 +22,16 @@ export class JobService implements IJobService{
     private jobRepository: IJobRepository;
     private proposalRepository:IProposalRepository;
     private gigRepository: IGigRepository;
+    private contractRepository: IContractRepository;
 
 
-    constructor(categoryRepository:ICategoryRepository, userRepository: IUserRepository, jobRepository: IJobRepository, proposalRepository:IProposalRepository, gigRepository:IGigRepository){
+    constructor(categoryRepository:ICategoryRepository, userRepository: IUserRepository, jobRepository: IJobRepository, proposalRepository:IProposalRepository, gigRepository:IGigRepository, contractRepository: IContractRepository){
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.jobRepository = jobRepository;
         this.proposalRepository = proposalRepository;
         this.gigRepository = gigRepository;
+        this.contractRepository = contractRepository;
     }
 
     async fetchCategories(): Promise<{categories: ICategory[]}> {
@@ -54,12 +57,12 @@ export class JobService implements IJobService{
             throw new NotFoundError(MESSAGES.INVALID_USER)
         }
 
-        const existingJob = await this.jobRepository.findJobById(jobData.id);
+        const existingJob = await this.jobRepository.findJobById(jobData._id);
         if (!existingJob || existingJob.clientId.toString() !== clientId) {
             throw new NotFoundError(MESSAGES.INVALID_JOB);
         }
 
-        const savedJob = await this.jobRepository.updateJobPost(jobData.id!, {
+       await this.jobRepository.updateJobPost(jobData._id!, {
             title: jobData.title,
             category: jobData.category,
             subCategory: jobData.subCategory,
@@ -84,11 +87,11 @@ export class JobService implements IJobService{
         if (!existingJob || existingJob.clientId.toString() !== clientId) {
             throw new NotFoundError(MESSAGES.INVALID_JOB);
         }
-        const deletePost = await this.jobRepository.findJobAndDelete(id);
+        await this.jobRepository.findJobAndDelete(id);
         return {message:MESSAGES.JOB_DELETED_SUCCESSFULLY}
     }
 
-    async getMyJobPosts(clientId:string, page: number, limit: number): Promise<PaginatedResponse<JobDataType>> {
+    async getMyJobPosts(clientId:string, page: number, limit: number,search?:string,filters?: { status?: string; category?: string; subCategory?: string }): Promise<PaginatedResponse<JobDataType>> {
      
         const user = await this.userRepository.findUserById(clientId)
         if(!user){
@@ -96,8 +99,8 @@ export class JobService implements IJobService{
         }
         const skip = (page - 1) * limit;
         const [jobs,total] = await Promise.all([
-            this.jobRepository.findJobsByClientId(clientId,skip, limit),
-            this.jobRepository.countJobs()
+            this.jobRepository.findJobsByClientId(clientId,skip, limit, search, filters),
+            this.jobRepository.countJobsByClientId(clientId, search, filters)
         ]) 
         // return {jobs} ;
         return{
@@ -111,14 +114,27 @@ export class JobService implements IJobService{
         }
    }
 
-   async getAllJobs(page: number, limit: number): Promise<{jobs:PaginatedResponse<JobDataType>}> {
+   async getActiveJobPosts(clientId:string): Promise<{ count: number; jobs: JobDataType[],completed:number, activeContracts:number}> {
+    const client = await this.userRepository.findUserById(clientId)
+    if (!client) {
+      throw new NotFoundError(MESSAGES.INVALID_USER);
+    }
+    const [count, jobs, completed, activeContracts] = await Promise.all([
+        this.jobRepository.findActiveJobsCountByUserId(clientId),
+        this.jobRepository.findActiveJobPostsByUserId(clientId),
+         this.jobRepository.findCompletedJobsCountByUserId(clientId),
+         this.contractRepository.countActiveContractsByClientId(clientId)
+    ]);
+    return { count, jobs,completed, activeContracts };
+   }
 
+   async getAllJobs(page: number, limit: number, search?: string, filters?: { category?: string; subCategory?: string; budgetRange?: string }): Promise<{jobs:PaginatedResponse<JobDataType>}> {
         const skip = (page - 1) * limit;
         const [jobs,total] = await Promise.all([
-             this.jobRepository.findAllJobs(skip, limit),
-             this.jobRepository.countJobs()
+             this.jobRepository.findAllJobs(skip, limit, search, filters),
+            //  this.jobRepository.findActiveJobsCount()
+            this.jobRepository.countFilteredJobs(search, filters)
         ]);
-        // return {jobs}
         return {
             jobs:{
             data: jobs,
@@ -140,10 +156,10 @@ export class JobService implements IJobService{
         return {clientProfile}
     }
 
-    async createJobProposal(freelancerId:string,proposalDetails:proposalDataType): Promise<{message:string}> {
+    async createProposal(freelancerId:string,proposalDetails:proposalDataType): Promise<{message:string}> {
         
-        const userExist = await this.userRepository.findUserById(freelancerId);
-        if(!userExist){
+        const freelancer = await this.userRepository.findUserById(freelancerId);
+        if(!freelancer){
             throw new NotFoundError(MESSAGES.INVALID_USER)
         }
         const jobExist = await this.jobRepository.findJobById(proposalDetails.jobId.toString());
@@ -157,7 +173,7 @@ export class JobService implements IJobService{
         }
         
         await this.proposalRepository.createProposal(proposalData)
-        return{message:MESSAGES.PROPOSAL_CREATED}
+        return{message:MESSAGES.JOB_APPLIED}
     }
 
     async getClientReceivedProposals(clientId:string, page: number, limit: number): Promise<{proposals:PaginatedResponse<IProposal>}> {
@@ -169,7 +185,7 @@ export class JobService implements IJobService{
         const skip = (page - 1) * limit;
         const [proposals,total] = await Promise.all([
              this.proposalRepository.findProposals(clientId,skip, limit),
-             this.proposalRepository.countProposals(),
+             this.proposalRepository.countReceivedProposals(clientId),
         ])
         return{proposals:{
             data:proposals,
@@ -199,29 +215,29 @@ export class JobService implements IJobService{
         return {proposal}
     }
 
-    async updateProposalStatus(proposalId: string, clientId: string): Promise<{proposal:IProposal | null}> {
+    async updateProposalStatus(proposalId: string,status: string, userId: string): Promise<{proposal:IProposal | null}> {
 
-            const userExist = await this.userRepository.findUserById(clientId)
+            const userExist = await this.userRepository.findUserById(userId)
             if(!userExist){
-                throw new NotFoundError(MESSAGES.INVALID_USER)
+                throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
             }
             const proposalExist = await this.proposalRepository.findProposalById(proposalId);
             if(!proposalExist){
                 throw new NotFoundError(MESSAGES.PROPOSAL_NOT_FOUND)
             }
-            if (proposalExist.clientId.toString() !== clientId) {
-                throw new UnauthorizedError(MESSAGES.UNAUTHORIZED);
-            }
-            const proposal = await this.proposalRepository.updateProposalStatusToAccepted(proposalId)
+            const proposal = await this.proposalRepository.updateProposalStatus(proposalId,status as ProposalStatus)
             return {proposal}
         }
 
-    async getFreelancerAppliedProposals(freelancerId:string,page:number,limit:number): Promise<{proposals: PaginatedResponse<IProposal>}> {
+    async getFreelancerAppliedProposals(freelancerId:string,page:number,limit:number, search?: string, filter?: string): Promise<{proposals: PaginatedResponse<IAppliedProposal>}> {
         const userExist = await this.userRepository.findUserById(freelancerId)
+         if(!userExist){
+            throw new UnauthorizedError(MESSAGES.UNAUTHORIZED )
+        }
         const skip = (page - 1) * limit;
         const [proposals,total] = await Promise.all([
-            this.proposalRepository.findAppliedProposalsByFreelancer(freelancerId,skip,limit),
-            this.proposalRepository.countProposals()
+            this.proposalRepository.findAppliedProposalsByFreelancer(freelancerId,skip,limit, search, filter),
+            this.proposalRepository.countAppliedProposals(freelancerId, search, filter)
         ])
         return{
             proposals:{
@@ -282,5 +298,126 @@ export class JobService implements IJobService{
         }
         await this.gigRepository.findGigByIdAndDelete(gigId)
         return{message:MESSAGES.GIG_DELETED}
+    }
+
+    async getFreelancersGigs(clientId:string, page: number, limit: number): Promise<PaginatedResponse<IGig>> {
+        const client = await this.userRepository.findUserById(clientId)
+        if(!client){
+            throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
+        }
+        const skip = (page - 1) * limit;
+
+        const [gigs,total] = await Promise.all([
+            this.gigRepository.findGigs(skip, limit),
+            this.gigRepository.countGigs()
+         ])
+
+        // const gigs = await this.gigRepository.findGigs()
+        // return{gigs}
+        return{
+            data: gigs,
+            meta:{
+                total,
+                page,
+                pages: Math.ceil(total / limit),
+                limit,
+            }
+        }
+    }
+
+    async createFreelancerJobInvitation(clientId:string,jobId:string,freelancerId:string): Promise<{message:string}> {
+        const client = await this.userRepository.findUserById(clientId)
+        if(!client){
+            throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
+        }
+        const freelancer = await this.userRepository.findUserById(freelancerId)
+        if(!freelancer){
+            throw new NotFoundError(MESSAGES.FREELANCER_NOT_FOUND)
+        }
+        const job = await this.jobRepository.findJobById(jobId)
+        if(!job){
+            throw new NotFoundError(MESSAGES.JOB_NOT_FOUND)
+        }
+        const{budget,duration,} = job
+        const proposalData: Partial<IProposal> = {
+            jobId: new Types.ObjectId(jobId),
+            freelancerId: new Types.ObjectId(freelancerId),
+            clientId: new Types.ObjectId(clientId),
+            proposalType:"client-invited",
+            status:'invited',
+            proposedBudget:budget,
+            duration
+        }
+        await this.proposalRepository.createProposal(proposalData)
+        return{message:MESSAGES.JOB_INVITATION_SENT}
+    }
+
+    async getSentInvitations(clientId:string): Promise<{invitations:IProposal[]}> {
+        const client = await this.userRepository.findUserById(clientId)
+        if(!client){
+            throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
+        }
+        const invitations = await this.proposalRepository.findInvitationsSent(clientId)
+        return{invitations}
+    }
+
+    async getJobInvitations(freelancerId:string,page: number, limit: number,search?:string,sortBy?:SortOption): Promise<{invitations:PaginatedResponse<JobInvitationView>}> {
+        const freelancer = await this.userRepository.findUserById(freelancerId);
+        if(!freelancer){
+            throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
+        }
+
+        const skip = (page - 1) * limit;
+        const [invitations,total] = await Promise.all([
+            this.proposalRepository.findJobInvitations(freelancerId,skip, limit, search,sortBy),
+            this.proposalRepository.countJobInvitesByFreelancer(freelancerId,search)
+        ]) 
+        return {
+            invitations:{
+            data: invitations,
+            meta: {
+                total,
+                page,
+                pages: Math.ceil(total / limit),
+                limit,
+            },
+        } };
+    }
+
+    async getJobDetails(jobId:string): Promise<{jobData:JobDataType}>{
+        const jobData = await this.jobRepository.findJobById(jobId)
+        if(!jobData){
+            throw new NotFoundError(MESSAGES.JOB_NOT_FOUND)
+        }
+        return {jobData}
+    }
+
+    async acceptJobInvitation(freelancerId:string,proposalId:string): Promise<{message:string}>{
+        const freelancer = await this.userRepository.findUserById(freelancerId)
+         if(!freelancer){
+            throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
+        }
+
+        const proposalExist = await this.proposalRepository.findProposalById(proposalId);
+        if(!proposalExist){
+            throw new NotFoundError(MESSAGES.PROPOSAL_NOT_FOUND)
+        }
+        const updatedStatus = ProposalStatus.PENDING;
+        await this.proposalRepository.updateProposalStatus(proposalId,updatedStatus)
+        return{message:MESSAGES.INVITATION_ACCEPTED}
+    }
+
+    async rejectInvitaion(freelancerId:string,proposalId:string): Promise<{message:string}> {
+        const freelancer = await this.userRepository.findUserById(freelancerId)
+         if(!freelancer){
+            throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
+        }
+        const proposalExist = await this.proposalRepository.findProposalById(proposalId);
+        if(!proposalExist){
+            throw new NotFoundError(MESSAGES.PROPOSAL_NOT_FOUND)
+        }
+        const updatedStatus = ProposalStatus.REJECTED;
+        await this.proposalRepository.updateProposalStatus(proposalId,updatedStatus)
+        return{message:MESSAGES.INVITATION_REJECTED}
     }
 }

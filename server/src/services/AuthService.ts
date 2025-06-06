@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 import { transporter } from '../config/nodemailer.config';
 import { OAuth2Client } from 'google-auth-library';
-import { UserRole, IUserResponse, SignUpData,IAuthService,IUserRepository,IJwtService} from "../interfaces";
+import { UserRole, IUserResponse, SignUpData,IAuthService,IUserRepository,IJwtService,IWalletRepository} from "../interfaces";
 import { otpGenerator } from "../utils/OtpGenerator";
 import { redisClient } from "../config/redis";
 import { MESSAGES } from '../constants/messages';
@@ -16,12 +16,14 @@ export class AuthService implements IAuthService {
     private userRepository: IUserRepository;
     private jwtService : IJwtService;
     private client = new OAuth2Client(process.env.CLIENT_ID);
+    private walletRepository: IWalletRepository;
      
 
-   constructor(userRepository: IUserRepository, jwtService: IJwtService,client: OAuth2Client){
+   constructor(userRepository: IUserRepository, jwtService: IJwtService,client: OAuth2Client,  walletRepository: IWalletRepository){
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.client = client;
+        this.walletRepository = walletRepository;
          
     }
    
@@ -40,7 +42,7 @@ export class AuthService implements IAuthService {
         data.password = await bcrypt.hash(data.password,10)
 
         const otp = otpGenerator();
-        const expiresIn = 30;
+        const expiresIn = 60;
         console.log("the ottttttttppppppppppp",otp)
 
         const mailOptions = {
@@ -49,14 +51,8 @@ export class AuthService implements IAuthService {
             subject: 'Welcome to Tekoffo',
             text: `Your OTP is: ${otp}`, 
           };
-
-          try {
-            await transporter.sendMail(mailOptions)
-            console.log("OTP sent successfully");
-          } catch (error) {
-            console.error("Error sending email:", error);
-          }
-
+          await transporter.sendMail(mailOptions)
+          console.log("OTP sent successfully");
           await redisClient.set(`otp:${data.email}`, otp, { EX: expiresIn });
           await redisClient.set(`signup:${data.email}`, JSON.stringify(data), { EX: 300 });
 
@@ -68,14 +64,18 @@ export class AuthService implements IAuthService {
           const storedOtp = await redisClient.get(`otp:${email}`);
           const storedUserData = await redisClient.get(`signup:${email}`);
           if (!storedOtp || !storedUserData) {
-              throw new NotFoundError(MESSAGES.OTP_EXPIRED_OR_INVALID);
-            }
+            throw new NotFoundError(MESSAGES.OTP_EXPIRED_OR_INVALID);
+          }
           if (storedOtp !== otp) {
-              throw new ValidationError(MESSAGES.INVALID_OTP);
-            }
+            throw new ValidationError(MESSAGES.INVALID_OTP);
+          }
 
           const userData = JSON.parse(storedUserData);
           const saveUser = await this.userRepository.createUser(userData);
+
+          if(saveUser.role === 'freelancer'){
+            await this.walletRepository.createWallet(saveUser._id)
+          }
 
           await redisClient.del(`otp:${email}`);
           await redisClient.del(`signup:${email}`);
@@ -153,6 +153,7 @@ export class AuthService implements IAuthService {
                     country: user.country,
                     skills: user.skills,
                     preferredJobFields: user.preferredJobFields,
+                    total_Spent: user.total_Spent,
                     linkedinUrl: user.linkedinUrl,                      
                     githubUrl: user.githubUrl,
                     portfolioUrl: user.portfolioUrl,
@@ -169,7 +170,6 @@ export class AuthService implements IAuthService {
         throw new NotFoundError(MESSAGES.INVALID_USER)
       }
       const storedToken = await redisClient.get(userId)
-      console.log('console from authserviceeee generateaccesstoekn',storedToken)
       if(!storedToken){
         throw new NotFoundError(MESSAGES.NO_TOKEN_FOUND)
       }
@@ -184,10 +184,10 @@ export class AuthService implements IAuthService {
         const user = await this.userRepository.findUserById(userId);
         if (!user) {
           throw new NotFoundError(MESSAGES.INVALID_USER);
-      }
-      await redisClient.del(userId.toString());
-      return {message:MESSAGES.LOGOUT_SUCCESS} 
-    }
+        }
+          await redisClient.del(userId.toString());
+          return {message:MESSAGES.LOGOUT_SUCCESS} 
+        }
 
     async forgotPassword(email:string): Promise<{message:string,email:string,expiresIn:number}> {
      
@@ -269,14 +269,7 @@ export class AuthService implements IAuthService {
             email: user.email,
             role: user.role,
           };
-    
-          // const accessToken = jwt.sign(
-          //   { id: user._id, email: user.email, role: user.role },
-          //   process.env.JWT_SECRET as string,
-          //   { expiresIn: '1h' }
-          // );
           const accessToken = this.jwtService.generateAccessToken(user._id,user.role,user.email)
-    
           return { user: userResponse, accessToken };
       }
 }

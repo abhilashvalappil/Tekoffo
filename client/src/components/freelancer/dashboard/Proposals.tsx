@@ -1,70 +1,59 @@
 
 import { useEffect, useState } from 'react';
-import { Search, Calendar, Filter, Check, X, ChevronDown } from 'lucide-react';
+import { Search, Filter, Check, X, ChevronDown } from 'lucide-react';
 import Navbar from '../shared/Navbar';
 import { navItems } from '../shared/NavbarItems';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import { fetchAppliedProposalsByFreelancer } from '../../../api';
 import { handleApiError } from '../../../utils/errors/errorHandler';
+import { useAuth } from '../../../hooks/customhooks/useAuth';
 import { AppliedProposal } from '../../../types/proposalTypes';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, persistor, RootState } from '../../../redux/store';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 import Footer from '../../shared/Footer';
-import { useNavigate } from 'react-router-dom';
+import { useDebounce } from '../../../hooks/customhooks/useDebounce';
+ 
 
 const FreelancerProposals = () => {
-  const [activeTab, setActiveTab] = useState('sent');
+  const [activeTab, setActiveTab] = useState('proposals');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [timeFilter, setTimeFilter] = useState('all');
+  // const [timeFilter, setTimeFilter] = useState('all');
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const [proposals, setProposals] = useState<AppliedProposal[]>([]);
   const [error, setError] = useState('')
-  const [totalCount,setTotalCount] = useState(0);
+  // const [totalCount,setTotalCount] = useState(0);
   const { pagination, handlePageChange, updateMeta } = usePagination({
     total: 0,
     page: 1,
     pages: 1,
     limit: 6,
   });
-
+  
   const user = useSelector((state: RootState) => state.auth.user);
-  const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
-
+  const { handleLogout } = useAuth();
+  const debouncedSearchTerm = useDebounce(searchQuery, 500);
+  
   useEffect(() => {
     const loadAppliedProposals = async() => {
       try {
-        const response = await fetchAppliedProposalsByFreelancer(pagination.page,pagination.limit)
-        // console.log('console from freelancer applied proposals',appliedProposals)
+        const response = await fetchAppliedProposalsByFreelancer(pagination.page,pagination.limit,debouncedSearchTerm,statusFilter)
         setProposals(response.data)
         updateMeta(response.meta.total, response.meta.pages);
-        setTotalCount(response.meta.total);
+        // setTotalCount(response.meta.total);
       } catch (error) {
         const errormessage = handleApiError(error)
         setError(errormessage)
       }
     }
     loadAppliedProposals()
-  },[pagination.page, pagination.limit])
+  },[pagination.page, pagination.limit,updateMeta,debouncedSearchTerm,statusFilter])
 
-    //* Handle logout
-    const handleLogout = async () => {
-      try {
-        if (user?._id) {
-          const result = await dispatch(logout(user._id)).unwrap();
-          console.log('Logout successful:', result);
-          persistor.purge();
-          navigate('/signin');
-        }
-      } catch (error) {
-        handleApiError(error)
-      }
-    };
+   
   
 
   return (
@@ -91,12 +80,12 @@ const FreelancerProposals = () => {
           >
             Applied Proposals
           </button>
-          <button
+          {/* <button
             className={`pb-2 px-4 font-medium ${activeTab === 'received' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
             onClick={() => setActiveTab('received')}
           >
             Received Proposals
-          </button>
+          </button> */}
         </div>
 
         {/* Search & Filters */}
@@ -128,7 +117,7 @@ const FreelancerProposals = () => {
               <ChevronDown className="absolute right-2 top-2.5 text-gray-400" size={18} />
             </div>
 
-            <div className="relative">
+            {/* <div className="relative">
               <select
                 className="appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={timeFilter}
@@ -142,9 +131,14 @@ const FreelancerProposals = () => {
               </select>
               <Calendar className="absolute left-3 top-2.5 text-gray-400" size={18} />
               <ChevronDown className="absolute right-2 top-2.5 text-gray-400" size={18} />
-            </div>
+            </div> */}
           </div>
         </div>
+        {error && (
+        <div className="mb-4 text-red-600 text-sm font-medium bg-red-100 border border-red-300 rounded-lg p-3">
+          {error}
+        </div>
+      )}
 
         {/* Proposals List */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -165,10 +159,10 @@ const FreelancerProposals = () => {
                 <tr className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="text-sm font-medium">{proposal.jobId.title}</div>
+                      <div className="text-sm font-medium">{proposal.jobDetails.title}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">{proposal.clientId.fullName}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">{proposal.clientDetails.fullName}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">{new Date(proposal.createdAt).toLocaleDateString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">{proposal.proposedBudget}</td>
                   <td className="px-6 py-4 whitespace-nowrap">

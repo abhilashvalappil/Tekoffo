@@ -23,7 +23,6 @@ const JobSchema: Schema<JobDataType> = new Schema({
     type: String, 
     required: true
    },
-  // requirements: { type: String, required: true }, 
   requirements: {
      type: [String], 
      required: true

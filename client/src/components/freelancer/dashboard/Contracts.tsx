@@ -1,36 +1,35 @@
+
 import { useEffect, useState } from 'react';
 import { Search, Calendar, Filter, ChevronDown } from 'lucide-react';
 import { useFetchContracts } from '../../../hooks/customhooks/useFetchContracts';
-import { submitContract, submitReview } from '../../../api';
+import { fetchSubmittedReviews, submitContract, submitReview } from '../../../api';
 import toast, { Toaster } from 'react-hot-toast';
 import Navbar from '../shared/Navbar';
 import { navItems } from '../shared/NavbarItems';
 import { handleApiError } from '../../../utils/errors/errorHandler';
-// import { contractResponse } from '../../../types/paymentTypes';
 import { useDebounce } from '../../../hooks/customhooks/useDebounce';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import ReviewModal from '../../shared/Rating';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, persistor, RootState } from '../../../redux/store';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 import ChatButton from '../shared/ChatButton';
 import Footer from '../../shared/Footer';
-import { useNavigate } from 'react-router-dom';
-import { logout } from '../../../redux/services/authService';
+import { useAuth } from '../../../hooks/customhooks/useAuth';
+import { IReview } from '../../../types/review';
+import { contractResponse } from '../../../types/paymentTypes';
 
 const Contracts = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const debouncedSearchTerm = useDebounce(searchQuery,500)
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [timeFilter, setTimeFilter] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<string>('contracts');
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
-  
-  
   const [isOpen, setIsOpen] = useState(false);
-  // const [pagination, setPagination] = useState({total: 0, page: 1, pages: 1,limit: 6,});
+  const [selectedContract, setSelectedContract] = useState<contractResponse | null>(null);
+  const [reviews,setReviews] = useState<IReview[]>([])
   const { pagination, handlePageChange, updateMeta } = usePagination({
     total: 0,
     page: 1,
@@ -39,20 +38,18 @@ const Contracts = () => {
   });
 
   const user = useSelector((state: RootState) => state.auth.user);
-  const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
-
-
-  const { contracts, loading, error, meta, refetch } = useFetchContracts(debouncedSearchTerm,pagination.page, pagination.limit ,statusFilter, timeFilter);
+  const { handleLogout } = useAuth();
+  const debouncedSearchTerm = useDebounce(searchQuery,500)
+  const { contracts, loading, error, meta, refetch } = useFetchContracts(pagination.page, pagination.limit, debouncedSearchTerm, statusFilter);
+  console.log('checking fetch #### ====== !!!!!!@@@@@@', contracts)
 
   useEffect(() => {
     updateMeta(meta.total, meta.pages);
-  }, [meta]);
+  }, [meta, updateMeta]);
 
   const handleApplyForApproval = async(contractId:string) => {
     try{
     const message  = await submitContract(contractId)
-    // console.log('checking contratmssggggggg',message)
     toast.success(message)
     refetch();
     }catch(error){
@@ -64,24 +61,28 @@ const Contracts = () => {
     try {
       const message = await submitReview(reviewedUserId,reviewData,contractId)   
       toast.success(message)
+      // Refetch reviews after successful submission
+      await getreviews()
+      setIsOpen(false) // Close the modal after successful submission
+      setSelectedContract(null) // Clear selected contract
     } catch (error) {
       toast.error(handleApiError(error));
     }
   }
 
-   //* Handle logout
-    const handleLogout = async () => {
+  useEffect(() => {
+      getreviews()
+    },[])
+  
+    const getreviews = async() => {
       try {
-        if (user?._id) {
-          const result = await dispatch(logout(user._id)).unwrap();
-          console.log('Logout successful:', result);
-          persistor.purge();
-          navigate('/signin');
-        }
+        const reviews = await fetchSubmittedReviews()
+        console.log('console from contracts.tsx getreviewss ====>>>',reviews)
+        setReviews(reviews)
       } catch (error) {
-        handleApiError(error)
+        console.error('Error fetching reviews:', error)
       }
-    };
+    }
 
   if (loading) return <p>Loading contracts...</p>;
   if (error) return <p>Error loading contracts: {error.message}</p>;
@@ -150,8 +151,7 @@ const Contracts = () => {
 
         {/* Contracts List */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          {/* {filterContracts().length > 0 ? ( */}
-              {contracts.length > 0 ? (
+          {contracts.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -167,7 +167,6 @@ const Contracts = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {/* {filterContracts().map((contract) => ( */}
                   {contracts.map((contract) => (
                     <tr key={contract._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{contract.jobId.title}</td>
@@ -193,39 +192,47 @@ const Contracts = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                       {contract.contractStatus === 'active' ? (
-                        <button
-                          onClick={() => handleApplyForApproval(contract._id)}
-                          className="bg-blue-900 text-white text-xs px-3 py-1 rounded-md hover:bg-blue-800 shadow-sm transition"
-                        >
-                          Apply for Approval
-                        </button>
-                      ) : contract.contractStatus === 'submitted' ? (
-                        <span className="inline-block text-xs px-3 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white shadow-md animate-pulse">
-                          Waiting for Approval
-                        </span>
-                      ) : (
-                        <>
-                        <button
-                        onClick={() => setIsOpen(true)}
-                        className="text-xs px-3 py-1 rounded-md bg-gradient-to-r from-green-400 to-emerald-600 text-white shadow-sm transition"
-                      >
-                        Leave a review
-                      </button>
-                      <ReviewModal
-                      open={isOpen}
-                      onClose={() => setIsOpen(false)}
-                      // onSubmit={handleReviewSubmit}
-                      onSubmit={(reviewData) => handleReviewSubmit(contract.clientId._id, reviewData,contract._id)}
-                    />
-                    </>
-                      )}
-                    </td>
-                    <td>
-                      <button>
-                      <ChatButton receiverId={contract.clientId._id} />
-                      </button>
-                    </td>
+                        {contract.contractStatus === 'active' ? (
+                          <button
+                            onClick={() => handleApplyForApproval(contract._id)}
+                            className="bg-blue-900 text-white text-xs px-3 py-1 rounded-md hover:bg-blue-800 shadow-sm transition"
+                          >
+                            Apply for Approval
+                          </button>
+                        ) : contract.contractStatus === 'submitted' ? (
+                          <span className="inline-block text-xs px-3 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white shadow-md animate-pulse">
+                            Waiting for Approval
+                          </span>
+                        ) : (
+                          <>
+                            {reviews.some(
+                              (review) =>
+                                review.reviewerId === user?._id &&
+                                review.reviewedUserId === contract.clientId._id &&
+                                review.contractId === contract._id
+                            ) ? (
+                              <span className="text-xs text-green-600 font-medium">Review Submitted</span>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setSelectedContract(contract);
+                                  setIsOpen(true);
+                                }}
+                                className="text-xs px-3 py-1 rounded-md bg-gradient-to-r from-green-400 to-emerald-600 text-white shadow-sm transition"
+                              >
+                                Leave a review
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </td>
+                      <td>
+                        {user?._id && (
+                          <button>
+                            <ChatButton senderId={user._id} receiverId={contract.clientId._id} />
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -236,17 +243,32 @@ const Contracts = () => {
           )}
         </div>
         <Stack spacing={2} alignItems="center" className="mt-4">
-        <Pagination
-          count={pagination.pages}
-          page={pagination.page}
-          onChange={(event, value) => handlePageChange(value)}
-          color="primary"
-        />
-      </Stack>
+          <Pagination
+            count={pagination.pages}
+            page={pagination.page}
+            onChange={(_e, value) => handlePageChange(value)}
+            color="primary"
+          />
+        </Stack>
       </div>
-       <Footer />
+      <Footer />
+      
+      {/* ReviewModal outside the table */}
+      <ReviewModal
+        open={isOpen}
+        onClose={() => {
+          setIsOpen(false);
+          setSelectedContract(null);
+        }}
+        onSubmit={(reviewData) =>
+          selectedContract && handleReviewSubmit(
+            selectedContract.clientId._id, 
+            reviewData, 
+            selectedContract._id
+          )
+        }
+      />
     </div>
-    
   );
 };
 

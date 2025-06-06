@@ -1,9 +1,10 @@
 import mongoose,{Schema, Types} from "mongoose";
 import { IMessage } from "../interfaces";
 
-const MessageSchema = new Schema({
-    roomId:{
-        type:String,
+const MessageSchema : Schema<IMessage> = new Schema({
+    chatId:{
+        type:Schema.Types.ObjectId,
+        ref:'Chat',
         required:true
     },
     senderId:{
@@ -16,10 +17,17 @@ const MessageSchema = new Schema({
         ref:'User',
         required:true
     },
-    text:{
+    content:{
+        type:String,
+    },
+    mediaUrl:{
         type:String,
     },
     isRead:{
+        type:Boolean,
+        default:false
+    },
+    isDeleted:{
         type:Boolean,
         default:false
     },

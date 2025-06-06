@@ -15,7 +15,15 @@ function FreelancerProfile() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(user?.profilePicture || null);
 
-  const hasProfile = user && (user.description || user.skills?.length > 0 || user.country);
+  // const hasProfile = user && (user.description || user.skills?.length > 0 || user.country);
+  const hasProfile =
+  user &&
+  (
+    !!user.description ||
+    (Array.isArray(user.skills) && user.skills.length > 0) ||
+    !!user.country
+  );
+
 
   const {
     register,
@@ -233,7 +241,7 @@ function FreelancerProfile() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
               <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-lg">
                 <h4 className="text-[#0A142F] font-semibold">Projects Completed</h4>
                 <p className="text-3xl font-bold mt-2 text-[#0A142F]">
@@ -252,7 +260,7 @@ function FreelancerProfile() {
                   {user?.total_Earnings ? `$${user?.total_Earnings}` : '$0'}
                 </p>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

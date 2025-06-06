@@ -1,422 +1,225 @@
-import React, { useState, useRef, useEffect } from 'react';
-import {
-  Users,
-  Briefcase,
-  MessageSquare,
-  Bell,
-  Search,
-  Menu,
-  LogOut,
-  User,
-  ChevronDown,
-} from 'lucide-react';
-import { useDispatch,useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../redux/store';
-import {fetchUsers,updateUserStatus} from '../../api/admin'
-import {logout} from '../../redux/services/authService'
-import { useNavigate } from 'react-router-dom';
-import { persistor } from '../../redux/store'
-import Table from './Table';
+ 
+import React, { useEffect, useState } from 'react';
+import { Users, Briefcase, DollarSign, TrendingUp, Eye, UserCheck, Star } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Sidebar from './Sidebar';
-import Pagination from '@mui/material/Pagination';
-import Stack from '@mui/material/Stack';
-import { handleApiError } from '../../utils/errors/errorHandler';
+import { fetchMonthlyRevenueStats, fetchPlatformRevenue, fetchTotalActiveJobsCount, fetchUsers } from '../../api';
+// import { useJobs } from '../../hooks/customhooks/useJobs';
 
-interface User {
-  _id: string;
-  username: string;
-  email: string;
-  role: string;
-  isBlocked?: boolean;
-}
-
-function AdminDash() {
+const AdminDashboard = () => {
+  const [activeTab, setActiveTab] = useState('overview');
   const [selectedItem, setSelectedItem] = useState('users');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const profileRef = useRef<HTMLDivElement>(null);
-  
-  // const navItems = [
-  //   { id: 'users', label: 'Users', icon: Users },
-  //   { id: 'category-management', label: 'Category Management', icon: Tag },
-  //   { id: 'jobs', label: 'Jobs', icon: Briefcase },
-  //   { id: 'messages', label: 'Messages', icon: MessageSquare },
-  //   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-  //   { id: 'settings', label: 'Settings', icon: Settings },
-  // ];
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalJobs, setTotalJobs] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [revenueData, setRevenueData] = useState([]);
 
- 
-  // const userId = useSelector((state) => state.auth.user?._id || null)
-  const userId = useSelector((state:RootState) => state.auth.user?._id || null)
-  const user = useSelector((state:RootState) =>state.auth.user )
-  const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
-  // const { users, loading, error, totalCount } = useSelector(
-  //   (state: RootState) => state.users
-  // );
-  const [users, setUsers] = useState<User[]>([]); 
-  const [totalCount,setTotalCount] = useState(0);
-  const [loading,setLoading] = useState(false)
-  const [error, setError] = useState('');
-  const [pagination, setPagination] = useState({
-      total: 0,
-      page: 1,
-      pages: 1,
-      limit: 3,
-    });
-
-   
   useEffect(() => {
-    const getUsers = async () => {
+    const getusers = async () => {
+      const response = await fetchUsers();
+      setTotalCount(response.meta.total);
+    }
+    getusers()
+  }, [])
+
+  useEffect(() => {
+    const totalActiveJobs = async () => {
+      const count = await fetchTotalActiveJobsCount()
+      setTotalJobs(count)
+    }
+    totalActiveJobs()
+  }, [])
+
+  useEffect(() => {
+    const platformRevenu = async () => {
+      const totalRevenue = await fetchPlatformRevenue()
+      setTotalRevenue(totalRevenue)
+    }
+    platformRevenu()
+  }, [])
+
+  useEffect(() => {
+    const loadRevenueStats = async () => {
       try {
-        setLoading(true);
-        const response = await fetchUsers(pagination.page, pagination.limit);  
-        // console.log('the userssssssssss',response.meta)
-        setUsers(response.data.users);
-        setPagination((prev) => ({
-          ...prev,
-          total: response.meta.total,
-          pages: response.meta.pages,
+        const stats = await fetchMonthlyRevenueStats();
+        // Transform the API data to match the chart format
+        const transformedData = stats.map(item => ({
+          month: item.month,
+          revenue: item.earnings || 0
         }));
-        setTotalCount(response.meta.total);
-      } catch (err) {
-        const errormessage = handleApiError(err)
-        setError(errormessage);
-      } finally {
-        setLoading(false);
-      }
-    };
-    getUsers();
-  }, [pagination.page, pagination.limit]);
-
-  const handleToggleBlock = async(userId: string, isBlocked: boolean) => {
-    try {
-      const newStatus = !isBlocked; 
-      const updatedUser = await updateUserStatus(userId,newStatus)
-       setUsers((prevUsers) =>
-        prevUsers.map((user) =>
-          user._id === updatedUser.userId ? { ...user, isBlocked: updatedUser.isBlocked } : user
-        )
-      );
-    } catch (error) {
-      handleApiError(error)
-    }
-  }
-
-  const handlePageChange = (newPage: number) => {
-    if (newPage > 0 && newPage <= pagination.pages) {
-      setPagination((prev) => ({
-        ...prev,
-        page: newPage,
-      }));
-    }
-  };
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
-        setIsProfileOpen(false);
+        setRevenueData(transformedData);
+      } catch (error) {
+        console.error('Error loading revenue stats:', error);
+        setRevenueData([]);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    loadRevenueStats();
+  }, [])
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-  };
-
-  const toggleProfile = () => {
-    setIsProfileOpen(!isProfileOpen);
-  };
-
-  const handleLogout = async() => {
-    try {
-          if(userId){
-            const result = await dispatch(logout(userId)).unwrap();
-            console.log("Logout successful:", result);
-            persistor.purge(); 
-            navigate("/signin");
-          }
-          
-        } catch (error) {
-          console.error("Logout failed:", error);
-        }
-  };
-
- 
-  interface Column {
-    header: string;
-    accessor: keyof User;
-    cell?: (user: User) => JSX.Element;
-  }
- 
-  // Define columns
-  const columns: Column[] = [
-    {
-      header: "User",
-      accessor: "username",
-      cell: (user) => (
-        <div className="flex items-center">
-          <div className="ml-4">
-            <div className="text-sm font-medium text-[#0A1529]">
-              {user.username}
-            </div>
-            <div className="text-sm text-gray-500">{user.email}</div>
-          </div>
-        </div>
-      ),
-    },
-    { header: "Role", accessor: "role" },
-    {
-      header: "Status",
-      accessor: "status",
-      cell: (user) => (
-        // <span
-        //   className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg ${
-        //     user.status === "Active"
-        //       ? "bg-green-50 text-green-700"
-        //       : "bg-yellow-50 text-yellow-700"
-        //   }`}
-        // >
-        //   {/* {user.status} */}
-        //   {user.status || "Active"}
-        // </span>
-        <span
-          className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg ${
-            user.isBlocked ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"
-          }`}
-        >
-          {user.isBlocked ? "Blocked" : "Active"}
-        </span>
-      ),
-    },
-    // { header: "Joined", accessor: "joined" },
-    {
-      header: "Action",
-      accessor: "_id", // Using _id as a key for the action
-      cell: (user) => (
-        // <button
-        //   onClick={() => handleToggleBlock(user._id)}
-        //   className={`px-3 py-1 text-xs font-semibold rounded-lg text-white ${
-        //     user.status === "blocked" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
-        //   }`}
-        // >
-        //   {user.status === "blocked" ? "Unblock" : "Block"}
-        // </button>
-        <button
-          onClick={() => handleToggleBlock(user._id, user.isBlocked)}
-          className={`px-3 py-1 text-xs font-semibold rounded-lg text-white ${
-            user.isBlocked ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
-          }`}
-        >
-          {user.isBlocked ? "Unblock" : "Block"}
-        </button>
-      ),
-    },
+  const stats = [
+    { title: 'Total Users', value: totalCount, change: '+12%', icon: Users, color: 'bg-blue-500' },
+    { title: 'Active Jobs', value: totalJobs, change: '+8%', icon: Briefcase, color: 'bg-green-500' },
+    { title: 'Revenue', value: totalRevenue, change: '+23%', icon: DollarSign, color: 'bg-purple-500' },
+    { title: 'Growth Rate', value: '18.2%', change: '+5%', icon: TrendingUp, color: 'bg-orange-500' }
   ];
 
+  const recentJobs = [
+    { id: 1, title: 'Full Stack Developer', client: 'TechCorp', budget: '$5,000', status: 'active' },
+    { id: 2, title: 'UI/UX Designer', client: 'StartupXYZ', budget: '$2,500', status: 'pending' },
+    { id: 3, title: 'Content Writer', client: 'BlogMedia', budget: '$800', status: 'completed' },
+    { id: 4, title: 'Mobile App Developer', client: 'AppStudio', budget: '$8,000', status: 'active' }
+  ];
+
+  const topFreelancers = [
+    { name: 'Sarah Johnson', rating: 4.9, jobs: 127, earnings: '$45,230' },
+    { name: 'Mike Chen', rating: 4.8, jobs: 98, earnings: '$38,950' },
+    { name: 'Elena Rodriguez', rating: 4.9, jobs: 156, earnings: '$52,100' }
+  ];
+
+  const StatCard = ({ stat }) => {
+    const Icon = stat.icon;
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-gray-600 text-sm">{stat.title}</p>
+            <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+            <p className="text-green-600 text-sm">{stat.change} from last month</p>
+          </div>
+          <div className={`${stat.color} p-3 rounded-lg`}>
+            <Icon className="w-6 h-6 text-white" />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'completed': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#F8F9FB] flex flex-col md:flex-row">
-      {/* Sidebar */}
+    <div className="min-h-screen ml-64 bg-gray-300">
       <Sidebar
         selectedItem={selectedItem}
         setSelectedItem={setSelectedItem}
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
       />
-
-      {/* Main Content */}
-      <main className="flex-1">
-        {/* Header */}
-        <header className="bg-white shadow-sm">
-          <div className="flex flex-col md:flex-row items-center justify-between px-4 md:px-8 py-5 gap-4">
-            <div className="flex items-center gap-4 w-full md:w-auto">
-              <button 
-                onClick={toggleMobileMenu}
-                className="p-1.5 hover:bg-gray-100 rounded-lg md:hidden"
-              >
-                <Menu className="w-6 h-6 text-[#0A1529]" />
-              </button>
-              <div className="relative flex-1 md:flex-none">
-                <Search className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="w-full md:w-64 pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0066FF] focus:border-transparent"
-                />
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <button className="relative p-2 hover:bg-gray-100 rounded-full">
-                <Bell className="w-6 h-6 text-[#0A1529]" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-              <div className="relative" ref={profileRef}>
-                <button
-                  onClick={toggleProfile}
-                  className="flex items-center gap-3 focus:outline-none"
-                >
-                  <div className="text-right hidden md:block">
-                    <p className="text-sm font-medium text-[#0A1529]">{user.username}</p>
-                    <p className="text-xs text-gray-500">Admin</p>
-                  </div>
-                  <img
-                  src = {user.profilePicture? user.profilePicture : ""}
-                    // src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                    alt="Admin"
-                    className="w-10 h-10 rounded-lg border-2 border-[#0066FF]"
-                  />
-                  <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-10">
-                    <button
-                      onClick={() => {
-                        setIsProfileOpen(false);
-                        // Handle profile click
-                      }}
-                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      <User className="w-4 h-4 mr-2" />
-                      Profile
-                    </button>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                    >
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+      <div className="fixed top-0 w-full z-50 bg-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
           </div>
-        </header>
-
-        {/* Dashboard Content */}
-        <div className="p-4 md:p-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-[#0A1529]">Total Users</h3>
-                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                  <Users className="w-6 h-6 text-[#0066FF]" />
-                </div>
-              </div>
-              <p className="text-3xl font-bold mt-4 text-[#0A1529]">{totalCount}</p>
-              <p className="text-sm text-green-600 mt-2 flex items-center">
-                <span className="flex items-center">↑ +12%</span>
-                <span className="text-gray-500 ml-1">from last month</span>
-              </p>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-[#0A1529]">Active Jobs</h3>
-                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                  <Briefcase className="w-6 h-6 text-[#0066FF]" />
-                </div>
-              </div>
-              <p className="text-3xl font-bold mt-4 text-[#0A1529]">1,234</p>
-              <p className="text-sm text-green-600 mt-2 flex items-center">
-                <span className="flex items-center">↑ +8%</span>
-                <span className="text-gray-500 ml-1">from last month</span>
-              </p>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-[#0A1529]">Messages</h3>
-                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                  <MessageSquare className="w-6 h-6 text-[#0066FF]" />
-                </div>
-              </div>
-              <p className="text-3xl font-bold mt-4 text-[#0A1529]">892</p>
-              <p className="text-sm text-red-600 mt-2 flex items-center">
-                <span className="flex items-center">↓ -3%</span>
-                <span className="text-gray-500 ml-1">from last month</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Recent Users Table */}
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-gray-100">
-              <h2 className="text-xl font-semibold text-[#0A1529]">Recent Users</h2>
-            </div>
-            {/* <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-[#F8F9FB]">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#0A1529] uppercase tracking-wider">User</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#0A1529] uppercase tracking-wider">Role</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#0A1529] uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-[#0A1529] uppercase tracking-wider">Joined</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {[
-                    {
-                      name: 'John Doe',
-                      email: 'john@example.com',
-                      role: 'Freelancer',
-                      status: 'Active',
-                      joined: 'Mar 12, 2024',
-                      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-                    },
-                    {
-                      name: 'Michael Johnson',
-                      email: 'michael@example.com',
-                      role: 'Freelancer',
-                      status: 'Active',
-                      joined: 'Mar 8, 2024',
-                      avatar: 'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-                    }
-                  ].map((user, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <img className="h-10 w-10 rounded-lg" src={user.avatar} alt="" />
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-[#0A1529]">{user.name}</div>
-                            <div className="text-sm text-gray-500">{user.email}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-[#0A1529]">{user.role}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg ${
-                          user.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-yellow-50 text-yellow-700'
-                        }`}>
-                          {user.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {user.joined}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div> */}
-             <Table data={users} columns={columns} />
-           
-          </div>
-          <Stack spacing={2} alignItems="center" className="mt-4">
-          <Pagination
-            count={pagination.pages}
-            page={pagination.page}
-            onChange={(event, value) => handlePageChange(value)}
-            color="primary"
-          />
-        </Stack>
         </div>
-      </main>
+      </div>
+
+      <div className="pt-25 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {stats.map((stat, index) => (
+            <StatCard key={index} stat={stat} />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Revenue Overview</h2>
+              <TrendingUp className="w-5 h-5 text-gray-500" />
+            </div>
+            {revenueData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={revenueData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value) => [`$${value.toLocaleString()}`, 'Revenue']}
+                    labelFormatter={(label) => `Month: ${label}`}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="revenue" 
+                    stroke="#3B82F6" 
+                    strokeWidth={3}
+                    dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: '#3B82F6', strokeWidth: 2 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-gray-500">
+                <div className="text-center">
+                  <TrendingUp className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Loading revenue data...</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Top Freelancers</h2>
+              <UserCheck className="w-5 h-5 text-gray-500" />
+            </div>
+            <div className="space-y-4">
+              {topFreelancers.map((freelancer, index) => (
+                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
+                      {freelancer.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">{freelancer.name}</h3>
+                      <div className="flex items-center space-x-1">
+                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                        <span className="text-sm text-gray-600">{freelancer.rating}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-gray-900">{freelancer.earnings}</p>
+                    <p className="text-sm text-gray-600">{freelancer.jobs} jobs</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div> */}
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 mt-8">
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Recent Jobs</h2>
+              <Eye className="w-5 h-5 text-gray-500" />
+            </div>
+            <div className="space-y-4">
+              {recentJobs.map((job) => (
+                <div key={job.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+                  <div>
+                    <h3 className="font-medium text-gray-900">{job.title}</h3>
+                    <p className="text-sm text-gray-600">{job.client}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-gray-900">{job.budget}</p>
+                    <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(job.status)}`}>
+                      {job.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
-}
+};
 
-export default AdminDash;
+export default AdminDashboard;

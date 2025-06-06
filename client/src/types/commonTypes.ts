@@ -7,3 +7,10 @@ export interface PaginatedResponse<T> {
         limit: number;
     };
 }
+
+export type MetaType = {
+  total: number;
+  page: number;
+  pages: number;
+  limit: number;
+};

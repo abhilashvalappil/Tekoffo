@@ -24,7 +24,7 @@ const proposalSchema = new Schema<IProposal>({
   },
   status: {
     type: String,
-    enum: ['pending', 'accepted', 'rejected'],
+    enum: ['invited','pending', 'accepted', 'rejected'],
     default: 'pending',
   },
   coverLetter: {

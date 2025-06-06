@@ -17,7 +17,7 @@ export class AuthController {
         try {
             const {username, email, password, role} = req.body;
             if (!username || !email || !password || !role) {
-                res.status(Http_Status.BAD_REQUEST).json(MESSAGES.ALL_FIELDS_REQUIRED)
+                res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.ALL_FIELDS_REQUIRED})
             }
             const result = await this.authService.signUp({username,email,password,role})
             res.status(Http_Status.OK).json({
@@ -80,7 +80,6 @@ export class AuthController {
 
     async signIn(req:Request, res:Response, next: NextFunction): Promise<void>{
         try {
-            console.log('console from authcontolerrrrrrrrrrr',req.body)
             const {identifier, password} = req.body;
             if(!identifier || !password){
                 res.status(Http_Status.BAD_REQUEST).json({ message: MESSAGES.ALL_FIELDS_REQUIRED })
@@ -95,7 +94,6 @@ export class AuthController {
                 accessToken:result.accessToken
             });
         } catch (error) {
-            console.log('console from authsignin controler error :',error)
             next(error)
         }
     }

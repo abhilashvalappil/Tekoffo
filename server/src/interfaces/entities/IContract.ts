@@ -42,3 +42,18 @@ export interface CreateContractDTO {
     startedAt: Date;
   }
   
+  export interface IContractResponse {
+  _id: Types.ObjectId;
+  clientId: Types.ObjectId;
+  jobId: Types.ObjectId | {
+    _id: Types.ObjectId;
+    title: string;
+  };
+  freelancerId: Types.ObjectId | {
+    _id: Types.ObjectId;
+    fullName: string;
+  };
+  contractStatus: status;
+  createdAt: Date;
+  updatedAt: Date;
+}

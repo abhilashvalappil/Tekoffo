@@ -102,7 +102,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center">
+    <div className="p-5 absolute inset-0 z-50 flex items-center justify-center">
       <Toaster position="top-center" />
       <div className="p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
         <div className="mt-3">
@@ -327,10 +327,10 @@ const CategoryManagement = () => {
         setIsMobileMenuOpen={setIsMobileMenuOpen}
       />
 
-      <div className="flex-1 min-h-screen bg-gray-50">
+      <div className="flex-1 min-h-screen bg-gray-300">
         <Toaster position="top-center" reverseOrder={false} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="ml-64 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-gray-50 rounded-lg shadow-lg overflow-hidden">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h1 className="text-2xl font-bold text-gray-900">Category Management</h1>
@@ -429,27 +429,7 @@ const CategoryManagement = () => {
                   </tbody>
                 </table>
               </div>
-
-              {/* <div className="flex justify-between items-center mt-4">
-                <button
-                  onClick={() => handlePageChange(pagination.page - 1)}
-                  disabled={pagination.page === 1}
-                  className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <span>
-                  Page {pagination.page} of {pagination.pages}
-                </span>
-                <button
-                  onClick={() => handlePageChange(pagination.page + 1)}
-                  disabled={pagination.page === pagination.pages}
-                  className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div> */}
-            
+ 
             </div>
           </div>
           <Stack spacing={2} alignItems="center" className="mt-4">
