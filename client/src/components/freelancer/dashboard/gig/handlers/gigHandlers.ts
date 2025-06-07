@@ -1,7 +1,7 @@
 
-import { Gig } from "../../types/gigTypes";  
-import { deleteGig } from "../../api"; 
-import { handleApiError } from "../../utils/errors/errorHandler";
+import { Gig } from "../../../../../types/gigTypes";  
+import { deleteGig } from "../../../../../api"; 
+import { handleApiError } from "../../../../../utils/errors/errorHandler";
 import toast from "react-hot-toast";
 import { NavigateFunction } from "react-router-dom";
 

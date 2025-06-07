@@ -6,7 +6,6 @@ import { JobFormSchema,UpdateJobInputSchema } from "../validations/jobValidation
 import { GigFormSchema } from "../validations/gigValidation";
 import { ZodIssue } from 'zod';
 import dotenv from "dotenv";
-import { error } from "console";
 import { ValidationError } from "../errors/customErrors";
 dotenv.config();
 import { SortOption } from "../interfaces/entities/IProposal";

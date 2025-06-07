@@ -13,6 +13,7 @@ import { useAuth } from '../../../hooks/customhooks/useAuth';
 import ClientNavbar from '../../client/shared/Navbar';
 import { clientNavItems } from '../../client/shared/NavbarItems';
 import Footer from '../../shared/Footer';
+// import { useLocation } from 'react-router-dom';
 
 const ChatBox: React.FC = () => {
   const [chats, setChats] = useState<Contact[]>([]);
@@ -33,7 +34,7 @@ const ChatBox: React.FC = () => {
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
 
   const user = useSelector((state: RootState) => state.auth.user);
-    const { handleLogout } = useAuth();
+  const { handleLogout } = useAuth();
 
 
   const selectedChat = chats.find((chat) => chat._id === selectedChatId);
@@ -45,12 +46,10 @@ const ChatBox: React.FC = () => {
     if (currentUserId) {
       socket.connect();
       
-      // Wait for connection to be established before joining
       const handleConnect = () => {
         console.log('Socket connected, joining as user:', currentUserId);
         socket.emit('user:join', currentUserId);
-        
-        // Request current online users list
+
         socket.emit('get:online-users');
       };
 

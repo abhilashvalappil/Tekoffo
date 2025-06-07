@@ -7,13 +7,23 @@ import { RootState, AppDispatch } from '../../../redux/store';
 import { updateFreelancerProfile } from '../../../redux/services/userService';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import Navbar from '../shared/Navbar';
+import { navItems } from '../shared/NavbarItems';
 import { freelancerProfileSchema, FreelancerProfileFormData } from '../../../utils/validations/ProfileValidation';
+import { useAuth } from '../../../hooks/customhooks/useAuth';
+import Footer from '../../shared/Footer';
 
 function FreelancerProfile() {
+  // const [activeTab, setActiveTab] = useState<string>('contracts');
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.auth.user);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(user?.profilePicture || null);
+
+  const { handleLogout } = useAuth();
 
   // const hasProfile = user && (user.description || user.skills?.length > 0 || user.country);
   const hasProfile =
@@ -118,7 +128,18 @@ function FreelancerProfile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white text-gray-800">
-      <div className="container mx-auto px-4 py-8">
+       <Navbar
+        // activeTab={activeTab}
+        // setActiveTab={setActiveTab}
+        isMenuOpen={isMenuOpen}
+        setIsMenuOpen={setIsMenuOpen}
+        isProfileOpen={isProfileOpen}
+        setIsProfileOpen={setIsProfileOpen}
+        user={user}
+         handleLogout={handleLogout}
+        navItems={navItems}
+      />
+      <div className="container mx-auto px-4 py-22">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
           <ProfileSidebar
@@ -410,6 +431,7 @@ function FreelancerProfile() {
           </div>
         </div>
       )}
+      <Footer />
     </div>
   );
 }

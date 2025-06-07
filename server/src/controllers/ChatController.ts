@@ -67,7 +67,6 @@ export class ChatController {
                 return;
             }
             const {contacts} = await this.chatService.getChatContacts(userId)
-            // console.log('console from chatcontroller getChatContacts ',contacts)
             res.status(Http_Status.OK).json({contacts})
         } catch (error) {
             next(error)

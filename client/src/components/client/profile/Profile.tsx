@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Globe, Mail, Pencil } from 'lucide-react';
-import ProfileSidebar from './ProfileSidebar';
+import ClientProfileSidebar from './ProfileSidebar';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { Link, useNavigate } from 'react-router-dom';
@@ -139,7 +139,7 @@ const DisplayProfile = () => {
       />
       <div className="container mx-auto px-4 py-22">
         <div className="flex flex-col lg:flex-row gap-8">
-          <ProfileSidebar
+          <ClientProfileSidebar
             client={{
               fullName: user?.fullName || 'Anonymous User',
               companyName: user?.companyName,

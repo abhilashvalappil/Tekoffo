@@ -1,19 +1,18 @@
-import bcrypt from "bcrypt";
-import {IJobService, IUserRepository,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser, CreateGigDTO, IGigRepository, IGig, UpdateGigDTO, IContractRepository,  } from "../interfaces";
+
+import {IJobService, IUserRepository,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser, CreateGigDTO, IGigRepository, IGig, UpdateGigDTO, IContractRepository,  } from "../interfaces";
 import {MESSAGES} from '../constants/messages'
-import { ConflictError, CustomError, NotFoundError, UnauthorizedError } from "../errors/customErrors";
-import { FreelancerData, JobDataType, JobInputData, JobUpdateData } from '../interfaces/entities/IJob';
+import { ConflictError, NotFoundError, UnauthorizedError } from "../errors/customErrors";
+import { JobDataType, JobInputData, JobUpdateData } from '../interfaces/entities/IJob';
 import { proposalDataType } from "../types/jobTypes";
 import { Types } from "mongoose";
 import { IAppliedProposal, IProposal, JobInvitationView, SortOption } from "../interfaces/entities/IProposal";
 import { ProposalStatus } from "../interfaces/entities/IProposal";
-import { IPaymentRepository } from "../interfaces/repositoryInterfaces/IPaymentRepository";
-import Stripe from "stripe";
+// import Stripe from "stripe";
 import dotenv from "dotenv";
 dotenv.config();
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 import { PaginatedResponse } from "../types/commonTypes";
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-03-31.basil' });
+// const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-03-31.basil' });
 
 
 export class JobService implements IJobService{

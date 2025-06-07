@@ -48,7 +48,7 @@ const ClientRoutes = () => (
     />
 
     <Route 
-      path="/client/change-password"
+      path="/change-password"
       element={
         <ProtectedRoute allowedRoles={["client","freelancer"]}>
           <ChangePassword />

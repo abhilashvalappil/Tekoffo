@@ -2,16 +2,16 @@ import React, { useEffect, useState } from 'react';
 import {Briefcase, Star, ChevronRight, DollarSign, Clock, Repeat } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../../redux/store';
-import Navbar from '../shared/Navbar';
-import { navItems } from '../shared/NavbarItems';
-import Footer from '../../shared/Footer';
-import { Gig } from '../../../types/gigTypes';
-import { fetchGigs } from '../../../api';
+import { RootState } from '../../../../redux/store';
+import Navbar from '../../shared/Navbar';
+import { navItems } from '../../shared/NavbarItems';
+import Footer from '../../../shared/Footer';
+import { Gig } from '../../../../types/gigTypes';
+import { fetchGigs } from '../../../../api';
 import { useNavigate } from 'react-router-dom';
 import EditGigModal from './EditGigModal';
-import { createGigHandlers } from '../../../handlers/freelancerHandlers/gigHandlers';
-import { useAuth } from '../../../hooks/customhooks/useAuth';
+import { createGigHandlers } from './handlers/gigHandlers';
+import { useAuth } from '../../../../hooks/customhooks/useAuth';
 
 
 const MyGigs: React.FC = () => {

@@ -25,5 +25,5 @@ export interface IPaymentService {
     getActiveAndCompletedContracts(userId:string): Promise<{activeContracts:number,completedContracts:number}>
     getFreelancerWallet(userId:string): Promise<IWallet|null>
     withdrawEarnings(userId:string,amount:number): Promise<boolean>
-    getWalletTransactions(userId:string): Promise<ITransaction[]>
+    getWalletTransactions(userId:string, page: number, limit: number): Promise<PaginatedResponse<ITransaction>>
 }

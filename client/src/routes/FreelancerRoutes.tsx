@@ -1,6 +1,4 @@
-
-
-import { Route,   } from "react-router-dom";
+import { Route} from "react-router-dom";
 import FreelancerHome from "../components/freelancer/dashboard/FreelancerDashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import CreateFreelancerProfile from "../components/freelancer/profile/CreateProfile"; 
@@ -10,13 +8,11 @@ import CompleteOnboarding from "../components/freelancer/dashboard/CompleteOnboa
 import OnboardingSuccess from "../components/freelancer/dashboard/OnboardingSuccess";
 import FreelancerProposals from "../components/freelancer/dashboard/Proposals";
 import Contracts from "../components/freelancer/dashboard/Contracts";
-// import Chat from "../components/freelancer/dashboard/Messages";
-import CreateGig from "../components/freelancer/dashboard/GigForm";
-import MyGigs from "../components/freelancer/dashboard/Gigs";
+import CreateGig from "../components/freelancer/dashboard/gig/GigForm";
+import MyGigs from "../components/freelancer/dashboard/gig/Gigs";
 import JobInvitationsPage from "../components/freelancer/dashboard/invitations/JobInvitations";
 import ChatBox from "../components/freelancer/dashboard/Chat";
 import Wallet from "../components/freelancer/profile/Wallet";
-import CallPage from "../components/freelancer/video/VideoCall";
 
  
 const FreelancerRoutes = () => (
@@ -106,14 +102,6 @@ const FreelancerRoutes = () => (
      element={
         <ProtectedRoute allowedRoles={["freelancer","client"]}>
      <ChatBox />
-      </ProtectedRoute>
-     } />
-
-    <Route 
-    path="/call" 
-     element={
-        <ProtectedRoute allowedRoles={["freelancer","client"]}>
-     <CallPage />
       </ProtectedRoute>
      } />
 

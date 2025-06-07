@@ -1,7 +1,7 @@
 import { PipelineStage, Types } from "mongoose";
 import Proposal from "../models/ProposalModel";
 import BaseRepository from "./BaseRepository";
-import { IAppliedProposal, IProposal, JobInvitationView, ProposalInputDataType } from "../interfaces/entities/IProposal";
+import { IAppliedProposal, IProposal, JobInvitationView } from "../interfaces/entities/IProposal";
 import { IProposalRepository } from "../interfaces/repositoryInterfaces/IProposalRepository";
 import { ProposalStatus } from "../interfaces/entities/IProposal";
 import { SortOption } from "../interfaces/entities/IProposal";
@@ -81,12 +81,6 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
         })
     }
 
-    // async countAppliedProposals(freelancerId:string,search?: string): Promise<number> {
-    //     return await this.count({
-    //         freelancerId:new Types.ObjectId(freelancerId),
-    //         proposalType: 'freelancer-applied'
-    //     });   
-    //   }
     async countAppliedProposals(freelancerId: string, search?: string, filter?: string): Promise<number> {
         const pipeline: PipelineStage[] = [
             {
@@ -129,7 +123,6 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
         return result[0]?.total || 0;
     }
 
-    
     async findProposals(clientId:string,skip: number, limit: number): Promise<IProposal[]> {
         return await this.find({
             clientId:new Types.ObjectId(clientId),

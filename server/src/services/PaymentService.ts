@@ -246,9 +246,7 @@ export class PaymentService implements IPaymentService {
     return { message: "Notification marked as read" };
   }
 
-  async markAllNotificationsAsRead(
-    ids: string[]
-  ): Promise<{ message: string }> {
+  async markAllNotificationsAsRead(ids: string[]): Promise<{ message: string }> {
     await this.notificationRepository.updateAllNotifications(ids);
     return { message: "All Notifications are marked as read" };
   }
@@ -472,13 +470,25 @@ export class PaymentService implements IPaymentService {
     return success;
   }
 
-  async getWalletTransactions(userId:string): Promise<ITransaction[]>{
+  async getWalletTransactions(userId:string,page: number,limit: number): Promise<PaginatedResponse<ITransaction>>{
     const userExist = await this.userRepository.findUserById(userId);
     if(!userExist){
         throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
     }
-    const transactions = await this.transactionRepository.findTransactions(userId)
-    return transactions;
-  }
+    const skip = (page - 1) * limit;
+    const [transactions,total] = await Promise.all([
+      this.transactionRepository.findTransactions(userId,skip, limit),
+      this.transactionRepository.countTransactionsByUserId(userId)
+    ]) 
+    return {
+            data: transactions,
+            meta: {
+                total,
+                page,
+                pages: Math.ceil(total / limit),
+                limit,
+            },
+        };
+    }
 
 }

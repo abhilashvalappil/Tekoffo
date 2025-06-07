@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Gig } from '../../../types/gigTypes';
-import { updateGig } from '../../../api';
-import { handleApiError } from '../../../utils/errors/errorHandler';
+import { Gig } from '../../../../types/gigTypes';
+import { updateGig } from '../../../../api';
+import { handleApiError } from '../../../../utils/errors/errorHandler';
 import toast from 'react-hot-toast';
 
 

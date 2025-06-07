@@ -1,13 +1,5 @@
 
-import   { useState } from 'react';
-import {
-  User,
-  Wallet,
-  Lock,
-  Settings,
-  Bell,
-  LogOut,
-} from 'lucide-react';
+import {User,Wallet,Lock,LogOut,} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface Freelancer {
@@ -20,7 +12,7 @@ interface Props {
 }
 
 function ProfileSidebar({ freelancer }: Props) {
-  const [activeTab, setActiveTab] = useState('profile');
+  // const [activeTab, setActiveTab] = useState('profile');
 
   return (
     <div className="lg:w-1/4 sticky top-8 h-fit">
@@ -39,26 +31,39 @@ function ProfileSidebar({ freelancer }: Props) {
                     
                     <nav className="mt-8">
                       <ul className="space-y-2">
-                        <li className="bg-[#0A142F] text-white rounded-xl p-3 flex items-center gap-3">
+                        {/* <li className="bg-[#0A142F] text-white rounded-xl p-3 flex items-center gap-3">
                           <User size={20} />
                           <span>My Profile</span>
-                        </li>
+                        </li> */}
                         <li>
-                           <Link
+                        <Link
+                          to="/freelancer/profile"
+                          className={`${
+                            location.pathname === '/freelancer/profile'
+                              ? 'bg-[#0A142F] text-white'
+                              : 'hover:bg-gray-50 text-gray-700'
+                          } rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors`}
+                        >
+                          <User size={20} />
+                          <span>My Profile</span>
+                        </Link>
+                      </li>
+
+                        <li>
+                        <Link
                             to="/freelancer/wallet"
-                            onClick={() => setActiveTab('wallet')}
-                           className={`${
-                              activeTab === 'wallet'
+                            className={`${
+                              location.pathname === '/freelancer/wallet'
                                 ? 'bg-[#0A142F] text-white'
                                 : 'hover:bg-gray-50 text-gray-700'
-                            }  rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors`}
-                            >
-                          <Wallet size={20}   />
-                          <span>Wallet</span>
+                            } rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors`}
+                          >
+                            <Wallet size={20} />
+                            <span>Wallet</span>
                           </Link>
-                        </li>
+                          </li>
                        
-                        <li>
+                        {/* <li>
                           <Link
                             to="/client/change-password"
                             onClick={() => setActiveTab('password')} // Preserve tab-switching behavior
@@ -71,15 +76,29 @@ function ProfileSidebar({ freelancer }: Props) {
                             <Lock size={20} />
                             <span>Change Password</span>
                           </Link>
+                        </li> */}
+                        <li>
+                          <Link
+                            to="/change-password"
+                            className={`${
+                              location.pathname === '/change-password'
+                                ? 'bg-[#0A142F] text-white'
+                                : 'hover:bg-gray-50 text-gray-700'
+                            } rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors`}
+                          >
+                            <Lock size={20} />
+                            <span>Change Password</span>
+                          </Link>
                         </li>
-                        <li className="hover:bg-gray-50 rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors">
+
+                        {/* <li className="hover:bg-gray-50 rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors">
                           <Settings size={20} className="text-gray-600" />
                           <span>Settings</span>
                         </li>
                         <li className="hover:bg-gray-50 rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors">
                           <Bell size={20} className="text-gray-600" />
                           <span>Notifications</span>
-                        </li>
+                        </li> */}
                         <li className="hover:bg-red-50 text-red-500 rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors mt-8">
                           <LogOut size={20} />
                           <span>Logout</span>

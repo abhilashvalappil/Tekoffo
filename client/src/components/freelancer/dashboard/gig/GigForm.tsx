@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import Navbar from '../shared/Navbar';
-import { navItems } from '../shared/NavbarItems';
+import Navbar from '../../shared/Navbar';
+import { navItems } from '../../shared/NavbarItems';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../../redux/store';
+import { RootState } from '../../../../redux/store';
 import { useNavigate } from 'react-router-dom';
-import { GigFormData,GigFormSchema } from '../../../utils/validations/GigFormValidation';
-import Footer from '../../shared/Footer';
-import { createGig, fetchListedCategories } from '../../../api';
-import { useAuth } from '../../../hooks/customhooks/useAuth';
-import { handleApiError } from '../../../utils/errors/errorHandler';
+import { GigFormData,GigFormSchema } from '../../../../utils/validations/GigFormValidation';
+import Footer from '../../../shared/Footer';
+import { createGig, fetchListedCategories } from '../../../../api';
+import { useAuth } from '../../../../hooks/customhooks/useAuth';
+import { handleApiError } from '../../../../utils/errors/errorHandler';
 
 interface Category {
   _id?: string;

@@ -150,7 +150,6 @@ class JobRepository extends BaseRepository<JobDataType> implements IJobRepositor
             query.subCategory = filters.subCategory
         }
         if(filters?.budgetRange){
-            // query.budget = filters.budgetRange
             const [minStr, maxStr] = filters.budgetRange.split('-');
             const min = parseInt(minStr);
             const max = parseInt(maxStr);

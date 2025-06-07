@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
-import ProfileSidebar from './ProfileSidebar';  
+import ClientProfileSidebar from './ProfileSidebar';  
 import { changePassword } from '../../../api/common';
-// import { Passwords } from '../../types/auth';
 import ClientNavbar from '../shared/Navbar';
 import { clientNavItems } from '../shared/NavbarItems';
 import Footer from '../../shared/Footer';
@@ -14,6 +13,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { passwordSchema,PasswordFormData } from '../../../utils/validations/AuthValidation';
 import { handleApiError } from '../../../utils/errors/errorHandler';
+import Navbar from '../../freelancer/shared/Navbar';
+import { navItems } from '../../freelancer/shared/NavbarItems';
+import { useAuth } from '../../../hooks/customhooks/useAuth';
+import ProfileSidebar from '../../freelancer/profile/ProfileSidebar';
 
  
 
@@ -23,15 +26,18 @@ const ChangePassword: React.FC  = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [serverError, setServerError] = useState('');
   const [activeTab, setActiveTab] = useState<string>('profile');
+  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
 
   
-  const userProfile = useSelector((state: RootState) => state.auth.user);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const { handleLogout } = useAuth();
   const navigate = useNavigate();
 
   const client = {
-    fullName: userProfile?.fullName || 'Anonymous User',
-    companyName: userProfile?.companyName,
-    profilePicture: userProfile?.profilePicture,
+    fullName: user?.fullName || 'Anonymous User',
+    companyName: user?.companyName,
+    profilePicture: user?.profilePicture,
   };
 
   const {
@@ -71,15 +77,40 @@ const ChangePassword: React.FC  = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white text-gray-800">
+      {user?.role === 'client' ? (
        <ClientNavbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         navItems={clientNavItems}
       />
+      ):(
+         <Navbar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isMenuOpen={isMenuOpen}
+        setIsMenuOpen={setIsMenuOpen}
+        isProfileOpen={isProfileOpen}
+        setIsProfileOpen={setIsProfileOpen}
+        user={user}
+         handleLogout={handleLogout}
+        navItems={navItems}
+      />
+      )
+}
       <Toaster position="top-center" reverseOrder={false} />
       <div className="container mx-auto px-4 py-22">
         <div className="flex flex-col lg:flex-row gap-8">
-          <ProfileSidebar client={client} activeTab="password" />
+          {user?.role === 'client' ? (
+          <ClientProfileSidebar client={client} activeTab="password" />
+          ):(
+            <ProfileSidebar
+            freelancer={{
+              fullName: user?.fullName || "Anonymous User",
+              profilePicture: user?.profilePicture,
+            }}
+          />
+          )
+          }
           <div className="lg:w-3/4">
             <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
               <h1 className="text-3xl font-bold mb-6 text-gray-900">Change Password</h1>

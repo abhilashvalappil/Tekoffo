@@ -47,14 +47,26 @@ export interface SocketMessage {
   __v: number;
 }
 
-
-// export interface Message {
-//     chatId: string;
-//     senderId: string;
-//     receiverId: string;
-//     content: string;
-//     isRead: boolean;
-//     timestamp: Date;
-//     createdAt?: Date;
-//     updatedAt?: Date;
-// }
+export interface ChatPartner {
+  _id: string;
+  username: string;
+  email: string;
+  role: 'client' | 'freelancer' | 'admin';
+  fullName: string;
+  companyName?: string;
+  description: string;
+  country: string;
+  isBlocked: boolean;
+  isGoogleAuth: boolean;
+  githubUrl?: string;
+  linkedinUrl?: string;
+  portfolioUrl?: string;
+  profilePicture?: string;
+  preferredJobFields?: string[];
+  skills?: string[];
+  stripeAccountId?: string;
+  total_Earnings?: number;
+  total_Spent?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}

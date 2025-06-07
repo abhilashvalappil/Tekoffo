@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import { ChatContactPreview, IMessageRepository, IChatService, IUserRepository, MessagePayload, IChatRepository, IChat, IChatContactPreview, IMessage } from "../interfaces";
+import { IMessageRepository, IChatService, IUserRepository, MessagePayload, IChatRepository, IChat, IChatContactPreview, IMessage } from "../interfaces";
 import { NotFoundError, UnauthorizedError } from "../errors/customErrors";
 import { MESSAGES } from "../constants/messages";
 

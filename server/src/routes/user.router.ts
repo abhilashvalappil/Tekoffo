@@ -1,5 +1,4 @@
 import { Router } from "express";
-import express from 'express';
 import { AuthController } from "../controllers/AuthController";
 import { UserController } from "../controllers/UserController";
 import { JobController } from "../controllers/JobController";
@@ -99,7 +98,7 @@ userRouter.put('/invitations/accept',authMiddleware,authorizeRole('freelancer'),
 
 
 userRouter.post('/send-message',uploadChatMedia.single('media'),authMiddleware,authorizeRole(['freelancer', 'client']),chatController.createMessage.bind(chatController))
-userRouter.post('/chats/chat',authMiddleware,authorizeRole('freelancer'),chatController.getChat.bind(chatController))
+userRouter.post('/chats/chat',authMiddleware,authorizeRole(['freelancer', 'client']),chatController.getChat.bind(chatController))
 userRouter.post('/create-chat',authMiddleware,authorizeRole('freelancer'),chatController.createChat.bind(chatController))
 userRouter.get('/api/chats',authMiddleware,authorizeRole(['freelancer', 'client']),chatController.getChatContacts.bind(chatController))
 userRouter.get('/api/messages',authMiddleware,authorizeRole(['freelancer', 'client']),chatController.getMessagesByChat.bind(chatController))

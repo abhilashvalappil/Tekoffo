@@ -152,7 +152,6 @@ export const fetchAndUpdateProposalToReject = async(proposalId:string): Promise<
 export const fetchChat = async(senderId:string,receiverId:string): Promise<string> => {
     try {
         const response = await API.post(userENDPOINTS.GET_CHATID,{senderId,receiverId})
-        // console.log('console from fetchchat apiiii',response.data)
         return response.data.chat;
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -230,9 +229,10 @@ export const withdrawAmount = async(amount:number): Promise<string> => {
     }
 }
 
-export const fetchTransactions = async(): Promise<ITransaction[]> => {
+export const fetchTransactions = async(page:number,limit:number): Promise<PaginatedResponse<ITransaction>> => {
     try {
-        const response = await API.get(userENDPOINTS.GET_TRANSACTIONS)
+        const response = await API.get(userENDPOINTS.GET_TRANSACTIONS,{params:{page, limit}})
+        console.log(';l@@@@@@@@@@@@@@llllllllllllll=======',response.data.transactions)
         return response.data.transactions;
     } catch (error) {
         throw new Error(handleApiError(error));

@@ -16,6 +16,7 @@ import Footer from '../../shared/Footer';
 import { IReview } from '../../../types/review';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
+import ChatButton from '../../freelancer/shared/ChatButton';
 
 const Contracts = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -143,6 +144,7 @@ const Contracts = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">chat</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -220,7 +222,13 @@ const Contracts = () => {
                         </>
                       )}
                     </td>
-
+                      <td>
+                        {user?._id && (
+                          <button>
+                            <ChatButton senderId={user._id} receiverId={contract.freelancerId._id} />
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -234,7 +242,6 @@ const Contracts = () => {
         <Pagination
           count={pagination.pages}
           page={pagination.page}
-          // onChange={(value) => handlePageChange(value)}
           onChange={(_e, page) => handlePageChange(page)}
           color="primary"
         />

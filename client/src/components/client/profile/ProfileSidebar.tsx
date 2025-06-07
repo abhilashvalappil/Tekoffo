@@ -18,7 +18,7 @@ interface Props {
   activeTab?: string;
 }
 
-function ProfileSidebar({ client }: Props) {
+function ClientProfileSidebar({ client }: Props) {
 
   return (
     <div className="lg:w-1/4 sticky top-8 h-fit">
@@ -80,9 +80,9 @@ function ProfileSidebar({ client }: Props) {
             </li> */}
             <li>
             <Link
-                to="/client/change-password"
+                to="/change-password"
                 className={`${
-                  location.pathname === '/client/change-password'
+                  location.pathname === '/change-password'
                     ? 'bg-[#0A142F] text-white'
                     : 'hover:bg-gray-50 text-gray-700'
                 } rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors`}
@@ -114,4 +114,4 @@ function ProfileSidebar({ client }: Props) {
   );
 }
 
-export default ProfileSidebar;
+export default ClientProfileSidebar;

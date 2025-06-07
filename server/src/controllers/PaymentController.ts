@@ -319,7 +319,17 @@ export class PaymentController {private paymentService: IPaymentService; private
         res.status(Http_Status.BAD_REQUEST).json({ error: MESSAGES.UNAUTHORIZED });
         return;
       }
-      const transactions = await this.paymentService.getWalletTransactions(userId)
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 8;
+
+      if (isNaN(page) || page < 1){
+        res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid page number" });
+      }
+      if (isNaN(limit) || limit < 1){
+        res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
+      }
+
+      const transactions = await this.paymentService.getWalletTransactions(userId,page,limit)
       if(!transactions){
         res.status(Http_Status.NOT_FOUND).json({message:MESSAGES.TRANSACTION_NOT_FOUND})
       }

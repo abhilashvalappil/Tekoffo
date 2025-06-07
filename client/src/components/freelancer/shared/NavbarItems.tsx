@@ -1,4 +1,4 @@
-import { Briefcase, FileText, LayoutDashboard, Mail, MessageSquare, ScrollText, Wallet } from "lucide-react";
+import { Briefcase, FileText, LayoutDashboard, Mail, ScrollText } from "lucide-react";
 
 
 export const navItems = [

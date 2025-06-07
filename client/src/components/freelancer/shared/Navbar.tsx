@@ -22,8 +22,8 @@ interface Notification {
 }
 
 interface NavbarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  activeTab?: string;
+  setActiveTab?: (tab: string) => void;
   isMenuOpen: boolean;
   setIsMenuOpen: (open: boolean) => void;
   isProfileOpen: boolean;
@@ -54,7 +54,7 @@ const Navbar: React.FC<NavbarProps> = ({
     const fetchNotifications = async () => {
       try {
         const response = await API.get('/notifications');
-        const fetchedNotifications: Notification[] = response.data.map((n: any) => ({
+        const fetchedNotifications: Notification[] = response.data.map((n: Notification) => ({
           id: n._id,
           type: 'payment',  
           title: ' Payment Authorized', 

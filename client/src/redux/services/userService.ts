@@ -2,7 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { AxiosError } from "axios";
 import API from "../../services/api"
 import { userENDPOINTS } from "../../constants/endpointUrl";
-import { ProfileFormData, UserProfileResponse } from "../../types/userTypes"
+import { UserProfileResponse } from "../../types/userTypes"
 
 
 export const createUserProfile = createAsyncThunk<

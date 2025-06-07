@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { Search, Calendar, Filter, ChevronDown } from 'lucide-react';
+import { Search, Filter, ChevronDown } from 'lucide-react';
 import { useFetchContracts } from '../../../hooks/customhooks/useFetchContracts';
 import { fetchSubmittedReviews, submitContract, submitReview } from '../../../api';
 import toast, { Toaster } from 'react-hot-toast';
@@ -23,7 +23,7 @@ import { contractResponse } from '../../../types/paymentTypes';
 const Contracts = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [timeFilter, setTimeFilter] = useState<string>('all');
+  // const [timeFilter, setTimeFilter] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<string>('contracts');
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
@@ -41,7 +41,6 @@ const Contracts = () => {
   const { handleLogout } = useAuth();
   const debouncedSearchTerm = useDebounce(searchQuery,500)
   const { contracts, loading, error, meta, refetch } = useFetchContracts(pagination.page, pagination.limit, debouncedSearchTerm, statusFilter);
-  console.log('checking fetch #### ====== !!!!!!@@@@@@', contracts)
 
   useEffect(() => {
     updateMeta(meta.total, meta.pages);
@@ -61,10 +60,9 @@ const Contracts = () => {
     try {
       const message = await submitReview(reviewedUserId,reviewData,contractId)   
       toast.success(message)
-      // Refetch reviews after successful submission
       await getreviews()
-      setIsOpen(false) // Close the modal after successful submission
-      setSelectedContract(null) // Clear selected contract
+      setIsOpen(false)  
+      setSelectedContract(null) 
     } catch (error) {
       toast.error(handleApiError(error));
     }
@@ -77,7 +75,6 @@ const Contracts = () => {
     const getreviews = async() => {
       try {
         const reviews = await fetchSubmittedReviews()
-        console.log('console from contracts.tsx getreviewss ====>>>',reviews)
         setReviews(reviews)
       } catch (error) {
         console.error('Error fetching reviews:', error)
@@ -133,7 +130,7 @@ const Contracts = () => {
               <ChevronDown className="absolute right-2 top-2.5 text-gray-400" size={18} />
             </div>
 
-            <div className="relative">
+            {/* <div className="relative">
               <select
                 className="appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={timeFilter}
@@ -145,7 +142,7 @@ const Contracts = () => {
               </select>
               <Calendar className="absolute left-3 top-2.5 text-gray-400" size={18} />
               <ChevronDown className="absolute right-2 top-2.5 text-gray-400" size={18} />
-            </div>
+            </div> */}
           </div>
         </div>
 

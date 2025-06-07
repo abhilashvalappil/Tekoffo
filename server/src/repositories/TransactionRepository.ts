@@ -12,8 +12,17 @@ class TransactionRepository extends BaseRepository<ITransaction> implements ITra
         await this.create(data)
     }
 
-    async findTransactions(userId:string): Promise<ITransaction[]>{
-        return await Transaction.find({userId: new Types.ObjectId(userId)})
+    async findTransactions(userId:string,skip: number, limit: number): Promise<ITransaction[]>{
+        return await Transaction.find({
+            userId: new Types.ObjectId(userId)
+        })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+    }
+
+    async countTransactionsByUserId(userId:string): Promise<number> {
+        return await this.count({userId: new Types.ObjectId(userId)})
     }
 
     async findAllTransactions(): Promise<ITransactionWithUsername[]>{

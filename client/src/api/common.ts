@@ -5,7 +5,7 @@ import { commonENDPOINTS,userENDPOINTS } from '../constants/endpointUrl'
 import {SingUpFormData,Passwords} from '../types/auth'
 import { handleApiError } from '../utils/errors/errorHandler'
 import { IFrontendPopulatedReview, IReview } from '../types/review'
-import { SocketMessage } from '../types/messageTypes'
+import { ChatPartner, SocketMessage } from '../types/messageTypes'
  
 
 export const signUp = async(userData:SingUpFormData) => {
@@ -36,7 +36,7 @@ export const changePassword = async(passwords:Passwords) => {
 }
 
 
-export const fetchReceiver = async(receiverId: string) => {
+export const fetchChatPartner = async(receiverId: string): Promise<ChatPartner> => {
     try {
         const response = await API.post(userENDPOINTS.GET_RECEIVER,{receiverId})
         return response.data;
