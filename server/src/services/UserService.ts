@@ -1,17 +1,12 @@
 import bcrypt from "bcrypt";
-import { IUserService,IUserRepository,ProfileFormData,UserProfileResponse,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser,  } from "../interfaces";
+import { IUserService,IUserRepository,ProfileFormData,UserProfileResponse,ICategoryRepository,IJobRepository,IProposalRepository, IUser,  } from "../interfaces";
 import {MESSAGES} from '../constants/messages'
 import { CustomError, NotFoundError, UnauthorizedError } from "../errors/customErrors";
-import { FreelancerData, JobDataType, JobInputData, JobUpdateData } from '../interfaces/entities/IJob';
-import { proposalDataType } from "../types/jobTypes";
-import { Types } from "mongoose";
-import { IProposal } from "../interfaces/entities/IProposal";
+import { FreelancerData } from '../interfaces/entities/IJob';
 import { IPaymentRepository } from "../interfaces/repositoryInterfaces/IPaymentRepository";
 import Stripe from "stripe";
 import dotenv from "dotenv";
 dotenv.config();
-import { v4 as uuidv4 } from 'uuid';
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-03-31.basil' });
 
 export class UserService implements IUserService {
     private userRepository: IUserRepository;
@@ -68,7 +63,6 @@ export class UserService implements IUserService {
             if (!saveProfile) {
                 throw new CustomError(MESSAGES.PROFILE_UPDATE_FAILED);  
             }
-            console.log("user profile savedddddddd",saveProfile)
             return {message:MESSAGES.PROFILE_CREATED,
                 userProfile:{
                     _id: saveProfile._id,
