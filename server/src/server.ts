@@ -1,5 +1,5 @@
 // import express from "express";
-import express, { Express, Request, Response, NextFunction } from 'express';
+import express from 'express';
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
@@ -16,14 +16,16 @@ import { setupSocketEvents } from './utils/socketManager';
 dotenv.config();
 
 const app = express();
+const mongoUrl = process.env.MONGO_URL;
 const client = new OAuth2Client(process.env.CLIENT_ID);
+const CLIENT_URL = process.env.CLIENT_URL
 
 const server = http.createServer(app);
 const io = initSocket(server);  
 setupSocketEvents(io);  
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: CLIENT_URL,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -41,9 +43,11 @@ app.use(morganMiddleware);
 app.use('/', userRouter);
 app.use('/admin',adminRouter)
 
- 
+ if (!mongoUrl) {
+  throw new Error("MONGO_URL is not defined in environment variables");
+}
 mongoose
-  .connect("mongodb://localhost:27017/Tekoffo" )
+  .connect(mongoUrl)
   .then(() => console.log("MongoDB connected"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
