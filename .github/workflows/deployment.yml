@@ -3,7 +3,7 @@ name: Build and Deploy Tekoffo
 on:
   push:
     branches:
-      - main
+      - master
 
 env:
   IMAGE_NAME: tekoffo-app
@@ -16,6 +16,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Change to server directory
+        run: cd server
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -27,6 +30,7 @@ jobs:
 
       - name: Build Docker Image
         run: |
+          cd server
           docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest .
 
       - name: Push Docker Image
