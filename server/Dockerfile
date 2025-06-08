@@ -10,7 +10,6 @@ RUN npm install
 # Copy tsconfig.json and source code
 COPY tsconfig.json ./
 COPY src ./src
-COPY config ./config
 
 # Build TypeScript code
 RUN npm run build || (echo "❌ TypeScript build failed!" && exit 1)
