@@ -7,12 +7,11 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copy tsconfig.json and source code
-COPY tsconfig.json ./
-COPY src ./src
+# Copy all source files
+COPY . .
 
 # Build TypeScript code
-RUN npm run build || (echo "❌ TypeScript build failed!" && exit 1)
+RUN npm run build
 
 EXPOSE 3000
 
