@@ -1,7 +1,7 @@
 
-import {IUserResponse,IAdminService,IUserRepository,ICategoryRepository,ICategory, FetchUserResponse, IJobRepository, IPlatformRepository, IContractRepository, ITransactionRepository, ITransactionWithUsername } from '../interfaces';
+import { IAdminService,IUserRepository,ICategoryRepository,ICategory, FetchUserResponse, IJobRepository, IPlatformRepository, IContractRepository, ITransactionRepository, ITransactionWithUsername, UserPublicInfo } from '../interfaces';
 import { MESSAGES } from '../constants/messages';
-import { CustomError,ValidationError,ConflictError,NotFoundError,UnauthorizedError } from "../errors/customErrors";
+import { ConflictError,NotFoundError } from "../errors/customErrors";
 import { onlineUsers } from '../utils/socketManager';
 import { getIO } from '../config/socket';
 import { PaginatedResponse } from '../types/commonTypes';
@@ -62,7 +62,7 @@ export class AdminService implements IAdminService {
             };         
         }
 
-        async updateUserStatus(userId:string, isBlocked: boolean): Promise<{message:string; user: any}> {
+        async updateUserStatus(userId:string, isBlocked: boolean): Promise<{message:string; user: UserPublicInfo}> {
                 const user = await this.userRepository.findUserById(userId);
                 if(!user){
                     throw new NotFoundError(MESSAGES.NO_USERS_FOUND)
@@ -101,7 +101,7 @@ export class AdminService implements IAdminService {
                 }
             }
             
-                const result = await this.categoryRepository.createCategory({name,subCategories})
+                 await this.categoryRepository.createCategory({name,subCategories})
                 return{message:MESSAGES.CATEGORY_CREATED_SUCCESSFULLY}
             }
 

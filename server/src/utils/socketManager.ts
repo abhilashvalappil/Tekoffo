@@ -16,7 +16,7 @@ export const setupSocketEvents = (io: Server) => {
     socket.on('get:online-users', () => {
       const currentOnlineUsers = Array.from(onlineUsers.keys());
       socket.emit('online-users-list', currentOnlineUsers);
-      // console.log('Sent online users list to client:', currentOnlineUsers);
+      console.log('Sent online users list to client:', currentOnlineUsers);
     });
 
     // Chat room management
@@ -79,7 +79,6 @@ export const setupSocketEvents = (io: Server) => {
 
     socket.on('initiate_call', ({ roomId }) => {
     console.log("Call initiated in room:", roomId);
-    // Notify other users in the room about incoming call
     socket.to(roomId).emit('incoming_call', { sender: socket.id });
 });
 

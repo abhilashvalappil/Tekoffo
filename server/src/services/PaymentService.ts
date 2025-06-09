@@ -100,7 +100,7 @@ export class PaymentService implements IPaymentService {
     if (!freelancer?.stripeAccountId) {
       throw new Error("Freelancer Stripe account ID not found.");
     }
-    // console.log('checking amountttttttttt :', amount)
+
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       // amount: amount * 100,
@@ -121,7 +121,6 @@ export class PaymentService implements IPaymentService {
         clientId,
       },
     });
-    console.log("console from createpayment userserviceee", paymentIntent);
 
     const transactionId = uuidv4();
     const transferDataDestination =
@@ -224,7 +223,7 @@ export class PaymentService implements IPaymentService {
       id: createdNotification._id.toString(),
       message,
     });
-    console.log("Notification sent to freelancer", message);
+    // console.log("Notification sent to freelancer", message);
     return { message: MESSAGES.CONTRACT_CREATED };
   }
 

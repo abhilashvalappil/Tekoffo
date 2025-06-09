@@ -88,7 +88,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     const handleOffer = (data: { offer: RTCSessionDescriptionInit; sender: string }) => {
       console.log('Offer received from:', data.sender);
       setIncomingOffer(data.offer);
-      setIsIncomingCall(true); // Make sure incoming call state is set
+      setIsIncomingCall(true);  
     };
 
     //*receiving answer

@@ -99,7 +99,7 @@ export class AuthService implements IAuthService {
         if (!storedUserData) {
           throw new NotFoundError(MESSAGES.SIGNUP_EXPIRED);
       }
-        const userData = JSON.parse(storedUserData);
+        JSON.parse(storedUserData);
         const otp = otpGenerator();
         console.log("Resentttttttttttt OTP:", otp);
 

@@ -59,8 +59,20 @@ function Landing() {
                 <button className="w-full bg-[#0A142F] text-white px-4 py-2 rounded-lg hover:bg-[#0A142F]/90 mb-2">
                   Post a Job
                 </button>
-                <button className="w-full text-gray-700 px-4 py-2 hover:bg-gray-50 mb-2">Sign Up</button>
-                <button className="w-full text-gray-700 px-4 py-2 hover:bg-gray-50">Log In</button>
+                {/* <button className="w-full text-gray-700 px-4 py-2 hover:bg-gray-50 mb-2">Sign Up</button> */}
+                {/* <button className="w-full text-gray-700 px-4 py-2 hover:bg-gray-50">Log In</button> */}
+                <Link
+                  to="/signup-as"
+                  className="block w-full text-left text-gray-700 px-4 py-2 hover:bg-gray-50 mb-2"
+                >
+                  Sign Up
+                </Link>
+                <Link
+                  to="/signin"
+                  className="block w-full text-left text-gray-700 px-4 py-2 hover:bg-gray-50"
+                >
+                  Log In
+                </Link>
               </div>
             </div>
           </div>

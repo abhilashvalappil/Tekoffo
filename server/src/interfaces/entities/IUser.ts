@@ -103,3 +103,11 @@ export interface UserProfileResponse {
 export interface FetchUserResponse {
   users: User[];
 }
+
+export interface UserPublicInfo {
+  _id?: string;
+  username?: string;
+  email?: string;
+  role?: string;
+  isBlocked?: boolean;
+}
