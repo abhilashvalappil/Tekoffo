@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { KeyRound } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import API from '../../redux/services/api/baseUrl';
 import { commonENDPOINTS } from '../../redux/services/api/endpointUrl';
 import { handleApiError } from '../../utils/errors/errorHandler';
@@ -11,7 +11,7 @@ const ForgotPasswordOtp =()=> {
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const location = useLocation();
+  // const location = useLocation();
   const navigate = useNavigate();
   // const email = location.state?.email;
 
@@ -144,7 +144,7 @@ const ForgotPasswordOtp =()=> {
             {Array(6).fill(null).map((_, index) => (
               <input
                 key={index}
-                ref={(el) => (inputRefs.current[index] = el)}
+                // ref={(el) => (inputRefs.current[index] = el)}
                 type="text"
                 inputMode="numeric"
                 maxLength={1}

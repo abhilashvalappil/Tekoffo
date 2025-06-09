@@ -7,13 +7,13 @@ import AdminRoutes from './routes/AdminRoutes'
 import PublicRoutes from './routes/PublicRoutes'
 import ClientRoutes from './routes/ClientRoutes'
 import FreelancerRoutes from './routes/FreelancerRoutes';
-import { useSocketConnection } from './hooks/customhooks/useSocket';
+import { User, useSocketConnection } from './hooks/customhooks/useSocket';
 
  
   const App: React.FC = () => {
 
     const user = useSelector((state: RootState) => state.auth.user);
-    useSocketConnection(user);
+    useSocketConnection(user as User);
 
   return (
   <Routes>
@@ -25,4 +25,4 @@ import { useSocketConnection } from './hooks/customhooks/useSocket';
   )
 }
 
-export default App
+export default App;

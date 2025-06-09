@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import   { useState, useRef, useEffect } from 'react';
 import {
   Users,
   Briefcase,
@@ -21,6 +21,7 @@ import Sidebar from './Sidebar';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import { handleApiError } from '../../utils/errors/errorHandler';
+import type { JSX } from 'react';
 
 interface User {
   _id: string;
@@ -28,10 +29,11 @@ interface User {
   email: string;
   role: string;
   isBlocked?: boolean;
+  status?: string;
 }
 
 function AdminUsers() {
-  const [selectedItem, setSelectedItem] = useState('users');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -55,6 +57,9 @@ function AdminUsers() {
       limit: 3,
     });
 
+    const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
    
   useEffect(() => {
     const getUsers = async () => {
@@ -160,7 +165,7 @@ function AdminUsers() {
     { header: "Role", accessor: "role" },
     {
       header: "Status",
-      accessor: "status",
+      accessor: "status", 
       cell: (user) => (
         // <span
         //   className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-lg ${
@@ -206,15 +211,36 @@ function AdminUsers() {
     },
   ];
 
+  if (loading) {
+  return (
+    <div className="flex justify-center items-center min-h-screen">
+      <p>Loading categories...</p>
+    </div>
+  );
+}
+
+if (error) {
+  return (
+    <div className="flex justify-center items-center min-h-screen">
+      <p className="text-red-500">{error}</p>
+    </div>
+  );
+}
+
+
   return (
     <div className="min-h-screen ml-64 bg-gray-300 flex flex-col md:flex-row">
       {/* Sidebar */}
-      <Sidebar
+      {/* <Sidebar
         selectedItem={selectedItem}
         setSelectedItem={setSelectedItem}
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
-      />
+      /> */}
+       <Sidebar
+              isOpen={isSidebarOpen}
+              onToggle={toggleSidebar}
+            />
 
       {/* Main Content */}
       <main className="flex-1">

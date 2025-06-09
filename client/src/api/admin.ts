@@ -1,5 +1,5 @@
 import API from '../services/api'
-import { adminENDPOINTS, userENDPOINTS } from '../constants/endpointUrl'
+import { adminENDPOINTS } from '../constants/endpointUrl'
 import { FetchUserResponse, fetchedCategories, AddCategoryPayload, EditCategoryPayload } from '../types/admin'
 import { handleApiError } from '../utils/errors/errorHandler'
 import { TransactionWithUsername } from '../types/transaction'

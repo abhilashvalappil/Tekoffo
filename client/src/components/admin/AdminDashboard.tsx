@@ -1,19 +1,21 @@
  
 import React, { useEffect, useState } from 'react';
-import { Users, Briefcase, DollarSign, TrendingUp, Eye, UserCheck, Star } from 'lucide-react';
+import { Users, Briefcase, DollarSign, TrendingUp, Eye } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Sidebar from './Sidebar';
 import { fetchMonthlyRevenueStats, fetchPlatformRevenue, fetchTotalActiveJobsCount, fetchUsers } from '../../api';
 // import { useJobs } from '../../hooks/customhooks/useJobs';
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [selectedItem, setSelectedItem] = useState('users');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [totalJobs, setTotalJobs] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [revenueData, setRevenueData] = useState([]);
+
+   const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
 
   useEffect(() => {
     const getusers = async () => {
@@ -71,11 +73,11 @@ const AdminDashboard = () => {
     { id: 4, title: 'Mobile App Developer', client: 'AppStudio', budget: '$8,000', status: 'active' }
   ];
 
-  const topFreelancers = [
-    { name: 'Sarah Johnson', rating: 4.9, jobs: 127, earnings: '$45,230' },
-    { name: 'Mike Chen', rating: 4.8, jobs: 98, earnings: '$38,950' },
-    { name: 'Elena Rodriguez', rating: 4.9, jobs: 156, earnings: '$52,100' }
-  ];
+  // const topFreelancers = [
+  //   { name: 'Sarah Johnson', rating: 4.9, jobs: 127, earnings: '$45,230' },
+  //   { name: 'Mike Chen', rating: 4.8, jobs: 98, earnings: '$38,950' },
+  //   { name: 'Elena Rodriguez', rating: 4.9, jobs: 156, earnings: '$52,100' }
+  // ];
 
   const StatCard = ({ stat }) => {
     const Icon = stat.icon;
@@ -106,12 +108,26 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen ml-64 bg-gray-300">
-      <Sidebar
+      {/* <Sidebar
         selectedItem={selectedItem}
         setSelectedItem={setSelectedItem}
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
+      /> */}
+       <Sidebar
+        isOpen={isSidebarOpen}
+        onToggle={toggleSidebar}
       />
+
+       <div className="flex-1 ml-0  ">
+    {/* Toggle button for mobile */}
+    <button
+      className="md:hidden m-4 p-2 bg-blue-600 text-white rounded"
+      onClick={toggleSidebar}
+    >
+      Toggle Sidebar
+    </button>
+
       <div className="fixed top-0 w-full z-50 bg-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
@@ -162,35 +178,6 @@ const AdminDashboard = () => {
               </div>
             )}
           </div>
-
-          {/* <div className="bg-white p-6 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Top Freelancers</h2>
-              <UserCheck className="w-5 h-5 text-gray-500" />
-            </div>
-            <div className="space-y-4">
-              {topFreelancers.map((freelancer, index) => (
-                <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium">
-                      {freelancer.name.charAt(0)}
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-gray-900">{freelancer.name}</h3>
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                        <span className="text-sm text-gray-600">{freelancer.rating}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-gray-900">{freelancer.earnings}</p>
-                    <p className="text-sm text-gray-600">{freelancer.jobs} jobs</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div> */}
         </div>
 
         <div className="grid grid-cols-1 gap-8 mt-8">
@@ -219,6 +206,7 @@ const AdminDashboard = () => {
         </div>
       </div>
     </div>
+     </div> 
   );
 };
 

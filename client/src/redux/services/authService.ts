@@ -25,12 +25,14 @@ export const register = createAsyncThunk(
     }
   }
 )
- 
 
-export const signIn = createAsyncThunk <SignInResponse, SignInCredentials>(
+ type SignInPayload = SignInCredentials | { googleCredential: string | null };
+
+export const signIn = createAsyncThunk <SignInResponse, SignInPayload>(
   "auth/signin",
   async (
-    credentials: SignInCredentials | { googleCredential: string | null },
+    // credentials: SignInCredentials | { googleCredential: string | null },
+    credentials,
     { rejectWithValue }
   ) => {
     try {

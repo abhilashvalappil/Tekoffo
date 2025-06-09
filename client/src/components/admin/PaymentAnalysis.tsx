@@ -1,153 +1,3 @@
-// import React, { useEffect, useState } from 'react';
-// import { Wallet, ShieldCheck, CreditCard } from 'lucide-react';
-// import Sidebar from './Sidebar';
-// import { fetchEscrowFunds, fetchPlatformRevenue } from '../../api';
-// import { fetchAllTransactions } from '../../api/admin';
-// import { TransactionWithUsername } from '../../types/transaction';
-
-// const transactions = [
-//   {
-//     id: 'TXN12345',
-//     user: 'John Doe',
-//     amount: 250,
-//     date: '2025-05-22',
-//     status: 'Completed',
-//   },
-//   {
-//     id: 'TXN12346',
-//     user: 'Jane Smith',
-//     amount: 180,
-//     date: '2025-05-21',
-//     status: 'In Escrow',
-//   },
-//   {
-//     id: 'TXN12347',
-//     user: 'Bob Johnson',
-//     amount: 320,
-//     date: '2025-05-20',
-//     status: 'Completed',
-//   },
-// ];
-
-// const PaymentAnalysis = () => {
-//     const [selectedItem, setSelectedItem] = useState('users');
-//     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-//     const [totalRevenue, setTotalRevenue] = useState(0);
-//     const [EscrowTotal, setEscrowTotal] = useState(0);
-//     const [transactions, setTransactions] = useState<TransactionWithUsername[]>([])
-
-
-//     useEffect(() => {
-//         const platformRevenu = async () => {
-//           const totalRevenue = await fetchPlatformRevenue()
-//           setTotalRevenue(totalRevenue)
-//         }
-//         platformRevenu()
-//       }, [])
-
-//     useEffect(() => {
-//         const FundsInEscrow = async () => {
-//           const totalFundsinEscrow = await fetchEscrowFunds()
-//           setEscrowTotal(totalFundsinEscrow)
-//         }
-//         FundsInEscrow()
-//       }, [])
-
-//     useEffect(() => {
-//         const loadTransactions = async () => {
-//           const transactions = await fetchAllTransactions()
-//           setTransactions(transactions)
-//         }
-//         loadTransactions()
-//       }, [])
-
-
-
-//   return (
-//     <div className="p-6 ml-64">
-//         {/* Sidebar */}
-//               <Sidebar
-//                 selectedItem={selectedItem}
-//                 setSelectedItem={setSelectedItem}
-//                 isMobileMenuOpen={isMobileMenuOpen}
-//                 setIsMobileMenuOpen={setIsMobileMenuOpen}
-//               />
-//       <h1 className="text-2xl font-bold text-gray-900 mb-6">Payment Analysis</h1>
-
-//       {/* Cards Section */}
-//       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-//         {/* Platform Earnings */}
-//         <div className="bg-white p-6 rounded-xl shadow-md flex items-center justify-between">
-//           <div>
-//             <p className="text-sm text-gray-500 mb-1">Platform Earnings</p>
-//             <h2 className="text-2xl font-semibold text-green-600">{totalRevenue}</h2>
-//           </div>
-//           <Wallet className="w-10 h-10 text-green-500" />
-//         </div>
-
-//         {/* Funds in Escrow */}
-//         <div className="bg-white p-6 rounded-xl shadow-md flex items-center justify-between">
-//           <div>
-//             <p className="text-sm text-gray-500 mb-1">Funds in Escrow</p>
-//             <h2 className="text-2xl font-semibold text-yellow-600">{EscrowTotal}</h2>
-//           </div>
-//           <ShieldCheck className="w-10 h-10 text-yellow-500" />
-//         </div>
-
-//         {/* Total Transactions */}
-//         <div className="bg-white p-6 rounded-xl shadow-md flex items-center justify-between">
-//           <div>
-//             <p className="text-sm text-gray-500 mb-1">Total Transactions</p>
-//             <h2 className="text-2xl font-semibold text-blue-600">$28,900</h2>
-//           </div>
-//           <CreditCard className="w-10 h-10 text-blue-500" />
-//         </div>
-//       </div>
-
-//       {/* Transactions Table */}
-//       <div className="bg-white p-6 rounded-xl shadow-md">
-//         <h2 className="text-lg font-semibold text-gray-900 mb-4">All Transactions</h2>
-//         <div className="overflow-x-auto">
-//           <table className="min-w-full text-sm text-left">
-//             <thead>
-//               <tr className="bg-gray-100 text-gray-600 uppercase text-xs">
-//                 <th className="py-3 px-4">Transaction ID</th>
-//                 <th className="py-3 px-4">User</th>
-//                 <th className="py-3 px-4">Amount</th>
-//                 <th className="py-3 px-4">Date</th>
-//                 <th className="py-3 px-4">Status</th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {transactions.map((txn) => (
-//                 <tr key={txn.id} className="border-b hover:bg-gray-50">
-//                   <td className="py-3 px-4">{txn.id}</td>
-//                   <td className="py-3 px-4">{txn.user}</td>
-//                   <td className="py-3 px-4">${txn.amount}</td>
-//                   <td className="py-3 px-4">{txn.date}</td>
-//                   <td className="py-3 px-4">
-//                     <span
-//                       className={`px-2 py-1 rounded-full text-xs font-medium ${
-//                         txn.status === 'Completed'
-//                           ? 'bg-green-100 text-green-700'
-//                           : 'bg-yellow-100 text-yellow-700'
-//                       }`}
-//                     >
-//                       {txn.status}
-//                     </span>
-//                   </td>
-//                 </tr>
-//               ))}
-//             </tbody>
-//           </table>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default PaymentAnalysis;
-
 
 import React, { useEffect, useState } from 'react';
 import { Wallet, ShieldCheck, CreditCard, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -157,8 +7,9 @@ import { fetchAllTransactions } from '../../api/admin';
 import { TransactionWithUsername } from '../../types/transaction';
 
 const PaymentAnalysis = () => {
-    const [selectedItem, setSelectedItem] = useState('users');
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    // const [selectedItem, setSelectedItem] = useState('users');
+    // const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [totalRevenue, setTotalRevenue] = useState(0);
     const [EscrowTotal, setEscrowTotal] = useState(0);
     const [transactions, setTransactions] = useState<TransactionWithUsername[]>([]);
@@ -167,6 +18,11 @@ const PaymentAnalysis = () => {
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
+
+    const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
+
 
     useEffect(() => {
         const platformRevenu = async () => {
@@ -284,12 +140,18 @@ const PaymentAnalysis = () => {
   return (
     <div className="p-6 ml-64">
         {/* Sidebar */}
-              <Sidebar
+              {/* <Sidebar
                 selectedItem={selectedItem}
                 setSelectedItem={setSelectedItem}
                 isMobileMenuOpen={isMobileMenuOpen}
                 setIsMobileMenuOpen={setIsMobileMenuOpen}
-              />
+              /> */}
+
+               <Sidebar
+                  isOpen={isSidebarOpen}
+                  onToggle={toggleSidebar}
+                />
+
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Payment Analysis</h1>
 
       {/* Cards Section */}

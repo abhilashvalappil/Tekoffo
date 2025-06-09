@@ -4,6 +4,7 @@ import {Briefcase,User,Settings,LogOut,Menu,X,Bell,MessageSquare,DollarSign,Bell
 import { useNavigate } from 'react-router-dom';
 import socket from '../../../utils/socket';
 import API from '../../../services/api';
+import type { JSX } from 'react';
 
 interface NavItem {
   icon: JSX.Element;
@@ -18,6 +19,14 @@ interface Notification {
   title: string;
   message: string;
   timestamp: Date;
+  status: 'unread' | 'read';
+}
+interface notification {
+  _id: string; // Backend _id from database
+  type: 'job' | 'message' | 'payment' | 'system';
+  title: string;
+  message: string;
+  createdAt: string;
   status: 'unread' | 'read';
 }
 
@@ -54,13 +63,13 @@ const Navbar: React.FC<NavbarProps> = ({
     const fetchNotifications = async () => {
       try {
         const response = await API.get('/notifications');
-        const fetchedNotifications: Notification[] = response.data.map((n: Notification) => ({
+        const fetchedNotifications: Notification[] = response.data.map((n: notification) => ({
           id: n._id,
           type: 'payment',  
           title: ' Payment Authorized', 
           message: n.message,
           timestamp: new Date(n.createdAt),
-          status: n.read ? 'read' : 'unread',
+          status: n.status,
         }));
         setNotifications(fetchedNotifications);
       } catch (error) {

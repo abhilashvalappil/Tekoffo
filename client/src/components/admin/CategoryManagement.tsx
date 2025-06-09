@@ -13,7 +13,7 @@ import { handleApiError } from '../../utils/errors/errorHandler';
 
 
 interface Category {
-  _id: string;
+  _id?: string;
   // catId: string;
   name: string;
   subCategories: string[];
@@ -172,8 +172,9 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 };
 
 const CategoryManagement = () => {
-  const [selectedItem, setSelectedItem] = useState('users');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  // const [selectedItem, setSelectedItem] = useState('users');
+  // const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | undefined>();
@@ -187,9 +188,12 @@ const CategoryManagement = () => {
     limit: 6,
   });
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortOption, setSortOption] = useState<'name-asc' | 'name-desc' | 'status-asc' | 'status-desc'>('name-asc');
+  // const [sortOption, setSortOption] = useState<'name-asc' | 'name-desc' | 'status-asc' | 'status-desc'>('name-asc');
+  const [sortOption, setSortOption] = useState<string>();
 
-  // const navigate = useNavigate();
+  const toggleSidebar = () => {
+    setIsSidebarOpen(prev => !prev);
+  };
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -320,11 +324,15 @@ const CategoryManagement = () => {
 
   return (
     <div className="flex">
-      <Sidebar
+      {/* <Sidebar
         selectedItem={selectedItem}
         setSelectedItem={setSelectedItem}
         isMobileMenuOpen={isMobileMenuOpen}
         setIsMobileMenuOpen={setIsMobileMenuOpen}
+      /> */}
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onToggle={toggleSidebar}
       />
 
       <div className="flex-1 min-h-screen bg-gray-300">
@@ -353,7 +361,7 @@ const CategoryManagement = () => {
                 />
                 <select
                   value={sortOption}
-                  onChange={(e) => setSortOption(e.target.value as any)}
+                  onChange={(e) => setSortOption(e.target.value as string)}
                   className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
                   <option value="name-asc">Name (A-Z)</option>

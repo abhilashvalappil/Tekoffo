@@ -7,7 +7,7 @@ import { handleApiError } from '../../utils/errors/errorHandler';
 const ForgotPasswod = () => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState<string | null>(null);
+  const [ ,setIsSuccess] = useState<boolean>(null);
   const [serverError, setServerError] = useState<string | null>(null);
 
   const navigate = useNavigate();

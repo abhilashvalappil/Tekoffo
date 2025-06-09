@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   Briefcase,
-  Bell,
   Menu,
   X,
   LogOut,
@@ -16,6 +15,8 @@ import { logout } from '../../../redux/services/authService';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { handleApiError } from '../../../utils/errors/errorHandler';
 import { fetchUnreadChatCount } from '../../../api';
+import type { JSX } from 'react';
+
 
 interface NavItem {
   icon: JSX.Element;

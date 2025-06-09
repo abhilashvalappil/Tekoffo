@@ -40,6 +40,11 @@ export interface SignInCredentials {
     password: string;
 }
 
+export interface GoogleSignInCredentials {
+    googleCredential: string;
+}
+
+export type AuthCredentials = SignInCredentials | GoogleSignInCredentials;
  
 export interface SignInResponse {
   message: string;

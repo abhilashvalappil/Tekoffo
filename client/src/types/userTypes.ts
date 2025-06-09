@@ -64,13 +64,13 @@ export interface JobDataResponse {
 
   export interface JobFormData {
     id?: string;
-    title: string;
-    category: string;
-    subCategory:string;
-    description:string;
-    requirements: string[];
-    budget:number;
-    duration:string;
+    title?: string;
+    category?: string;
+    subCategory?:string;
+    description?:string;
+    requirements?: string[];
+    budget?:number;
+    duration?:string;
     status?: 'open' | 'inprogress' | 'completed';
     isBlocked?: boolean;
     created_At?: Date;

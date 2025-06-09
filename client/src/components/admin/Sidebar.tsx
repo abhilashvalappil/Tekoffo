@@ -102,10 +102,8 @@
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
-  Briefcase, 
+  LayoutDashboard,  
   Users, 
-  Calendar, 
   Settings, 
   LogOut,
   Menu,

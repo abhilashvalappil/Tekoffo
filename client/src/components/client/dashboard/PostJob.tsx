@@ -11,7 +11,9 @@ import Footer from '../../shared/Footer';
 import { Category } from '../../../types/jobTypes';
 
 
-type FormErrors = Partial<Record<keyof JobFormData, string>>;
+// type FormErrors = Partial<Record<keyof JobFormData, string>>;
+type FormErrors = Partial<Record<keyof JobFormData, string>> & { general?: string };
+
 
 const PostJob: React.FC = () => {
   const [activeTab, setActiveTab] = useState('post');
@@ -129,7 +131,7 @@ const PostJob: React.FC = () => {
       setErrors({});
     } catch (error) {
       console.error('Failed to post job:', error);
-      setErrors({ general: 'Failed to post job. Please try again.' });
+      setErrors({ general:'Failed to post job. Please try again.' });
     }
   };
 

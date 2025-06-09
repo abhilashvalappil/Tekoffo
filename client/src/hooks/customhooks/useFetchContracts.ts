@@ -5,7 +5,7 @@ import { contractResponse } from "../../types/paymentTypes";
 import { MetaType } from "../../types/commonTypes";
 
 
-export const useFetchContracts = (page:number,limit:number, search?: string, status?:string ) => {
+export const useFetchContracts = (page?:number,limit?:number, search?: string, status?:string ) => {
     const [contracts, setContracts] = useState<contractResponse[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null)

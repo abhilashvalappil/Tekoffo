@@ -1,5 +1,4 @@
 
-
 import { Route} from "react-router-dom";
 import ClientDashboard from "../components/client/dashboard/ClientDashboard";
 import ProtectedRoute from "./ProtectedRoute";
@@ -8,13 +7,12 @@ import DisplayProfile from "../components/client/profile/Profile";
 import ChangePassword from "../components/client/profile/ChangePassword";
 import PostJob from "../components/client/dashboard/PostJob";
 import MyJobPosts from "../components/client/dashboard/MyJobs";
-import Freelancers from "../components/client/dashboard/AvailableFreelancers";
+// import Freelancers from "../components/client/dashboard/AvailableFreelancers";
 import Proposals from "../components/client/dashboard/Proposals";
 import PaymentReview from "../components/client/payment/PaymentReview";
 import PaymentSuccess from "../pages/PaymentSuccess";
 import Contracts from "../components/client/dashboard/Contracts";
 import FreelancerGigsList from "../components/client/dashboard/GigPosts";
-import JobTabs from "../components/shared/Sample";
 
  
 const ClientRoutes = () => (
@@ -74,13 +72,13 @@ const ClientRoutes = () => (
     } 
     />
 
-    <Route 
+    {/* <Route 
       path="/client/freelancers"
       element={
         <ProtectedRoute allowedRoles={["client"]}>
           <Freelancers />
         </ProtectedRoute>
-     } />
+     } /> */}
 
     <Route 
       path="/client/freelancer-gigs"
@@ -98,13 +96,13 @@ const ClientRoutes = () => (
         </ProtectedRoute>
      } />
 
-    <Route 
+    {/* <Route 
       path="/client/proposalss"
       element={
         <ProtectedRoute allowedRoles={["client"]}>
           <JobTabs />
         </ProtectedRoute>
-     } />
+     } /> */}
 
     <Route 
       path="/client/contracts"

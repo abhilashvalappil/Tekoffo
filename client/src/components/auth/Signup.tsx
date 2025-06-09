@@ -10,12 +10,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema, SignUpFormData } from '../../utils/validations/AuthValidation'
 import { handleApiError } from '../../utils/errors/errorHandler';
+import { UserRole } from '../../types/userTypes';
+import { SingUpFormData } from '../../types/auth';
  
 
 
 const SignupPage: React.FC = () => {
   const location = useLocation();
-  const role = location.state.role;
+  const role:UserRole = location.state.role;
 
   //*zod
   const {
@@ -49,12 +51,19 @@ const SignupPage: React.FC = () => {
         setServerError(null);
         localStorage.setItem('otpEmail',data.email)
 
-      const { confirmPassword:_, ...userData } = data;
+      // const { confirmPassword:_, ...userData } = data;
 
-      const signupData = {
-        ...userData,
+      // const signupData: SingUpFormData = {
+      //   ...userData,
+      //   role: role,
+      // };
+      const signupData: SingUpFormData = {
+        username: data.username,
+        email: data.email,
+        password: data.password,
         role: role,
       };
+
 
       const result = await signUp(signupData)
       if (result.success) {
