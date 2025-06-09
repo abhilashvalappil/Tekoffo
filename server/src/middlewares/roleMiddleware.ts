@@ -1,21 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 
-// interface AuthRequest extends Request {
-//   role?: string;
-// }
-
-// export const authorizeRole = (requiredRole: string) => {
-//   return (req: AuthRequest, res: Response, next: NextFunction): void => {
-//     if (req.role !== requiredRole) {
-//       res.status(403).json({ message: 'Forbidden: Access denied' });
-//       return;  
-//     }
-//     next();
-//   };
-// };
-
- 
-
 interface AuthRequest extends Request {
   role?: string | string[];  
 }

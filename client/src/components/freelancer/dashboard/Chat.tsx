@@ -155,7 +155,7 @@ const ChatBox: React.FC = () => {
     loadMessages();
   }, [selectedChatId]);
 
-  // Handle receiving messages in real-time
+  //* Handle receiving messages in real-time
   useEffect(() => {
     if (!currentUserId) return;
 
@@ -231,7 +231,6 @@ const ChatBox: React.FC = () => {
 
   const handleSend = async () => {
     if ((!newMessage.trim() && !media) || !selectedChatId || !selectedChat?.contact._id) return;
-    console.log('wordldddddd *****&&&&&&&&&&&',newMessage,"chatidddd", selectedChatId,"prtner idddd--====", selectedChat.contact._id)
     try {
       const formData = new FormData();
     formData.append('chatId', selectedChatId);
