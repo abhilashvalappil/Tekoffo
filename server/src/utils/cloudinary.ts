@@ -38,8 +38,8 @@ const storage = new CloudinaryStorage({
   params: async (req, file) => {
     const fileType = file.mimetype.split('/')[0]; // image, video, application, etc.
 
-    let folder = 'chat_media';
-    let allowedFormats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'mov', 'pdf', 'docx'];
+    const folder = 'chat_media';
+    const allowedFormats = ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'mov', 'pdf', 'docx'];
 
     return {
       folder,
