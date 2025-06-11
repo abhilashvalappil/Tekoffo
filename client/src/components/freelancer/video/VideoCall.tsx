@@ -23,9 +23,20 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
 
   //*PeerConnection
   const initializePeerConnection = useCallback(() => {
+    // const pc = new RTCPeerConnection({
+    //   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+    // });
     const pc = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+      iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        {
+          urls: 'turn:openrelay.metered.ca:80',
+          username: 'openrelayproject',
+          credential: 'openrelayproject',
+        },
+      ],
     });
+
 
     //* Listen for remote tracks
     pc.ontrack = (event) => {
