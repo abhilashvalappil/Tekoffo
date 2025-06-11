@@ -405,7 +405,6 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
               <button
                 onClick={handleAnswerCall}
-                onTouchStart={handleAnswerCall}
                 style={{
                   padding: '12px 24px',
                   backgroundColor: '#2196f3',
@@ -415,7 +414,6 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
                   cursor: 'pointer',
                   fontWeight: 'bold',
                   fontSize: '16px',
-                  touchAction: 'manipulation',
                 }}
               >
                 📞 Answer Call

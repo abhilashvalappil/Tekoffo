@@ -12,4 +12,5 @@ npm-debug.log
 # Build files
 dist/
 
-/server/production/
+production/
+
