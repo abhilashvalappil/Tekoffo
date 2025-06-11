@@ -43,6 +43,11 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
       const [remoteStream] = event.streams;
       if (remoteVideoRef.current && remoteStream) {
         remoteVideoRef.current.srcObject = remoteStream;
+
+        remoteVideoRef.current.play().catch((err) => {
+        console.error('Failed to play remote video:', err);
+      });
+
         setIsConnected(true);
       }
     };
