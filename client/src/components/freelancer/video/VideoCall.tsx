@@ -1,6 +1,6 @@
-
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import socket from '../../../utils/socket';
+import { handleApiError } from '../../../utils/errors/errorHandler';
 
 interface VideoCallProps {
   roomId: string;
@@ -20,12 +20,52 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
   const [isIncomingCall, setIsIncomingCall] = useState(false);
   const [incomingOffer, setIncomingOffer] = useState<RTCSessionDescriptionInit | null>(null);
   const [callInitiated, setCallInitiated] = useState(false);
+  const [isAnswering, setIsAnswering] = useState(false);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
 
-  //*PeerConnection
+  // Check if we're on mobile
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+  // Debug mobile environment
+  useEffect(() => {
+    const debugInfo = {
+      userAgent: navigator.userAgent,
+      isIOS: isIOS,
+      isAndroid: /Android/.test(navigator.userAgent),
+      isMobile: isMobile,
+      hasGetUserMedia: !!navigator.mediaDevices?.getUserMedia,
+      isSecureContext: window.isSecureContext,
+      hasCamera: !!navigator.mediaDevices,
+    };
+    console.log('Mobile Debug Info:', debugInfo);
+  }, [isMobile, isIOS]);
+
+  // Check media permissions
+  const checkMediaPermissions = async () => {
+    try {
+      if ('permissions' in navigator) {
+        const cameraPermission = await navigator.permissions.query({ name: 'camera' as PermissionName });
+        const microphonePermission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+        
+        console.log('Camera permission:', cameraPermission.state);
+        console.log('Microphone permission:', microphonePermission.state);
+        
+        if (cameraPermission.state === 'denied' || microphonePermission.state === 'denied') {
+          setPermissionError('Camera or microphone access denied. Please enable permissions and refresh.');
+          return false;
+        }
+      }
+      return true;
+    } catch (error) {
+      handleApiError(error)
+      console.log('Permission API not supported, proceeding anyway');
+      return true;
+    }
+  };
+
+  //* PeerConnection
   const initializePeerConnection = useCallback(() => {
-    // const pc = new RTCPeerConnection({
-    //   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-    // });
     const pc = new RTCPeerConnection({
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -36,7 +76,6 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
         },
       ],
     });
-
 
     //* Listen for remote tracks
     pc.ontrack = (event) => {
@@ -54,15 +93,25 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
       }
     };
 
+    //* Connection state monitoring
+    pc.onconnectionstatechange = () => {
+      console.log('Connection state:', pc.connectionState);
+      if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+        console.log('Connection failed or disconnected');
+      }
+    };
+
     return pc;
   }, [roomId]);
 
-   const handleCallCleanup = useCallback(() => {
+  const handleCallCleanup = useCallback(() => {
     setIsCallActive(false);
     setIsConnected(false);
     setIsIncomingCall(false);
     setIncomingOffer(null);
     setCallInitiated(false);
+    setIsAnswering(false);
+    setPermissionError(null);
 
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => track.stop());
@@ -89,20 +138,20 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
   useEffect(() => {
     pcRef.current = initializePeerConnection();
 
-    //*incoming call notification
+    //* incoming call notification
     const handleIncomingCall = (data: { sender: string }) => {
       console.log('Incoming call received from:', data.sender);
       setIsIncomingCall(true);
     };
 
-    //*receiving offer
+    //* receiving offer
     const handleOffer = (data: { offer: RTCSessionDescriptionInit; sender: string }) => {
       console.log('Offer received from:', data.sender);
       setIncomingOffer(data.offer);
-      setIsIncomingCall(true);  
+      setIsIncomingCall(true);
     };
 
-    //*receiving answer
+    //* receiving answer
     const handleAnswer = async (data: { answer: RTCSessionDescriptionInit; sender: string }) => {
       console.log('Answer received from:', data.sender);
       if (pcRef.current && data.answer) {
@@ -126,12 +175,12 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
         }
       }
     };
- 
+
     const handleCallEnded = (data: { sender: string }) => {
       console.log('Call ended by:', data.sender);
       handleCallCleanup();
     };
- 
+
     const handleCallDeclined = (data: { sender: string }) => {
       console.log('Call declined by:', data.sender);
       handleCallCleanup();
@@ -155,7 +204,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
       socket.off('ice-candidate', handleIceCandidate);
       socket.off('call_ended', handleCallEnded);
       socket.off('call_declined', handleCallDeclined);
-      
+
       //* Clean up peer connection and streams
       if (pcRef.current) {
         pcRef.current.close();
@@ -167,24 +216,84 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
       }
     };
   }, [roomId, initializePeerConnection, handleCallCleanup]);
- 
+
   const startLocalStream = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setPermissionError(null);
+      
+      // Check permissions first
+      const hasPermissions = await checkMediaPermissions();
+      if (!hasPermissions) {
+        throw new Error('Media permissions denied');
+      }
+
+      // Mobile-friendly media constraints
+      const constraints = {
+        video: {
+          width: { min: 320, ideal: 640, max: 1280 },
+          height: { min: 240, ideal: 480, max: 720 },
+          frameRate: { ideal: 15, max: 30 },
+          facingMode: 'user' // Use front camera by default
+        },
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: { ideal: 44100 }
+        }
+      };
+
+      console.log('Requesting media with constraints:', constraints);
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      
       localStreamRef.current = stream;
+      
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
+        // Ensure video plays on mobile
+        localVideoRef.current.play().catch(e => console.log('Local video play failed:', e));
       }
 
       if (pcRef.current && stream) {
         stream.getTracks().forEach((track) => {
+          console.log('Adding track:', track.kind, track.label);
           pcRef.current?.addTrack(track, stream);
         });
       }
+      
+      console.log('Media stream started successfully');
       return stream;
     } catch (error) {
       console.error('Error accessing media devices:', error);
-      throw error;
+      
+      // Fallback: Try with more basic constraints
+      try {
+        console.log('Trying fallback constraints...');
+        const fallbackConstraints = isMobile ? 
+          { video: { facingMode: 'user' }, audio: true } : 
+          { video: true, audio: true };
+          
+        const fallbackStream = await navigator.mediaDevices.getUserMedia(fallbackConstraints);
+        
+        localStreamRef.current = fallbackStream;
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = fallbackStream;
+          localVideoRef.current.play().catch(e => console.log('Fallback video play failed:', e));
+        }
+        
+        if (pcRef.current && fallbackStream) {
+          fallbackStream.getTracks().forEach((track) => {
+            pcRef.current?.addTrack(track, fallbackStream);
+          });
+        }
+        
+        console.log('Fallback stream started successfully');
+        return fallbackStream;
+      } catch (fallbackError) {
+        console.error('Fallback also failed:', fallbackError);
+        setPermissionError(`Unable to access camera/microphone: ${fallbackError.message}`);
+        throw fallbackError;
+      }
     }
   };
 
@@ -195,9 +304,11 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     try {
       socket.emit('initiate_call', { roomId });
       
-      //* Start local stream  create offer
+      //* Start local stream then create offer
       await startLocalStream();
-      if (!pcRef.current) return;
+      if (!pcRef.current) {
+        throw new Error('No peer connection available');
+      }
 
       const offer = await pcRef.current.createOffer();
       await pcRef.current.setLocalDescription(offer);
@@ -207,6 +318,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     } catch (error) {
       console.error('Failed to initiate call:', error);
       setCallInitiated(false);
+      alert(`Failed to start call: ${error.message}`);
     }
   };
 
@@ -217,24 +329,69 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     }
     
     console.log('Answering call...');
+    setIsAnswering(true);
     
     try {
+      // Hide incoming call UI immediately
+      setIsIncomingCall(false);
+      
+      console.log('Starting media stream...');
       await startLocalStream();
-      if (!pcRef.current) return;
+      
+      if (!pcRef.current) {
+        throw new Error('No peer connection available');
+      }
 
+      console.log('Setting remote description...');
       await pcRef.current.setRemoteDescription(new RTCSessionDescription(incomingOffer));
+      
+      console.log('Creating answer...');
       const answer = await pcRef.current.createAnswer();
+      
+      console.log('Setting local description...');
       await pcRef.current.setLocalDescription(answer);
       
+      console.log('Emitting answer...');
       socket.emit('answer', { roomId, answer });
       
-      setIsIncomingCall(false);
       setIsCallActive(true);
       setIncomingOffer(null);
+      setIsAnswering(false);
       
       console.log('Call answered successfully');
     } catch (error) {
       console.error('Failed to answer call:', error);
+      
+      // Reset state on error
+      setIsIncomingCall(true);
+      setIsCallActive(false);
+      setIsAnswering(false);
+      
+      // Show user-friendly error message
+      alert(`Failed to answer call: ${error.message}`);
+    }
+  };
+
+  // Mobile-specific answer call handler
+  const handleAnswerCallMobile = async (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Prevent multiple rapid taps
+    const answerBtn = document.getElementById('answer-btn') as HTMLButtonElement;
+    if (answerBtn) {
+      answerBtn.disabled = true;
+    }
+    
+    try {
+      await handleAnswerCall();
+    } finally {
+      // Re-enable button after a delay
+      setTimeout(() => {
+        if (answerBtn) {
+          answerBtn.disabled = false;
+        }
+      }, 2000);
     }
   };
 
@@ -264,7 +421,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     setIsAudioMuted((prev) => !prev);
   };
 
-  //*video mute/unmute
+  //* video mute/unmute
   const toggleVideo = () => {
     if (!localStreamRef.current) return;
     localStreamRef.current.getVideoTracks().forEach((track) => {
@@ -278,14 +435,41 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     isIncomingCall,
     callInitiated,
     hasIncomingOffer: !!incomingOffer,
-    isConnected
+    isConnected,
+    isAnswering,
+    isMobile
   });
 
   return (
-    <div style={{ maxWidth: 800, margin: 'auto', padding: 20, fontFamily: 'Arial, sans-serif' }}>
+    <div style={{ 
+      maxWidth: isMobile ? '100%' : 800, 
+      margin: 'auto', 
+      padding: isMobile ? 10 : 20, 
+      fontFamily: 'Arial, sans-serif' 
+    }}>
       <h2 style={{ textAlign: 'center', marginBottom: 20 }}>Video Call</h2>
 
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 20 }}>
+      {/* Permission Error */}
+      {permissionError && (
+        <div style={{
+          backgroundColor: '#ffebee',
+          color: '#c62828',
+          padding: '10px',
+          borderRadius: '6px',
+          marginBottom: '20px',
+          border: '1px solid #e57373'
+        }}>
+          {permissionError}
+        </div>
+      )}
+
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        gap: isMobile ? 10 : 20,
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: 'center'
+      }}>
         <div style={{ position: 'relative' }}>
           <video
             ref={localVideoRef}
@@ -293,8 +477,8 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
             muted
             playsInline
             style={{
-              width: 320,
-              height: 240,
+              width: isMobile ? 280 : 320,
+              height: isMobile ? 210 : 240,
               borderRadius: 10,
               border: '3px solid #4caf50',
               backgroundColor: '#000',
@@ -311,6 +495,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
               padding: '4px 8px',
               borderRadius: 6,
               fontWeight: 'bold',
+              fontSize: isMobile ? '12px' : '14px'
             }}
           >
             You
@@ -323,8 +508,8 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
             autoPlay
             playsInline
             style={{
-              width: 320,
-              height: 240,
+              width: isMobile ? 280 : 320,
+              height: isMobile ? 210 : 240,
               borderRadius: 10,
               border: isConnected ? '3px solid #2196f3' : '3px dashed #aaa',
               backgroundColor: '#000',
@@ -341,6 +526,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
               padding: '4px 8px',
               borderRadius: 6,
               fontWeight: 'bold',
+              fontSize: isMobile ? '12px' : '14px'
             }}
           >
             {isConnected ? 'Remote' : 'Waiting...'}
@@ -353,22 +539,26 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
           marginTop: 20,
           display: 'flex',
           justifyContent: 'center',
-          gap: 15,
+          gap: isMobile ? 10 : 15,
           flexWrap: 'wrap',
         }}
       >
         {/* Show Start Call button only if no call is active and no incoming call */}
-        {!isCallActive && !isIncomingCall && !callInitiated && (
+        {!isCallActive && !isIncomingCall && !callInitiated && !isAnswering && (
           <button
             onClick={handleInitiateCall}
             style={{
-              padding: '10px 20px',
+              padding: isMobile ? '12px 20px' : '10px 20px',
               backgroundColor: '#4caf50',
               color: 'white',
               border: 'none',
               borderRadius: 6,
               cursor: 'pointer',
               fontWeight: 'bold',
+              fontSize: isMobile ? '16px' : '14px',
+              touchAction: 'manipulation',
+              userSelect: 'none',
+              WebkitTapHighlightColor: 'transparent'
             }}
           >
             Start Call
@@ -382,13 +572,17 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
             <button
               onClick={handleEndCall}
               style={{
-                padding: '10px 20px',
+                padding: isMobile ? '12px 20px' : '10px 20px',
                 backgroundColor: '#f44336',
                 color: 'white',
                 border: 'none',
                 borderRadius: 6,
                 cursor: 'pointer',
                 fontWeight: 'bold',
+                fontSize: isMobile ? '16px' : '14px',
+                touchAction: 'manipulation',
+                userSelect: 'none',
+                WebkitTapHighlightColor: 'transparent'
               }}
             >
               Cancel Call
@@ -396,39 +590,68 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
           </div>
         )}
 
-        {/* Show incoming call options - This should now work properly */}
-        {isIncomingCall && (
+        {/* Show answering status */}
+        {isAnswering && (
           <div style={{ textAlign: 'center' }}>
-            <p style={{ marginBottom: 10, fontSize: '18px', fontWeight: 'bold' }}>
+            <p style={{ fontSize: '16px', color: '#2196f3' }}>
+              📞 Connecting...
+            </p>
+          </div>
+        )}
+
+        {/* Show incoming call options */}
+        {isIncomingCall && !isAnswering && (
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ 
+              marginBottom: 10, 
+              fontSize: isMobile ? '20px' : '18px', 
+              fontWeight: 'bold' 
+            }}>
               📞 Incoming call...
             </p>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+            <div style={{ 
+              display: 'flex', 
+              gap: isMobile ? 15 : 10, 
+              justifyContent: 'center',
+              flexDirection: isMobile ? 'column' : 'row'
+            }}>
               <button
-                onClick={handleAnswerCall}
+                id="answer-btn"
+                onClick={isMobile ? handleAnswerCallMobile : handleAnswerCall}
+                onTouchStart={isMobile ? (e) => e.preventDefault() : undefined}
                 style={{
-                  padding: '12px 24px',
+                  padding: isMobile ? '16px 32px' : '12px 24px',
                   backgroundColor: '#2196f3',
                   color: 'white',
                   border: 'none',
                   borderRadius: 6,
                   cursor: 'pointer',
                   fontWeight: 'bold',
-                  fontSize: '16px',
+                  fontSize: isMobile ? '18px' : '16px',
+                  touchAction: 'manipulation',
+                  userSelect: 'none',
+                  WebkitTapHighlightColor: 'transparent',
+                  minWidth: isMobile ? '200px' : 'auto'
                 }}
               >
                 📞 Answer Call
               </button>
               <button
                 onClick={handleDeclineCall}
+                onTouchStart={isMobile ? (e) => e.preventDefault() : undefined}
                 style={{
-                  padding: '12px 24px',
+                  padding: isMobile ? '16px 32px' : '12px 24px',
                   backgroundColor: '#f44336',
                   color: 'white',
                   border: 'none',
                   borderRadius: 6,
                   cursor: 'pointer',
                   fontWeight: 'bold',
-                  fontSize: '16px',
+                  fontSize: isMobile ? '18px' : '16px',
+                  touchAction: 'manipulation',
+                  userSelect: 'none',
+                  WebkitTapHighlightColor: 'transparent',
+                  minWidth: isMobile ? '200px' : 'auto'
                 }}
               >
                 ❌ Decline
@@ -443,13 +666,17 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
             <button
               onClick={handleEndCall}
               style={{
-                padding: '10px 20px',
+                padding: isMobile ? '12px 20px' : '10px 20px',
                 backgroundColor: '#f44336',
                 color: 'white',
                 border: 'none',
                 borderRadius: 6,
                 cursor: 'pointer',
                 fontWeight: 'bold',
+                fontSize: isMobile ? '16px' : '14px',
+                touchAction: 'manipulation',
+                userSelect: 'none',
+                WebkitTapHighlightColor: 'transparent'
               }}
             >
               End Call
@@ -458,13 +685,17 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
             <button
               onClick={toggleAudio}
               style={{
-                padding: '10px 20px',
+                padding: isMobile ? '12px 20px' : '10px 20px',
                 backgroundColor: isAudioMuted ? '#757575' : '#4caf50',
                 color: 'white',
                 border: 'none',
                 borderRadius: 6,
                 cursor: 'pointer',
                 fontWeight: 'bold',
+                fontSize: isMobile ? '16px' : '14px',
+                touchAction: 'manipulation',
+                userSelect: 'none',
+                WebkitTapHighlightColor: 'transparent'
               }}
             >
               {isAudioMuted ? '🔇 Unmute Audio' : '🔊 Mute Audio'}
@@ -473,13 +704,17 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
             <button
               onClick={toggleVideo}
               style={{
-                padding: '10px 20px',
+                padding: isMobile ? '12px 20px' : '10px 20px',
                 backgroundColor: isVideoMuted ? '#757575' : '#4caf50',
                 color: 'white',
                 border: 'none',
                 borderRadius: 6,
                 cursor: 'pointer',
                 fontWeight: 'bold',
+                fontSize: isMobile ? '16px' : '14px',
+                touchAction: 'manipulation',
+                userSelect: 'none',
+                WebkitTapHighlightColor: 'transparent'
               }}
             >
               {isVideoMuted ? '📹 Enable Video' : '📹 Disable Video'}
@@ -489,9 +724,16 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
       </div>
 
       {/* Debug info - remove in production */}
-      <div style={{ marginTop: 20, fontSize: '12px', color: '#666', textAlign: 'center' }}>
+      <div style={{ 
+        marginTop: 20, 
+        fontSize: '12px', 
+        color: '#666', 
+        textAlign: 'center',
+        display: process.env.NODE_ENV === 'development' ? 'block' : 'none'
+      }}>
         Debug: Call Active: {isCallActive.toString()}, Incoming: {isIncomingCall.toString()}, 
-        Initiated: {callInitiated.toString()}, Has Offer: {(!!incomingOffer).toString()}
+        Initiated: {callInitiated.toString()}, Has Offer: {(!!incomingOffer).toString()}, 
+        Answering: {isAnswering.toString()}, Mobile: {isMobile.toString()}
       </div>
     </div>
   );

@@ -80,13 +80,13 @@ export const setupSocketEvents = (io: Server) => {
     socket.on('initiate_call', ({ roomId }) => {
     console.log("Call initiated in room:", roomId);
     socket.to(roomId).emit('incoming_call', { sender: socket.id });
-});
+    });
 
-//* Handle call decline
-socket.on('decline_call', ({ roomId }) => {
-    console.log("Call declined in room:", roomId);
-    socket.to(roomId).emit('call_declined', { sender: socket.id });
-});
+    //* Handle call decline
+    socket.on('decline_call', ({ roomId }) => {
+        console.log("Call declined in room:", roomId);
+        socket.to(roomId).emit('call_declined', { sender: socket.id });
+    });
 
      socket.on('offer', ({ offer, roomId }) => {
         socket.to(roomId).emit('offer', { offer, sender: socket.id });
