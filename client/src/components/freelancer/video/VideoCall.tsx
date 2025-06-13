@@ -12,6 +12,10 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  
+  // ICE candidate queue - THIS IS THE KEY FIX
+  const iceCandidateQueueRef = useRef<RTCIceCandidateInit[]>([]);
+  const remoteDescriptionSetRef = useRef<boolean>(false);
 
   const [isConnected, setIsConnected] = useState(false);
   const [isCallActive, setIsCallActive] = useState(false);
@@ -64,41 +68,109 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     }
   };
 
+  // Process queued ICE candidates after remote description is set
+  const processQueuedIceCandidates = async () => {
+    if (!pcRef.current || !remoteDescriptionSetRef.current) {
+      console.log('Cannot process ICE candidates yet - peer connection or remote description not ready');
+      return;
+    }
+
+    console.log(`Processing ${iceCandidateQueueRef.current.length} queued ICE candidates`);
+    
+    while (iceCandidateQueueRef.current.length > 0) {
+      const candidate = iceCandidateQueueRef.current.shift();
+      if (candidate) {
+        try {
+          await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+          console.log('Successfully added queued ICE candidate');
+        } catch (error) {
+          console.error('Error adding queued ICE candidate:', error);
+        }
+      }
+    }
+  };
+
   //* PeerConnection
   const initializePeerConnection = useCallback(() => {
+    // Reset ICE candidate queue and remote description flag
+    iceCandidateQueueRef.current = [];
+    remoteDescriptionSetRef.current = false;
+
     const pc = new RTCPeerConnection({
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
         {
           urls: 'turn:openrelay.metered.ca:80',
           username: 'openrelayproject',
           credential: 'openrelayproject',
         },
+        // Add more TURN servers for production reliability
+        {
+          urls: 'turn:openrelay.metered.ca:443',
+          username: 'openrelayproject',
+          credential: 'openrelayproject',
+        },
       ],
+      // Add configuration for better production performance
+      iceCandidatePoolSize: 10,
+      iceTransportPolicy: 'all',
+      bundlePolicy: 'max-bundle',
+      rtcpMuxPolicy: 'require',
     });
 
     //* Listen for remote tracks
     pc.ontrack = (event) => {
+      console.log('Remote track received:', event.track.kind);
       const [remoteStream] = event.streams;
       if (remoteVideoRef.current && remoteStream) {
         remoteVideoRef.current.srcObject = remoteStream;
         setIsConnected(true);
+        
+        // Ensure remote video plays
+        remoteVideoRef.current.play().catch(e => 
+          console.log('Remote video play failed:', e)
+        );
       }
     };
 
     //* Send ICE candidates to peer
     pc.onicecandidate = (event) => {
       if (event.candidate) {
+        console.log('Sending ICE candidate:', event.candidate.type);
         socket.emit('ice-candidate', { roomId, candidate: event.candidate });
+      } else {
+        console.log('ICE candidate gathering complete');
       }
     };
 
     //* Connection state monitoring
     pc.onconnectionstatechange = () => {
-      console.log('Connection state:', pc.connectionState);
-      if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
-        console.log('Connection failed or disconnected');
+      console.log('Connection state changed:', pc.connectionState);
+      if (pc.connectionState === 'connected') {
+        console.log('✅ Peer connection established successfully');
+      } else if (pc.connectionState === 'failed') {
+        console.log('❌ Peer connection failed');
+        // Attempt to restart ICE
+        pc.restartIce();
+      } else if (pc.connectionState === 'disconnected') {
+        console.log('⚠️ Peer connection disconnected');
       }
+    };
+
+    //* ICE connection state monitoring
+    pc.oniceconnectionstatechange = () => {
+      console.log('ICE connection state:', pc.iceConnectionState);
+      if (pc.iceConnectionState === 'failed') {
+        console.log('ICE connection failed, restarting...');
+        pc.restartIce();
+      }
+    };
+
+    //* ICE gathering state monitoring
+    pc.onicegatheringstatechange = () => {
+      console.log('ICE gathering state:', pc.iceGatheringState);
     };
 
     return pc;
@@ -112,6 +184,10 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     setCallInitiated(false);
     setIsAnswering(false);
     setPermissionError(null);
+
+    // Reset ICE candidate queue and remote description flag
+    iceCandidateQueueRef.current = [];
+    remoteDescriptionSetRef.current = false;
 
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => track.stop());
@@ -157,22 +233,44 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
       if (pcRef.current && data.answer) {
         try {
           await pcRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
-          console.log('Answer set successfully');
+          console.log('✅ Answer set successfully');
+          
+          // Mark remote description as set and process queued ICE candidates
+          remoteDescriptionSetRef.current = true;
+          await processQueuedIceCandidates();
+          
           setIsCallActive(true);
           setCallInitiated(false);
         } catch (error) {
-          console.error('Error setting remote description:', error);
+          console.error('❌ Error setting remote description (answer):', error);
         }
       }
     };
 
+    // FIXED ICE CANDIDATE HANDLING
     const handleIceCandidate = async (data: { candidate: RTCIceCandidateInit; sender: string }) => {
-      if (pcRef.current && data.candidate) {
-        try {
-          await pcRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
-        } catch (err) {
-          console.error('Error adding received ICE candidate', err);
-        }
+      console.log('ICE candidate received from:', data.sender);
+      
+      if (!pcRef.current) {
+        console.log('No peer connection available, ignoring ICE candidate');
+        return;
+      }
+
+      // Check if remote description has been set
+      if (!remoteDescriptionSetRef.current) {
+        console.log('Remote description not set yet, queuing ICE candidate');
+        iceCandidateQueueRef.current.push(data.candidate);
+        return;
+      }
+
+      // Remote description is set, add candidate immediately
+      try {
+        await pcRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+        console.log('✅ ICE candidate added successfully');
+      } catch (error) {
+        console.error('❌ Error adding ICE candidate:', error);
+        // If it fails, queue it for later
+        iceCandidateQueueRef.current.push(data.candidate);
       }
     };
 
@@ -233,7 +331,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
           width: { min: 320, ideal: 640, max: 1280 },
           height: { min: 240, ideal: 480, max: 720 },
           frameRate: { ideal: 15, max: 30 },
-          facingMode: 'user' // Use front camera by default
+          facingMode: 'user'
         },
         audio: {
           echoCancellation: true,
@@ -250,21 +348,28 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
       
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
-        // Ensure video plays on mobile
         localVideoRef.current.play().catch(e => console.log('Local video play failed:', e));
       }
 
       if (pcRef.current && stream) {
+        // Remove existing tracks first
+        pcRef.current.getSenders().forEach(sender => {
+          if (sender.track) {
+            pcRef.current?.removeTrack(sender);
+          }
+        });
+
+        // Add new tracks
         stream.getTracks().forEach((track) => {
           console.log('Adding track:', track.kind, track.label);
           pcRef.current?.addTrack(track, stream);
         });
       }
       
-      console.log('Media stream started successfully');
+      console.log('✅ Media stream started successfully');
       return stream;
     } catch (error) {
-      console.error('Error accessing media devices:', error);
+      console.error('❌ Error accessing media devices:', error);
       
       // Fallback: Try with more basic constraints
       try {
@@ -287,10 +392,10 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
           });
         }
         
-        console.log('Fallback stream started successfully');
+        console.log('✅ Fallback stream started successfully');
         return fallbackStream;
       } catch (fallbackError) {
-        console.error('Fallback also failed:', fallbackError);
+        console.error('❌ Fallback also failed:', fallbackError);
         setPermissionError(`Unable to access camera/microphone: ${fallbackError.message}`);
         throw fallbackError;
       }
@@ -298,25 +403,29 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
   };
 
   const handleInitiateCall = async () => {
-    console.log('Initiating call...');
+    console.log('🚀 Initiating call...');
     setCallInitiated(true);
     
     try {
       socket.emit('initiate_call', { roomId });
       
-      //* Start local stream then create offer
       await startLocalStream();
       if (!pcRef.current) {
         throw new Error('No peer connection available');
       }
 
-      const offer = await pcRef.current.createOffer();
+      console.log('Creating offer...');
+      const offer = await pcRef.current.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+      });
+      
       await pcRef.current.setLocalDescription(offer);
       socket.emit('offer', { roomId, offer });
       
-      console.log('Offer sent successfully');
+      console.log('✅ Offer sent successfully');
     } catch (error) {
-      console.error('Failed to initiate call:', error);
+      console.error('❌ Failed to initiate call:', error);
       setCallInitiated(false);
       alert(`Failed to start call: ${error.message}`);
     }
@@ -328,11 +437,10 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
       return;
     }
     
-    console.log('Answering call...');
+    console.log('📞 Answering call...');
     setIsAnswering(true);
     
     try {
-      // Hide incoming call UI immediately
       setIsIncomingCall(false);
       
       console.log('Starting media stream...');
@@ -342,13 +450,20 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
         throw new Error('No peer connection available');
       }
 
-      console.log('Setting remote description...');
+      console.log('Setting remote description (offer)...');
       await pcRef.current.setRemoteDescription(new RTCSessionDescription(incomingOffer));
       
-      console.log('Creating answer...');
-      const answer = await pcRef.current.createAnswer();
+      // Mark remote description as set and process queued ICE candidates
+      remoteDescriptionSetRef.current = true;
+      await processQueuedIceCandidates();
       
-      console.log('Setting local description...');
+      console.log('Creating answer...');
+      const answer = await pcRef.current.createAnswer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+      });
+      
+      console.log('Setting local description (answer)...');
       await pcRef.current.setLocalDescription(answer);
       
       console.log('Emitting answer...');
@@ -358,16 +473,15 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
       setIncomingOffer(null);
       setIsAnswering(false);
       
-      console.log('Call answered successfully');
+      console.log('✅ Call answered successfully');
     } catch (error) {
-      console.error('Failed to answer call:', error);
+      console.error('❌ Failed to answer call:', error);
       
-      // Reset state on error
       setIsIncomingCall(true);
       setIsCallActive(false);
       setIsAnswering(false);
+      remoteDescriptionSetRef.current = false;
       
-      // Show user-friendly error message
       alert(`Failed to answer call: ${error.message}`);
     }
   };
@@ -377,7 +491,6 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Prevent multiple rapid taps
     const answerBtn = document.getElementById('answer-btn') as HTMLButtonElement;
     if (answerBtn) {
       answerBtn.disabled = true;
@@ -386,7 +499,6 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     try {
       await handleAnswerCall();
     } finally {
-      // Re-enable button after a delay
       setTimeout(() => {
         if (answerBtn) {
           answerBtn.disabled = false;
@@ -396,7 +508,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
   };
 
   const handleDeclineCall = () => {
-    console.log('Declining call...');
+    console.log('❌ Declining call...');
     setIsIncomingCall(false);
     setIncomingOffer(null);
     socket.emit('decline_call', { roomId });
@@ -407,12 +519,11 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
   };
 
   const handleEndCall = () => {
-    console.log('Ending call...');
+    console.log('🔚 Ending call...');
     socket.emit('call_ended', { roomId });
     handleCallCleanup();
   };
 
-  //* audio mute/unmute
   const toggleAudio = () => {
     if (!localStreamRef.current) return;
     localStreamRef.current.getAudioTracks().forEach((track) => {
@@ -421,7 +532,6 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     setIsAudioMuted((prev) => !prev);
   };
 
-  //* video mute/unmute
   const toggleVideo = () => {
     if (!localStreamRef.current) return;
     localStreamRef.current.getVideoTracks().forEach((track) => {
@@ -437,7 +547,9 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     hasIncomingOffer: !!incomingOffer,
     isConnected,
     isAnswering,
-    isMobile
+    isMobile,
+    remoteDescriptionSet: remoteDescriptionSetRef.current,
+    queuedCandidates: iceCandidateQueueRef.current.length
   });
 
   return (
@@ -666,17 +778,13 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
             <button
               onClick={handleEndCall}
               style={{
-                padding: isMobile ? '12px 20px' : '10px 20px',
+                padding: '10px 20px',
                 backgroundColor: '#f44336',
                 color: 'white',
                 border: 'none',
                 borderRadius: 6,
                 cursor: 'pointer',
                 fontWeight: 'bold',
-                fontSize: isMobile ? '16px' : '14px',
-                touchAction: 'manipulation',
-                userSelect: 'none',
-                WebkitTapHighlightColor: 'transparent'
               }}
             >
               End Call
@@ -685,17 +793,13 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
             <button
               onClick={toggleAudio}
               style={{
-                padding: isMobile ? '12px 20px' : '10px 20px',
+                padding: '10px 20px',
                 backgroundColor: isAudioMuted ? '#757575' : '#4caf50',
                 color: 'white',
                 border: 'none',
                 borderRadius: 6,
                 cursor: 'pointer',
                 fontWeight: 'bold',
-                fontSize: isMobile ? '16px' : '14px',
-                touchAction: 'manipulation',
-                userSelect: 'none',
-                WebkitTapHighlightColor: 'transparent'
               }}
             >
               {isAudioMuted ? '🔇 Unmute Audio' : '🔊 Mute Audio'}
@@ -704,17 +808,13 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
             <button
               onClick={toggleVideo}
               style={{
-                padding: isMobile ? '12px 20px' : '10px 20px',
+                padding: '10px 20px',
                 backgroundColor: isVideoMuted ? '#757575' : '#4caf50',
                 color: 'white',
                 border: 'none',
                 borderRadius: 6,
                 cursor: 'pointer',
                 fontWeight: 'bold',
-                fontSize: isMobile ? '16px' : '14px',
-                touchAction: 'manipulation',
-                userSelect: 'none',
-                WebkitTapHighlightColor: 'transparent'
               }}
             >
               {isVideoMuted ? '📹 Enable Video' : '📹 Disable Video'}
@@ -724,16 +824,9 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
       </div>
 
       {/* Debug info - remove in production */}
-      <div style={{ 
-        marginTop: 20, 
-        fontSize: '12px', 
-        color: '#666', 
-        textAlign: 'center',
-        display: process.env.NODE_ENV === 'development' ? 'block' : 'none'
-      }}>
+      <div style={{ marginTop: 20, fontSize: '12px', color: '#666', textAlign: 'center' }}>
         Debug: Call Active: {isCallActive.toString()}, Incoming: {isIncomingCall.toString()}, 
-        Initiated: {callInitiated.toString()}, Has Offer: {(!!incomingOffer).toString()}, 
-        Answering: {isAnswering.toString()}, Mobile: {isMobile.toString()}
+        Initiated: {callInitiated.toString()}, Has Offer: {(!!incomingOffer).toString()}
       </div>
     </div>
   );
