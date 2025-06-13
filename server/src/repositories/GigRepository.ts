@@ -1,7 +1,7 @@
 import Gig from '../models/GigModel'
 import { CreateGigDTO, IGig, IGigRepository } from '../interfaces'
 import BaseRepository from './BaseRepository'
-import { Types } from 'mongoose'
+import { PipelineStage, Types } from 'mongoose'
 
 class GigRepository extends BaseRepository<IGig> implements IGigRepository {
     constructor(){
@@ -20,65 +20,150 @@ class GigRepository extends BaseRepository<IGig> implements IGigRepository {
         return await this.findById(id)
     }
 
-    async findGigs(skip: number, limit: number): Promise<IGig[]> {
-        return await Gig.aggregate([
-            {
-                $match: {
-                    isActive: true
-                }
-            },
-            {
-                $lookup: {
-                    from: 'users',  
-                    localField: 'freelancerId',
-                    foreignField: '_id',
-                    as: 'freelancer'
-                }
-            },
-            {
-                $unwind: '$freelancer'
-            },
-            {
-                $lookup: {
-                    from: 'reviews',
-                    localField: 'freelancerId',
-                    foreignField: 'reviewedUserId',
-                    as: 'reviews'
-                }
-            },
-            {
-                $addFields: {
-                    averageRating: { $avg: '$reviews.rating' },
-                    totalReviews: { $size: '$reviews' }
-                }
-            },
-            {
-                $project: {
-                    title: 1,
-                    description: 1,
-                    category: 1,
-                    price: 1,
-                    revisions: 1,
-                    deliveryTime: 1,
-                    skills: 1,
-                    requirements: 1,
-                    freelancer: {
-                        _id: 1,
-                        fullName: 1,
-                        profilePicture: 1
-                    },
-                    averageRating: { $ifNull: ['$averageRating', 0] },
-                    totalReviews: 1
-                    }
-                },
-                { $skip: skip }, 
-                { $limit: limit }, 
-            ]);
-     }
+    // async findGigs(skip: number, limit: number,search?: string): Promise<IGig[]> {
+    //     return await Gig.aggregate([
+    //         {
+    //             $match: {
+    //                 isActive: true
+    //             }
+    //         },
+    //         {
+    //             $lookup: {
+    //                 from: 'users',  
+    //                 localField: 'freelancerId',
+    //                 foreignField: '_id',
+    //                 as: 'freelancer'
+    //             }
+    //         },
+    //         {
+    //             $unwind: '$freelancer'
+    //         },
+    //         {
+    //             $lookup: {
+    //                 from: 'reviews',
+    //                 localField: 'freelancerId',
+    //                 foreignField: 'reviewedUserId',
+    //                 as: 'reviews'
+    //             }
+    //         },
+    //         {
+    //             $addFields: {
+    //                 averageRating: { $avg: '$reviews.rating' },
+    //                 totalReviews: { $size: '$reviews' }
+    //             }
+    //         },
+    //         {
+    //             $project: {
+    //                 title: 1,
+    //                 description: 1,
+    //                 category: 1,
+    //                 price: 1,
+    //                 revisions: 1,
+    //                 deliveryTime: 1,
+    //                 skills: 1,
+    //                 requirements: 1,
+    //                 freelancer: {
+    //                     _id: 1,
+    //                     fullName: 1,
+    //                     profilePicture: 1
+    //                 },
+    //                 averageRating: { $ifNull: ['$averageRating', 0] },
+    //                 totalReviews: 1
+    //                 }
+    //             },
+    //             { $skip: skip }, 
+    //             { $limit: limit }, 
+    //         ]);
+    //  }
+    async findGigs(skip: number, limit: number, search?: string): Promise<IGig[]> {
+        const pipeline: PipelineStage[] = [];
 
-     async countGigs(): Promise<number>{
-        return await this.count();
-     }
+        pipeline.push({
+            $match: {
+            isActive: true,
+            },
+        });
+
+        if (search && search.trim()) {
+            const regex = new RegExp(search, 'i');
+            pipeline.push({
+            $match: {
+                $or: [
+                { title: { $regex: regex } },
+                { description: { $regex: regex } },
+                ],
+            },
+            });
+        }
+
+        pipeline.push(
+            {
+            $lookup: {
+                from: 'users',
+                localField: 'freelancerId',
+                foreignField: '_id',
+                as: 'freelancer',
+            },
+            },
+            { $unwind: '$freelancer' },
+            {
+            $lookup: {
+                from: 'reviews',
+                localField: 'freelancerId',
+                foreignField: 'reviewedUserId',
+                as: 'reviews',
+            },
+            },
+            {
+            $addFields: {
+                averageRating: { $avg: '$reviews.rating' },
+                totalReviews: { $size: '$reviews' },
+            },
+            },
+            {
+            $project: {
+                title: 1,
+                description: 1,
+                category: 1,
+                price: 1,
+                revisions: 1,
+                deliveryTime: 1,
+                skills: 1,
+                requirements: 1,
+                freelancer: {
+                _id: 1,
+                fullName: 1,
+                profilePicture: 1,
+                },
+                averageRating: { $ifNull: ['$averageRating', 0] },
+                totalReviews: 1,
+            },
+            },
+            { $skip: skip },
+            { $limit: limit }
+        );
+
+        return await Gig.aggregate<IGig>(pipeline);
+    }
+
+    //  async countGigs(search?: string): Promise<number>{
+    //     return await this.count();
+    //  }
+    async countGigs(search?: string): Promise<number> {
+    if (search && search.trim()) {
+        const regex = new RegExp(search, 'i');
+        return await Gig.countDocuments({
+        isActive: true,
+        $or: [
+            { title: { $regex: regex } },
+            { description: { $regex: regex } },
+        ],
+        });
+    }
+
+    return await Gig.countDocuments({ isActive: true });
+    }
+
 
 
     async findByIdAndUpdate(id:string,gig:Partial<IGig>): Promise<IGig | null> {

@@ -56,8 +56,8 @@ const Navbar: React.FC<NavbarProps> = ({
   const navigate = useNavigate();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
-
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  
 
   useEffect(() => {
     const fetchNotifications = async () => {

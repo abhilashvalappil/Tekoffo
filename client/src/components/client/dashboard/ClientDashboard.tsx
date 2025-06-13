@@ -73,10 +73,10 @@ const ClientDashboard = () => {
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {[
-              { icon: <DollarSign className="h-6 w-6" />, label: 'Total Spent', value: profileData?.total_Spent, trend: '$3,500 this month' },
-              { icon: <Briefcase className="h-6 w-6" />, label: 'Active Projects', value: activeJobsCount, trend: '+2 new' },
-              { icon: <CheckCircle className="h-6 w-6" />, label: 'Completed Projects', value: completedJobsCount, trend: '+3 this month' },
-              { icon: <Handshake className="h-6 w-6" />, label: 'Active Contracts', value: activeContractsCount, trend: '+4' },
+              { icon: <DollarSign className="h-6 w-6" />, label: 'Total Spent', value: profileData?.total_Spent, trend: '' },
+              { icon: <Briefcase className="h-6 w-6" />, label: 'Active Projects', value: activeJobsCount, trend: '' },
+              { icon: <CheckCircle className="h-6 w-6" />, label: 'Completed Projects', value: completedJobsCount, trend: '' },
+              { icon: <Handshake className="h-6 w-6" />, label: 'Active Contracts', value: activeContractsCount, trend: '' },
             ].map((stat, index) => (
               <div key={index} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-4">

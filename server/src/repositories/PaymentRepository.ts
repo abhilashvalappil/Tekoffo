@@ -1,4 +1,3 @@
-import { Types } from "mongoose";
 import Payment from '../models/PaymentModel'
 import BaseRepository from "./BaseRepository";
 import { IPayment,IPaymentRepository } from "../interfaces";

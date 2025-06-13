@@ -80,37 +80,6 @@ const ClientNavbar: React.FC<NavbarProps> = ({ navItems, activeTab, setActiveTab
               <Briefcase className="h-8 w-8 text-white" />
               <span className="ml-2 text-xl font-bold">Tekoffo</span>
             </a>
-            {/* <div className="hidden md:flex items-center ml-10 space-x-8">
-              {navItems.map((item) =>
-        item.path ? (
-          <Link
-            key={item.id}
-            to={item.path}
-            className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === item.id
-                ? 'bg-white/20 text-white'
-                : 'text-gray-300 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            {item.icon}
-            <span className="ml-2">{item.label}</span>
-          </Link>
-        ) : (
-          <button
-            key={item.id}
-            onClick={() => setActiveTab(item.id)}
-            className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === item.id
-                ? 'bg-white/20 text-white'
-                : 'text-gray-300 hover:bg-white/10 hover:text-white'
-            }`}
-          >
-            {item.icon}
-            <span className="ml-2">{item.label}</span>
-          </button>
-        )
-      )}
-            </div> */}
             <div className="hidden md:flex items-center ml-10 space-x-4">
   {navItems.map((item) => {
     const isMessagesTab = item.id === 'messages';
@@ -223,6 +192,7 @@ const ClientNavbar: React.FC<NavbarProps> = ({ navItems, activeTab, setActiveTab
                 onClick={() => {
                   setActiveTab(item.id);
                   setIsMenuOpen(false);
+                  if (item.path) navigate(item.path);
                 }}
                 className={`flex items-center w-full px-3 py-2 rounded-md text-sm font-medium ${
                   activeTab === item.id

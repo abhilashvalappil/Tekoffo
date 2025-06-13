@@ -26,7 +26,7 @@ export interface IJobService {
     getFreelancerGigs(freelancerId:string): Promise<{gigs:IGig[] | null}>
     updateFreelancerGig(freelancerId:string,gigData:UpdateGigDTO): Promise<{message:string}>
     deleteFreelancerGig(freelancerId:string, gigId:string): Promise<{message:string}>
-    getFreelancersGigs(clientId:string, page: number, limit: number): Promise<PaginatedResponse<IGig>>
+    getFreelancersGigs(clientId:string, page: number, limit: number,search?:string): Promise<PaginatedResponse<IGig>>
     createFreelancerJobInvitation(clientId:string,jobId:string,freelancerId:string): Promise<{message:string}>
     getSentInvitations(clientId:string): Promise<{invitations:IProposal[]}>
     getJobInvitations(freelancerId:string,page: number, limit: number,search?:string,sortBy?:SortOption): Promise<{invitations:PaginatedResponse<JobInvitationView>}>

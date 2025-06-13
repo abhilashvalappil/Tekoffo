@@ -101,7 +101,6 @@ export class JobService implements IJobService{
             this.jobRepository.findJobsByClientId(clientId,skip, limit, search, filters),
             this.jobRepository.countJobsByClientId(clientId, search, filters)
         ]) 
-        // return {jobs} ;
         return{
             data: jobs,
             meta:{
@@ -299,20 +298,16 @@ export class JobService implements IJobService{
         return{message:MESSAGES.GIG_DELETED}
     }
 
-    async getFreelancersGigs(clientId:string, page: number, limit: number): Promise<PaginatedResponse<IGig>> {
+    async getFreelancersGigs(clientId:string, page: number, limit: number,search?:string): Promise<PaginatedResponse<IGig>> {
         const client = await this.userRepository.findUserById(clientId)
         if(!client){
             throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
         }
         const skip = (page - 1) * limit;
-
         const [gigs,total] = await Promise.all([
-            this.gigRepository.findGigs(skip, limit),
-            this.gigRepository.countGigs()
+            this.gigRepository.findGigs(skip, limit, search),
+            this.gigRepository.countGigs(search)
          ])
-
-        // const gigs = await this.gigRepository.findGigs()
-        // return{gigs}
         return{
             data: gigs,
             meta:{

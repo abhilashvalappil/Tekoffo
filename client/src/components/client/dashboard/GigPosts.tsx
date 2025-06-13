@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Briefcase, ChevronRight, DollarSign, Clock, Repeat, User } from 'lucide-react';
+import { Briefcase, ChevronRight, DollarSign, Clock, Repeat, User, Search } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
@@ -15,12 +15,14 @@ import { handleApiError } from '../../../utils/errors/errorHandler';
 import { IFrontendPopulatedReview } from '../../../types/review';
 import { Job } from '../../../types/userTypes';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
+import { useDebounce } from '../../../hooks/customhooks/useDebounce';
 
 
 
 const FreelancerGigs = () => {
   const [gigs, setGigs] = useState<FreelancerGigListDTO[]>([]);
   const [jobs, setJobs] = useState<Job[]>([])
+  const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('gigs');
   const [showReviews, setShowReviews] = useState<boolean>(false);
   const [showInviteModal, setShowInviteModal] = useState<boolean>(false);
@@ -33,15 +35,16 @@ const FreelancerGigs = () => {
       updateMeta,
     } = usePagination({ total: 0, page: 1, pages: 1, limit: 3 });
 
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   useEffect(() => {
     const loadGigs = async() => {
-      const response = await fetchFreelancersGigs(pagination.page, pagination.limit)
+      const response = await fetchFreelancersGigs(pagination.page, pagination.limit, debouncedSearchTerm)
       setGigs(response.data)
       updateMeta(response.meta.total,  response.meta.pages);
     }
     loadGigs()
-  },[pagination.page, pagination.limit, updateMeta])
+  },[pagination.page, pagination.limit, debouncedSearchTerm, updateMeta])
 
   useEffect(() => {
     const loadJobs = async() => {
@@ -79,7 +82,17 @@ const FreelancerGigs = () => {
       <div className="pt-16 p-4 md:p-20">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-2xl md:text-3xl font-bold text-[#0A142F] mb-8">Freelancer Gigs</h1>
-          <div className="grid gap-6">
+          <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Search freelancer gigs by title or description..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0A142F]/20"
+              />
+            </div>
+          <div className="grid gap-6 py-8">
             {gigs.length === 0 ? (
               <div className="text-center py-8 text-[#0A142F]/70">No gigs found</div>
             ) : (

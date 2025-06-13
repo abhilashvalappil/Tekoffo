@@ -292,22 +292,7 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
         return result[0]?.totalCount || 0;
     }
 
-
-    // async findAppliedProposalsByFreelancer(freelancerId:string,skip: number, limit: number, search?: string): Promise<IProposal[]> {
-    //     return await this.find({
-    //         freelancerId:new Types.ObjectId(freelancerId),
-    //         proposalType:'freelancer-applied'
-    //     },{ skip, limit, sort: { createdAt: -1 } })
-    //     .populate({
-    //         path: 'jobId',
-    //         select: 'title'
-    //     })
-    //     .populate({
-    //         path: 'clientId',
-    //         select: 'fullName'
-    //     })
-    // }
-    async findAppliedProposalsByFreelancer(
+async findAppliedProposalsByFreelancer(
   freelancerId: string,
   skip: number,
   limit: number,

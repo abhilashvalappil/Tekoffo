@@ -76,9 +76,8 @@ const MyJobPosts = () => {
   loadCategories()
  },[])
 
- 
-  const statuses = [...new Set(myJobPosts.map(job => job.status))];
-
+  // const statuses = [...new Set(myJobPosts.map(job => job.status))];
+  const statuses = ['open', 'inprogress', 'completed'];
    
   const handleDeleteJob = async (id:string) => {
   const result = await Swal.fire({
@@ -86,8 +85,8 @@ const MyJobPosts = () => {
     text: 'Do you want to delete this job post? This action cannot be undone!',
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#4f46e5',  // modern purple
-    cancelButtonColor: '#d33',      // cancel red
+    confirmButtonColor: '#4f46e5',  
+    cancelButtonColor: '#d33',      
     confirmButtonText: 'Yes, delete it!',
     cancelButtonText: 'No, keep it',
     reverseButtons: true,

@@ -389,6 +389,7 @@ export class JobController {
             }
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 8;
+            const search = req.query.search as string;
 
             if (isNaN(page) || page < 1){
                 res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid page number" });
@@ -397,7 +398,7 @@ export class JobController {
                 res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
             }
 
-            const  gigs  = await this.jobService.getFreelancersGigs(clientId, page, limit)
+            const  gigs  = await this.jobService.getFreelancersGigs(clientId, page, limit,search)
             res.status(Http_Status.OK).json({gigs})
         } catch (error) {
             next(error)

@@ -47,30 +47,11 @@ class CategoryRepository extends BaseRepository<ICategory> implements ICategoryR
     });
   }
 
-  
-
-    // async findCategoryById(id:string): Promise<ICategory | null> {
-    //   return await this.findById(id)
-    // }
-
-    // async updateCategory(category: Partial<ICategory>): Promise<ICategory | null> {
-    //   const { catId, ...updateData } = category;
-    //   return await this.findOneAndUpdate({ catId }, updateData); 
-    // }
-
     async findCategoryById(categoryId: string): Promise<ICategory | null> {
         return await this.findById(categoryId);
       }
-      
-
-   
-    // async findSubCategoriesMatch(subCategories: string[]): Promise<ICategory | null> {
-    //     return await this.findOne({ subCategories: subCategories });
-    //   }
-  
 
     async getAllCategories(skip: number, limit: number): Promise<ICategory[]> {
-        // return await this.find({}, skip, limit, { createdAt: -1 }) || [];  
         return await this.find({}, { skip, limit, sort: { createdAt: -1 } }) || [];  
       }
 

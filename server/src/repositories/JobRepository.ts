@@ -26,7 +26,6 @@ class JobRepository extends BaseRepository<JobDataType> implements IJobRepositor
     }
 
     async findJobsByClientId(clientId: string,skip: number, limit: number,search?: string,filters?: { status?: string; category?: string; subCategory?: string }): Promise<JobDataType[]> {
-        // return await this.find({ clientId: new Types.ObjectId(clientId) },{skip, limit, sort: { createdAt: -1 } });
         const query: FilterQuery<JobDataType> = {
             clientId: new Types.ObjectId(clientId),
         };
@@ -50,8 +49,7 @@ class JobRepository extends BaseRepository<JobDataType> implements IJobRepositor
         });
     }
 
-    async countJobsByClientId(clientId:string,search?: string, filters?: { status?: string; category?: string; subCategory?: string }): Promise<number> {
-        // return await this.count({ clientId: new Types.ObjectId(clientId) });   
+    async countJobsByClientId(clientId:string,search?: string, filters?: { status?: string; category?: string; subCategory?: string }): Promise<number> { 
         const query: FilterQuery<JobDataType> = {
             clientId: new Types.ObjectId(clientId),
         };

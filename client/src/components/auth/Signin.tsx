@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { Briefcase, Eye, EyeOff, LogIn } from 'lucide-react';
 import { useDispatch,useSelector } from 'react-redux';
 import { RootState,AppDispatch } from '../../redux/store'
 import { signIn } from '../../redux/services/authService';
@@ -129,11 +129,17 @@ const validateForm = (): boolean => {
   };
 
   return (
-    <div className="min-h-screen bg-[#3a4b82] flex items-center justify-center p-">
+    <div className="min-h-screen overflow-hidden bg-[#3a4b82] flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-8 space-y-6">
+      <div className="flex items-center justify-center gap-2 mb-4">
+          <Briefcase className="text-blue-700" size={28} />
+          <h1 className="text-3xl font-bold tracking-wide text-gray-800">Tekoffo</h1>
+        </div>
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to your account</p>
+          {/* <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+          <p className="text-gray-600">Sign in to your account</p> */}
+          <h2 className="text-2xl font-semibold text-gray-800">Welcome Back</h2>
+          <p className="text-gray-500">Sign in to continue</p>
         </div>
 
         {loading && <p>Loading...</p>}
@@ -226,7 +232,8 @@ const validateForm = (): boolean => {
         <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
-            width="352px"
+            width="100%"
+            // width="352px" 
           />
 
         <div className="text-center text-sm text-gray-600">
@@ -238,6 +245,7 @@ const validateForm = (): boolean => {
       </div>
     </div>
   );
+  
 }
 
 export default SignIn;

@@ -20,7 +20,6 @@ class PlatformRepository extends BaseRepository<IPlatformEarnings> implements IP
                 }
             }
         ])
-        console.log("console from <<>>>>>>>==",result)
          return result[0]?.total || 0;
     }
 

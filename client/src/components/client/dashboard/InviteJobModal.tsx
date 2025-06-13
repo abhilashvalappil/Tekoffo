@@ -44,7 +44,6 @@ export default function InviteToJobModal({
       setIsLoading(true);
       try {
         const invitations: ProposalData[] = await fetchInvitationsSent();
-        console.log('the existing invitations areeeeeeee ====>>>>>>', invitations);
         
         // Helper function to extract ID from nested object or string
         const extractId = (obj: { _id: string } | string): string => {
@@ -94,103 +93,103 @@ export default function InviteToJobModal({
   };
   
   if (!isOpen) return null;
-  
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-black/30">
-      <div className="bg-gradient-to-b from-white via-gray-50 to-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border border-gray-200/50 backdrop-blur-lg">
-        {/* Animated Header */}
-        <div className="relative p-8 border-b border-gray-200/50">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-cyan-500/5"></div>
-          <div className="relative flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
-                <Zap className="text-white" size={24} />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-                  Invite {freelancerName}
-                </h2>
-                <p className="text-sm text-gray-500 mt-1">Select the perfect job for collaboration</p>
-              </div>
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm bg-black/30">
+    <div className="bg-white rounded-2xl w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl max-h-[85vh] overflow-hidden flex flex-col shadow-md border border-gray-200">
+      
+      {/* Header */}
+      <div className="relative p-3 border-b border-gray-200">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-purple-500/5 to-cyan-500/5"></div>
+        <div className="relative flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow">
+              <Zap className="text-white" size={20} />
             </div>
-            <button 
-              onClick={onClose} 
-              className="p-3 hover:bg-gray-100 rounded-2xl transition-all duration-300 hover:rotate-90 group"
-            >
-              <X size={24} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
-            </button>
-          </div>
-        </div>
-        
-        {/* Enhanced Search Bar */}
-        <div className="p-6 border-b border-gray-200/50">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search by job title or category..."
-              className="w-full pl-12 pr-12 py-4 bg-gray-50/50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 text-gray-900 placeholder-gray-500"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
-              <Filter className="h-5 w-5 text-gray-400" />
+            <div>
+              <h2 className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                Invite {freelancerName}
+              </h2>
+              <p className="text-xs text-gray-500">Pick a job for collaboration</p>
             </div>
           </div>
+          <button 
+            onClick={onClose} 
+            className="p-2 hover:bg-gray-100 rounded-xl transition-all group"
+          >
+            <X size={20} className="text-gray-400 group-hover:text-gray-600" />
+          </button>
         </div>
-        
-        {/* Jobs List with Loading State */}
-        <div className="flex-1 overflow-y-auto">
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center h-64">
-              <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-              <p className="text-gray-500">Loading your jobs...</p>
-            </div>
-          ) : filteredJobs.length > 0 ? (
-            <div className="p-6 space-y-4">
-              {filteredJobs.map((job, index) => (
-                <JobItem 
-                  key={job._id} 
-                  job={job} 
-                  onInvite={handleInvite}
-                  isInvited={isJobInvited(job._id)}
-                  animationDelay={index * 100}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center mb-6">
-                <Briefcase size={32} className="text-gray-400" />
-              </div>
-              <p className="text-xl font-semibold text-gray-600 mb-2">No active jobs found</p>
-              <p className="text-sm text-gray-400">Create a new job post to start inviting freelancers</p>
-            </div>
-          )}
-        </div>
-        
-        {/* Futuristic Footer */}
-        <div className="p-6 border-t border-gray-200/50 bg-gradient-to-r from-gray-50/50 to-white/50">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-              <span className="text-sm text-gray-600 font-medium">
-                {filteredJobs.length} jobs available
-              </span>
-            </div>
-            <button
-              onClick={onClose}
-              className="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-300 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              Close
-            </button>
+      </div>
+
+      {/* Search */}
+      <div className="p-3 border-b border-gray-200">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search jobs..."
+            className="w-full pl-10 pr-10 py-2 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+            <Filter className="h-4 w-4 text-gray-400" />
           </div>
         </div>
       </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-3">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center min-h-[160px]">
+            <div className="w-8 h-8 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mb-2"></div>
+            <p className="text-gray-500 text-sm">Loading jobs...</p>
+          </div>
+        ) : filteredJobs.length > 0 ? (
+          <div className="space-y-3">
+            {filteredJobs.map((job, index) => (
+              <JobItem 
+                key={job._id} 
+                job={job} 
+                onInvite={handleInvite}
+                isInvited={isJobInvited(job._id)}
+                animationDelay={index * 100}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center min-h-[160px] text-center text-gray-500">
+            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+              <Briefcase size={24} className="text-gray-400" />
+            </div>
+            <p className="text-sm font-medium text-gray-600">No active jobs</p>
+            <p className="text-xs text-gray-400">Create a new job post</p>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="p-3 border-t border-gray-200 bg-gray-50">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+            <span className="text-sm text-gray-600">{filteredJobs.length} jobs</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm font-medium shadow"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+
     </div>
-  );
+  </div>
+);
+
 }
 
 interface JobItemProps {

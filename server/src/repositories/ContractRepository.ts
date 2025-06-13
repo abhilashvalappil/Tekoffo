@@ -41,22 +41,7 @@ class ContractRepository extends BaseRepository<IContract>implements IContractRe
         path: "clientId",
         select: "fullName",
       });
-    return contracts.filter((contract) => contract.jobId !== null);
-    // return await this.find(query, {
-    //   skip,
-    //   limit,
-    //   sort: { createdAt: -1 },
-    // })
-    //   .populate({
-    //     path: "jobId",
-    //     match: searchRegex ? { title: searchRegex } : undefined,
-    //     select: "title",
-    //   })
-    //   .populate({
-    //     path: "clientId",
-    //     select: "fullName",
-    //   });
-      
+    return contracts.filter((contract) => contract.jobId !== null);      
   }
 
   async countContractsByFreelancerId(userId: string): Promise<number> {

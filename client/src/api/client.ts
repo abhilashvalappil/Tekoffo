@@ -125,9 +125,9 @@ export const submitReview = async(reviewedUserId:string,reviewData:{ rating: num
     }
 }
 
-export const fetchFreelancersGigs = async(page?:number, limit?:number): Promise<PaginatedResponse<FreelancerGigListDTO>> => {
+export const fetchFreelancersGigs = async(page?:number, limit?:number, search?: string): Promise<PaginatedResponse<FreelancerGigListDTO>> => {
     try {
-        const response = await API.get(userENDPOINTS.GET_GIGS,{ params: { page, limit}})
+        const response = await API.get(userENDPOINTS.GET_GIGS,{ params: { page, limit,search}})
         return response.data.gigs;
     } catch (error) {
         throw new Error(handleApiError(error));
