@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import { IAuthService,ICookieHandlerService } from "../interfaces"; 
-import { ValidationError } from "../errors/customErrors";
 import { Http_Status } from "../constants/statusCodes";
 import { MESSAGES } from '../constants/messages';
 
@@ -60,7 +59,7 @@ export class AuthController {
                 user:result.user,
                 accessToken: result.accessToken
             })
-        } catch (error:any) {
+        } catch (error) {
             next(error)
         }
     }
@@ -174,7 +173,7 @@ export class AuthController {
             user: result.user,
             accessToken: result.accessToken,
           });
-        } catch (error: any) {
+        } catch (error) {
             next(error)
         }
     }

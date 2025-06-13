@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { Http_Status } from "../constants/statusCodes";
 import { MESSAGES } from '../constants/messages';
-import dotenv from "dotenv";
-import { error } from "console";
 import { IChatService } from "../interfaces";
  
  

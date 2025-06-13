@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from "express";
 import { Http_Status } from "../constants/statusCodes";
 import { MESSAGES } from '../constants/messages';
 import { IAdminService } from "../interfaces";
-import { error } from "console";
 
 interface AuthRequest extends Request {
     userId?: string;  
@@ -127,8 +126,12 @@ export class AdminController {
     }
 
     async getActiveJobsCount(req:Request, res:Response, next: NextFunction): Promise<void>{
-        const {count} = await this.adminService.getActiveJobsCount();
-        res.status(Http_Status.OK).json({count})
+        try {
+            const {count} = await this.adminService.getActiveJobsCount();
+             res.status(Http_Status.OK).json({count})
+        } catch (error) {
+            next(error)
+        }
     }
 
     async getPlatformRevenue(req:Request, res:Response, next: NextFunction): Promise<void> {
