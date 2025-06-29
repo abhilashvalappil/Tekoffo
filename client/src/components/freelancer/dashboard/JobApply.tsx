@@ -3,27 +3,7 @@ import { submitProposal } from '../../../api';
 import { handleApiError } from '../../../utils/errors/errorHandler';
 import { Toaster, toast } from 'react-hot-toast';
 import { JobDataType } from '../../../hooks/customhooks/useJobs';
-
-// interface JobDetails {
-//   id: string;
-//   // clientId:string;
-//   clientId:{
-//     _id:string;
-//     fullName:string;
-//     profilePicture?:string;
-//     companyName?:string;
-//     country:string;
-//   }
-//   title: string;
-//   clientName: string;
-//   clientLocation: string;
-//   clientRating: number;
-//   postedDate: string;
-//   description: string;
-//   requirements: string[];
-//   budget: string;
-//   duration: string;
-// }
+ 
 
 interface Client {
     fullName: string;

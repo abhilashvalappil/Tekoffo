@@ -2,25 +2,6 @@ import { useState } from "react";
 import API from "../../services/api";
 import { handleApiError } from "../../utils/errors/errorHandler";
  
-
-
-// export function useClient(){
-//     const [client,setClient] = useState(null);
-//     const [error, setError] = useState(null);
-
-//     const fetchClient = async(clientId:string) => {
-//         try {
-//             const response = await API.get(`/jobs/client?clientId=${clientId}`)
-//             console.log('client datas fetchingggg',response.data)
-//             setClient(response.data)
-//         } catch (error) {
-//             console.log("error typeeeeeeeeeeeeeeeee",typeof error)
-//             setError(error)
-//         }
-//     }
-//     return { client, error, fetchClient };
-// }
-
   interface Client {
   id:string;
   fullName:string;

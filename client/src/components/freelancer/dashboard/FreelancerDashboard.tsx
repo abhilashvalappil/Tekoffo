@@ -248,16 +248,16 @@ function FreelancerHome() {
                 className="border rounded-lg p-4 shadow hover:shadow-md transition"
               >
                 <h3 className="font-semibold text-lg">
-                  {contract.jobId?.title}
+                  {contract.job.title}
                 </h3>
                 <p className="text-sm text-gray-600">
-                  Client: {contract.clientId.fullName}
+                  Client: {contract.client.fullName}
                 </p>
                 <p className="text-sm text-gray-600">
                   Amount: ${contract.amount}
                 </p>
                 <p className="text-sm text-gray-600">
-                  Started At: {new Date(contract.startedAt).toLocaleDateString()}
+                  Started At: {new Date(contract.createdAt).toLocaleDateString()}
                 </p>
                 <p className="text-sm text-green-600 font-medium">
                   Status: {contract.contractStatus}

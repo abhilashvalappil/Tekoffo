@@ -14,6 +14,7 @@ export const commonENDPOINTS = {
 
   export const adminENDPOINTS = {
     GET_USERS: "/admin/users",
+    GET_TOTAL_CLIENTS_COUNT: "/admin/users/count",
     UPDATE_USER: "/admin/update-status",
     ADD_CATEGORY: "/admin/add-category",
     UPDATE_CATEGORY: "/admin/update-category",
@@ -90,7 +91,11 @@ export const commonENDPOINTS = {
     MARK_MESSAGES_AS_READ: '/api/messages/mark-read',
     GET_UNREAD_MESSAGES:'/api/messages/unread',
     DELETE_MSG: '/api/messages/delete-message',
-    
+
+    //* notification
+    GET_NOTIFICATIONS: '/api/notifications',
+    MARK_AS_READ: (id: string) => `/api/notifications/${id}/read`,
+    MARK_ALL_NOTIFICATIONS_AS_READ: '/api/notifications/mark-all-read',
 
     //* gig
     CREATE_GIG: '/create-gig',

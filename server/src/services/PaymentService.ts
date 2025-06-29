@@ -1,4 +1,3 @@
- 
 import Stripe from "stripe";
 import { IUserRepository,IJobRepository,IProposalRepository, IPaymentService, CreateContractDTO, INotification, IContract, status, CreateReviewDTO, IWallet, ITransaction, IReview, IPopulatedReview  } from "../interfaces";
 import {MESSAGES} from '../constants/messages'
@@ -10,6 +9,8 @@ dotenv.config();
 import { v4 as uuidv4 } from 'uuid';
 import { getIO } from '../config/socket';
 import { PaginatedResponse } from "../types/commonTypes";
+import { NotificationTypes } from "../types/notificationTypes";
+import { onlineUsers } from "../utils/socketManager";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-03-31.basil' });
 export const TRANSACTION_TYPE = {
   CREDIT: 'credit',
@@ -210,20 +211,19 @@ export class PaymentService implements IPaymentService {
     const message = `Your payment of $${amount} has been authorized.
         The client ${client.fullName} has confirmed the payment. You can now start the work`;
 
-    const notification = {
-      clientId,
-      freelancerId,
+    const notificationData: Partial<INotification> = {
+      senderId: new Types.ObjectId(clientId.toString()),
+      recipientId:new Types.ObjectId(freelancerId.toString()),
+      type:NotificationTypes.PAYMENT_SUCCESS,
       message,
     };
 
-    const createdNotification =
-      await this.notificationRepository.createNotification(notification);
+    const notification = await this.notificationRepository.createNotification(notificationData);
     const io = getIO();
-    io.to(freelancerId.toString()).emit("notification", {
-      id: createdNotification._id.toString(),
-      message,
-    });
-    // console.log("Notification sent to freelancer", message);
+    const recipientSocketId = onlineUsers.get(freelancerId.toString())
+    if(recipientSocketId){
+      io.to(recipientSocketId).emit('notification',notification)
+    }
     return { message: MESSAGES.CONTRACT_CREATED };
   }
 
@@ -232,21 +232,22 @@ export class PaymentService implements IPaymentService {
      if(!user){
       throw new NotFoundError(MESSAGES.UNAUTHORIZED);
     }
-    const notifications = await this.notificationRepository.findNotifications(
-      userId
-    );
+    const notifications = await this.notificationRepository.findNotifications(userId);
     return { notifications };
   }
 
-  async markNotificationAsRead(id: string): Promise<{ message: string }> {
-     
-      await this.notificationRepository.findNotificationById(id);
+  async markNotificationAsRead(userId: string,id: string): Promise<{ message: string }> {
+    const user  = await this.userRepository.findUserById(userId);
+     if(!user){
+      throw new NotFoundError(MESSAGES.UNAUTHORIZED);
+    }
+    await this.notificationRepository.findNotificationById(id);
     await this.notificationRepository.updateNotification(id);
     return { message: "Notification marked as read" };
   }
 
-  async markAllNotificationsAsRead(ids: string[]): Promise<{ message: string }> {
-    await this.notificationRepository.updateAllNotifications(ids);
+  async markAllNotificationsAsRead(userId: string): Promise<{ message: string }> {
+    await this.notificationRepository.updateAllNotifications(userId);
     return { message: "All Notifications are marked as read" };
   }
 
@@ -268,7 +269,7 @@ export class PaymentService implements IPaymentService {
           search,
           status
         ),
-        this.contractRepository.countContractsByFreelancerId(userId),
+        this.contractRepository.countContractsByFreelancerId(userId,search,status),
       ]);
     }
     if (user.role == "client") {
@@ -280,7 +281,7 @@ export class PaymentService implements IPaymentService {
           search,
           status
         ),
-        this.contractRepository.countContractsByClientId(userId),
+        this.contractRepository.countContractsByClientId(userId,search,status),
       ]);
     }
     return {
@@ -302,43 +303,52 @@ export class PaymentService implements IPaymentService {
   }
 
   async submitContractForApproval(freelancerId: string,contractId: string): Promise<{ message: string }> {
+    const contract = await this.contractRepository.findContractById(contractId);
+    if (!contract) {
+      throw new NotFoundError(MESSAGES.CONTRACT_NOT_FOUND);
+    }
+    const freelancer = await this.userRepository.findUserById(freelancerId);
+    if (!freelancer) {
+      throw new UnauthorizedError(MESSAGES.UNAUTHORIZED);
+    }
+    const job = await this.jobRepository.findJobById(contract.jobId.toString())
+    if(!job){
+      throw new NotFoundError(MESSAGES.JOB_NOT_FOUND)
+    }
+    await this.contractRepository.updateContractStatus(contractId,status.Submitted);
+
+    const notificationData: Partial<INotification> = {
+      senderId: new Types.ObjectId(freelancerId),
+      recipientId:new Types.ObjectId(contract.clientId.toString()),
+      type:NotificationTypes.JOB_SUBMITTED,
+      message: `${freelancer.fullName} submitted the completed work of your job "${job.title}" for your approval.`,
+   }
+   const notification = await this.notificationRepository.createNotification(notificationData)
+   const io = getIO();
+   const recipientSocketId = onlineUsers.get(contract.clientId.toString());
+   if(recipientSocketId){
+    io.to(recipientSocketId).emit('notification',notification)
+   }
+    return { message: MESSAGES.CONTRACT_SUBMITTED_FOR_APPROVAL };
+  }
+
+  async releasePayment(userId: string,contractId: string,paymentIntentId: string,transactionId: string): Promise<{ message: string }> {
+    const client = await this.userRepository.findUserById(userId);
+    if(!client){
+      throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
+    }
     const contractExist = await this.contractRepository.findContractById(contractId);
     if (!contractExist) {
       throw new NotFoundError(MESSAGES.CONTRACT_NOT_FOUND);
     }
-    const freelancerExist = await this.userRepository.findUserById(
-      freelancerId
-    );
-    if (!freelancerExist) {
-      throw new UnauthorizedError(MESSAGES.UNAUTHORIZED);
-    }
-    await this.contractRepository.updateContractStatus(
-      contractId,
-      status.Submitted
-    );
-    return { message: MESSAGES.CONTRACT_SUBMITTED_FOR_APPROVAL };
-  }
-
-  async releasePayment(contractId: string,paymentIntentId: string,transactionId: string): Promise<{ message: string }> {
-    
-    const contractExist = await this.contractRepository.findContractById(
-      contractId
-    );
-    if (!contractExist) {
-      throw new NotFoundError(MESSAGES.CONTRACT_NOT_FOUND);
-    }
-    const transaction = await this.paymentRepository.findTransaction(
-      transactionId
-    );
+    const transaction = await this.paymentRepository.findTransaction(transactionId);
     if (!transaction) {
       throw new NotFoundError(MESSAGES.TRANSACTION_NOT_FOUND);
     }
     await stripe.paymentIntents.capture(paymentIntentId);
 
     const freelancerId = transaction.freelancerId.toString();
-    const job = await this.jobRepository.findJobById(
-      transaction.jobId.toString()
-    );
+    const job = await this.jobRepository.findJobById(transaction.jobId.toString());
     if (!job) {
       throw new NotFoundError(MESSAGES.JOB_NOT_FOUND);
     }
@@ -349,7 +359,6 @@ export class PaymentService implements IPaymentService {
 
     const platformFee = transaction.amount * 0.05;
     const freelancerEarning = transaction.amount - platformFee;
-
     await this.walletRepository.updateWallet(freelancerId, freelancerEarning);
 
     const jobId = transaction.jobId.toString();
@@ -361,7 +370,6 @@ export class PaymentService implements IPaymentService {
         platformCommission: platformFee * 2
     }
     await this.platformRepository.recordPlatFormEarnings(platformEarningsData)
-    
     const transactiondata = {
       userId: new Types.ObjectId(freelancerId),
       type: TRANSACTION_TYPE.CREDIT,
@@ -370,17 +378,22 @@ export class PaymentService implements IPaymentService {
     };
     await this.transactionRepository.createTransaction(transactiondata);
 
-    await this.paymentRepository.updatePaymentStatus(
-      transaction._id.toString(),
-      "released"
-    );
-    await this.contractRepository.updateContractStatus(
-      contractId,
-      status.Completed
-    );
-    await this.jobRepository.updateJobPost(contractExist.jobId.toString(), {
-      status: "completed",
-    });
+    await this.paymentRepository.updatePaymentStatus(transaction._id.toString(),"released");
+    await this.contractRepository.updateContractStatus(contractId,status.Completed);
+    await this.jobRepository.updateJobPost(contractExist.jobId.toString(), {status: "completed",});
+
+    const notificationData: Partial<INotification> = {
+      senderId: new Types.ObjectId(clientId),
+      recipientId:new Types.ObjectId(freelancerId),
+      type:NotificationTypes.PAYMENT_RELEASED,
+      message: `Your submitted work for the job "${job.title}" has been approved by ${client.fullName} and payment released.`,
+    }
+    const notification = await this.notificationRepository.createNotification(notificationData)
+    const io = getIO();
+    const recipientSocketId = onlineUsers.get(freelancerId);
+    if(recipientSocketId){
+      io.to(recipientSocketId).emit('notification',notification)
+    }
     return { message: MESSAGES.PAYMENT_RELEASED };
   }
 

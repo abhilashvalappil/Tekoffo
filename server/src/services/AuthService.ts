@@ -241,7 +241,6 @@ export class AuthService implements IAuthService {
     }
 
     async googleSignIn(credential: string): Promise<{ user: IUserResponse; accessToken: string }> {
-         
           const ticket = await this.client.verifyIdToken({
             idToken: credential,
             audience: process.env.CLIENT_ID,
@@ -261,15 +260,39 @@ export class AuthService implements IAuthService {
               googleId,
               role: 'client' as UserRole,  
             });
+          }else{
+             if(user.isBlocked){
+              throw new UnauthorizedError(MESSAGES.ACCOUNT_BLOCKED);
+             }
           }
+          
     
-          const userResponse: IUserResponse = {
-            _id: user._id,
-            username: user.username,
-            email: user.email,
-            role: user.role,
-          };
+          // const userResponse: IUserResponse = {
+          //   _id: user._id,
+          //   username: user.username,
+          //   email: user.email,
+          //   role: user.role,
+          // };
           const accessToken = this.jwtService.generateAccessToken(user._id,user.role,user.email)
+          const refreshToken = this.jwtService.generateRefreshToken(user._id,user.role,user.email);
+          await redisClient.set(user._id.toString(),refreshToken)
+           const userResponse: IUserResponse = {
+        _id: user._id.toString(),
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        fullName: user.fullName || '',
+        companyName: user.companyName || '',
+        description: user.description || '',
+        country: user.country || '',
+        skills: user.skills || [],
+        preferredJobFields: user.preferredJobFields || [],
+        total_Spent: user.total_Spent || 0,
+        linkedinUrl: user.linkedinUrl || '',                      
+        githubUrl: user.githubUrl || '',
+        portfolioUrl: user.portfolioUrl || '',
+        profilePicture: user.profilePicture || '',
+    };
           return { user: userResponse, accessToken };
       }
 }

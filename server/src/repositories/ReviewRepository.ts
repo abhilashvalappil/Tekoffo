@@ -17,9 +17,6 @@ class ReviewRepository extends BaseRepository<IReview> implements IReviewReposit
         return await this.find({reviewerId: new Types.ObjectId(userId)})
     }
 
-    // async findReviewsByUserId(userId:string): Promise<IReview[] | null> {
-    //     return await this.find({reviewedUserId: new Types.ObjectId(userId)})
-    // }
     async findReviewsByUserId(userId: string): Promise<IPopulatedReview[] | null> {
         return await Review.find({
             reviewedUserId: new Types.ObjectId(userId),

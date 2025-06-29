@@ -91,11 +91,22 @@ export class PaymentController {private paymentService: IPaymentService; private
         res.status(Http_Status.FORBIDDEN).json({ error: MESSAGES.UNAUTHORIZED });
         return;
       }
-      const { notifications } = await this.paymentService.getNotifications(
-        userId
-      );
-      // console.log('console from notifications controller 555555',notifications)
-      res.status(Http_Status.OK).json(notifications);
+      const {notifications}  = await this.paymentService.getNotifications(userId);
+      res.status(Http_Status.OK).json({notifications});
+    } catch (error) {
+      next(error);
+    }
+  }
+
+    async markNotificationAsRead(req: AuthRequest,res: Response,next: NextFunction): Promise<void> {
+    try {
+      const userId = req.userId;
+      if (!userId) {
+        res.status(Http_Status.BAD_REQUEST).json({ error: MESSAGES.UNAUTHORIZED });
+        return;
+      }
+      const { id } = req.params;
+      await this.paymentService.markNotificationAsRead(userId,id);
     } catch (error) {
       next(error);
     }
@@ -119,8 +130,6 @@ export class PaymentController {private paymentService: IPaymentService; private
       if (isNaN(limit) || limit < 1) {
         res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
       }
-
-      // const { search = "", status = "all", time = "all" } = req.query;
       const paginatedResponse = await this.paymentService.getUserContracts(
         userId,
         page,
@@ -179,11 +188,7 @@ export class PaymentController {private paymentService: IPaymentService; private
         stripePaymentIntentId: paymentIntentId,
         transactionId,
       } = req.body;
-      const { message } = await this.paymentService.releasePayment(
-        contractId,
-        paymentIntentId,
-        transactionId
-      );
+      const { message } = await this.paymentService.releasePayment(userId,contractId,paymentIntentId,transactionId);
       res.status(Http_Status.OK).json(message);
     } catch (error) {
       next(error);
@@ -243,20 +248,6 @@ export class PaymentController {private paymentService: IPaymentService; private
     }
   }
 
-  async markNotificationAsRead(req: AuthRequest,res: Response,next: NextFunction): Promise<void> {
-    try {
-      const userId = req.userId;
-      if (!userId) {
-        res.status(Http_Status.BAD_REQUEST).json({ error: MESSAGES.UNAUTHORIZED });
-        return;
-      }
-      const { id } = req.params;
-      await this.paymentService.markNotificationAsRead(id);
-    } catch (error) {
-      next(error);
-    }
-  }
-
   async markAllNotificationsAsRead(req: AuthRequest,res: Response,next: NextFunction): Promise<void> {
     try {
       const userId = req.userId;
@@ -264,8 +255,7 @@ export class PaymentController {private paymentService: IPaymentService; private
         res.status(Http_Status.BAD_REQUEST).json({ error: MESSAGES.UNAUTHORIZED });
         return;
       }
-      const { ids } = req.body;
-      await this.paymentService.markAllNotificationsAsRead(ids);
+      await this.paymentService.markAllNotificationsAsRead(userId);
     } catch (error) {
       next(error);
     }

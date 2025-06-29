@@ -2,6 +2,7 @@ import User from '../models/UserModel'
 import { IUser,IUserRepository } from '../interfaces';
 import BaseRepository from './BaseRepository';
 import { FreelancerData } from '../interfaces/entities/IJob';
+import { FilterQuery } from 'mongoose';
 
 class UserRepository extends BaseRepository<IUser> implements IUserRepository {
   constructor(){
@@ -32,12 +33,42 @@ class UserRepository extends BaseRepository<IUser> implements IUserRepository {
       return await this.findById(userId);
     }
 
-    async findUsers(skip: number, limit: number): Promise<IUser[]> {
-      return await this.find({role:{$ne:'admin'}},{ skip, limit, sort: { createdAt: -1 } }) || [];
+    async findUsers(skip: number, limit: number,search?: string): Promise<IUser[]> {
+      const query: FilterQuery<IUser> = {
+        role: { $ne: 'admin' },
+      }
+      if(search){
+        const searchRegex = new RegExp(search,'i');
+        query.$or = [
+          {username: searchRegex},
+          {email: searchRegex}
+        ]
+      }
+      return await this.find(query,{ skip, limit, sort: { createdAt: -1 } });
     }
-    async countUsers(): Promise<number> {
-      return await this.count();   
-    }
+
+    async countUsers(search?: string): Promise<number> {
+      const query: FilterQuery<IUser> = {
+        role: { $ne: 'admin' },
+      };
+
+      if (search) {
+        const searchRegex = new RegExp(search, 'i');
+        query.$or = [
+          { username: searchRegex },
+          { email: searchRegex }
+        ];
+      }
+      return await this.count(query);
+  }
+
+
+    async getTotalClientsCount(): Promise<number>{
+      return await this.count({ role: 'client' }); 
+    } 
+    async getTotalFreelancersCount(): Promise<number>{
+      return await this.count({ role: 'freelancer' }); 
+    } 
 
     async updateUserStatus(userId: string, isBlocked: boolean) {
       return await this.updateById(userId, { isBlocked } as Partial<IUser>);

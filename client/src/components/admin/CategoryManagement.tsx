@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Pencil, MoreVertical } from 'lucide-react';
-import Sidebar from './Sidebar';
 import { addCategory, fetchCategories, updateCategoryStatus, updateCategory } from '../../api/admin';
 import { Toaster, toast } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-// import { useNavigate } from 'react-router-dom';
 import { categorySchema,CategoryFormData } from '../../utils/validations/CategoryValidation';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import { handleApiError } from '../../utils/errors/errorHandler';
+import { useDebounce } from '../../hooks/customhooks/useDebounce';
 
 
 interface Category {
@@ -69,15 +68,11 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
     setServerError('');
     const categoryData: Partial<Category> = {
       _id: mode === 'edit' ? category?._id : undefined,
-      // _id: mode === 'add' ? category?._id : undefined,
-      // catId: mode === 'edit' ? category?.catId : Date.now().toString(),
       name: data.name,
       subCategories: data.subcategories
       .split(',')
       .map((sub) => sub.trim())
       .filter((sub) => sub.length > 0),
-      // _id: data._id,
-      // subCategories: data.subcategories, // already transformed to array by zod
     };
 
     const toastId = toast.loading(mode === 'add' ? 'Adding category...' : 'Updating category...');
@@ -172,9 +167,6 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 };
 
 const CategoryManagement = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  // const [selectedItem, setSelectedItem] = useState('users');
-  // const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | undefined>();
@@ -190,15 +182,12 @@ const CategoryManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   // const [sortOption, setSortOption] = useState<'name-asc' | 'name-desc' | 'status-asc' | 'status-desc'>('name-asc');
   const [sortOption, setSortOption] = useState<string>();
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(prev => !prev);
-  };
+  const debouncedSearchTerm = useDebounce(searchQuery, 500);
 
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const fetchedData = await fetchCategories(pagination.page, pagination.limit);
+        const fetchedData = await fetchCategories(pagination.page, pagination.limit,debouncedSearchTerm);
         setCategories(fetchedData.data);
         setPagination((prev) => ({
           ...prev,
@@ -214,7 +203,7 @@ const CategoryManagement = () => {
       }
     };
     loadCategories();
-  }, [pagination.page, pagination.limit]);
+  }, [pagination.page, pagination.limit,debouncedSearchTerm]);
 
   const handleAddCategory = () => {
     setModalMode('add');
@@ -288,9 +277,9 @@ const CategoryManagement = () => {
   };
 
   const filteredAndSortedCategories = categories
-    .filter((category) =>
-      category.name.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    // .filter((category) =>
+    //   category.name.toLowerCase().includes(searchQuery.toLowerCase())
+    // )
     .sort((a, b) => {
       switch (sortOption) {
         case 'name-asc':
@@ -324,24 +313,20 @@ const CategoryManagement = () => {
 
   return (
     <div className="flex">
-      {/* <Sidebar
-        selectedItem={selectedItem}
-        setSelectedItem={setSelectedItem}
-        isMobileMenuOpen={isMobileMenuOpen}
-        setIsMobileMenuOpen={setIsMobileMenuOpen}
-      /> */}
-      <Sidebar
-        isOpen={isSidebarOpen}
-        onToggle={toggleSidebar}
-      />
-
+      <div className="fixed top-0 w-full z-50 bg-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <h1 className="text-2xl font-bold text-gray-900">Category Management</h1>
+          </div>
+        </div>
+      </div>
       <div className="flex-1 min-h-screen bg-gray-300">
-        <Toaster position="top-center" reverseOrder={false} />
-        <div className="ml-64 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Toaster position="top-right" reverseOrder={false} />
+        <div className="mt-15 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="bg-gray-50 rounded-lg shadow-lg overflow-hidden">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-900">Category Management</h1>
+                <h5 className="text-1xl font-bold text-gray-900">Categories</h5>
                 <button
                   onClick={handleAddCategory}
                   className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -412,10 +397,10 @@ const CategoryManagement = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <button
                             onClick={() => toggleCategoryStatus(category._id)}
-                            className={`px-4 py-1.5 rounded-full text-white text-sm font-medium transition-colors ${
+                            className={`px-3 py-1 text-xs font-semibold rounded-lg text-white ${
                               category.isListed
-                                ? 'bg-red-500 hover:bg-red-600'
-                                : 'bg-green-500 hover:bg-green-600'
+                                ? 'bg-red-600 hover:bg-red-700 text-white'
+                                : 'bg-green-600 hover:bg-green-700 text-white'
                             }`}
                           >
                             {category.isListed ? 'Listed' : 'Unlisted'}

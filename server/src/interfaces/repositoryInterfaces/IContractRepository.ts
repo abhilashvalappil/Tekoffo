@@ -3,13 +3,12 @@ import { CreateContractDTO, IContract, status } from "../entities/IContract";
 export interface IContractRepository {
    createContract(contract:CreateContractDTO): Promise<IContract>
    findContractById(id:string): Promise<IContract|null> 
-   // findContractsByFreelancerId(userId:string): Promise<IContract[]>
    findContractsByFreelancerId(userId: string, skip: number, limit: number ,search?: string, status?: string): Promise<IContract[]>
-   countContractsByFreelancerId(userId:string): Promise<number>
+   countContractsByFreelancerId(userId:string,search?: string,status?: string): Promise<number>
    countActiveContractsByFreelancerId(userId: string): Promise<number>
    countCompletedContractsByFreelancerId(userId: string): Promise<number>
    findContractsByClientId(userId:string,skip: number, limit: number,  search?: string, status?: string): Promise<IContract[]>
-   countContractsByClientId(userId:string): Promise<number>
+   countContractsByClientId(userId:string,search?: string,status?: string): Promise<number>
    countActiveContractsByClientId(userId:string): Promise<number>
    countContracts(): Promise<number>
    updateContractStatus(id:string, status: status): Promise<IContract|null>

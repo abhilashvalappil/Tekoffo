@@ -16,6 +16,7 @@ const adminService = new AdminService(UserRepository,CategoryRepository, JobRepo
 const adminController = new AdminController(adminService);
 
 adminRouter.get('/users',authMiddleware,adminController.fetchUsers.bind(adminController));
+adminRouter.get('/users/count',authMiddleware,adminController.getTotalUsersCountByRole.bind(adminController));
 adminRouter.post('/update-status',adminController.updateUserStatus.bind(adminController));
 adminRouter.post('/add-category',adminController.addCategory.bind(adminController));
 adminRouter.put('/update-category',adminController.updaCategory.bind(adminController));

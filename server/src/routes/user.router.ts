@@ -40,7 +40,7 @@ const authService = new AuthService(UserRepository, jwtService,googleClient,Wall
 const authController = new AuthController(authService,cookieHandlerService);
 const userService = new UserService(UserRepository,CategoryRepository,JobRepository,ProposalRepository,PaymentRepository )
 const userController = new UserController(userService);
-const jobService = new JobService(CategoryRepository,UserRepository,JobRepository,ProposalRepository,GigRepository,ContractRepository)
+const jobService = new JobService(CategoryRepository,UserRepository,JobRepository,ProposalRepository,GigRepository,ContractRepository, NotificationRepository)
 const jobController = new JobController(jobService)
 const paymentService = new PaymentService(UserRepository,JobRepository,ProposalRepository,PaymentRepository,ContractRepository, NotificationRepository, ReviewRepository,WalletRepository,TransactionRepository, PlatformRepository)
 const paymentController = new PaymentController(paymentService)
@@ -69,15 +69,15 @@ userRouter.post('/create-freelancerprofile',upload.single('profilePicture'),auth
 userRouter.put('/update-freelancerprofile',upload.single('profilePicture'),authMiddleware,authorizeRole('freelancer'),userController.updateFreelancerProfile.bind(userController))
 userRouter.get('/api/profile',authMiddleware,authorizeRole(['freelancer', 'client']),userController.getUserProfile.bind(userController))
 
-userRouter.get('/jobs/posted',authMiddleware,authorizeRole('freelancer'),jobController.getAvailbleJobs.bind(jobController))
+userRouter.get('/jobs/posted',authMiddleware,authorizeRole(['freelancer','admin']),jobController.getAvailbleJobs.bind(jobController))
 userRouter.get('/jobs/client',authMiddleware,authorizeRole('freelancer'),jobController.getClientProfileByJob.bind(jobController))
 userRouter.post('/send-proposal',uploadProposal.single('attachments'),authMiddleware,authorizeRole('freelancer'),jobController.createProposal.bind(jobController))
 userRouter.get('/api/proposals',authMiddleware,authorizeRole('freelancer'),jobController.getFreelancerAppliedProposals.bind(jobController))
 userRouter.get('/onboard-freelancer',authMiddleware,authorizeRole('freelancer'),paymentController.createConnectedAccount.bind(paymentController))
 userRouter.get('/check-stripe-account',authMiddleware,authorizeRole('freelancer'),paymentController.checkStripeAccount.bind(paymentController))
-userRouter.get('/notifications',authMiddleware,authorizeRole(['freelancer', 'client']),paymentController.getNotifications.bind(paymentController))
-userRouter.put('/notifications/:id/read',authMiddleware,authorizeRole('freelancer'),paymentController.markNotificationAsRead.bind(paymentController))
-userRouter.put('/notifications/read-all',authMiddleware,authorizeRole('freelancer'),paymentController.markAllNotificationsAsRead.bind(paymentController))
+userRouter.get('/api/notifications',authMiddleware,authorizeRole(['freelancer', 'client']),paymentController.getNotifications.bind(paymentController))
+userRouter.put('/api/notifications/:id/read',authMiddleware,authorizeRole(['freelancer', 'client']),paymentController.markNotificationAsRead.bind(paymentController))
+userRouter.put('/api/notifications/mark-all-read',authMiddleware,authorizeRole(['freelancer', 'client']),paymentController.markAllNotificationsAsRead.bind(paymentController))
 userRouter.get('/contracts',authMiddleware,authorizeRole(['freelancer', 'client']),paymentController.getUserContracts.bind(paymentController))
 userRouter.post('/contracts/submit',authMiddleware,authorizeRole('freelancer'),paymentController.submitContractForApproval.bind(paymentController))
 userRouter.get('/contracts/active',authMiddleware,authorizeRole('freelancer'),paymentController.getActiveAndCompletedContracts.bind(paymentController))

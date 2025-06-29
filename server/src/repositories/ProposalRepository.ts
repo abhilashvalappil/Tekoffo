@@ -74,12 +74,81 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
         return await this.count();   
       }
     
-    async countReceivedProposals(userId:string): Promise<number> {
-        return await this.count({
+    async countReceivedProposals(userId: string, search?: string,filters?: { status?: string; time?: string}): Promise<number> {
+      const pipeline: PipelineStage[] = [
+        {
+          $match: {
             clientId: new Types.ObjectId(userId),
-            proposalType: 'freelancer-applied'
-        })
+            proposalType: 'freelancer-applied',
+          },
+        },
+        {
+          $lookup: {
+            from: 'jobs',
+            localField: 'jobId',
+            foreignField: '_id',
+            as: 'job',
+          },
+        },
+        { $unwind: '$job' },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'freelancerId',
+            foreignField: '_id',
+            as: 'freelancer',
+          },
+        },
+        { $unwind: '$freelancer' },
+      ];
+
+      if (search) {
+        const regex = new RegExp(search, 'i');
+        pipeline.push({
+          $match: {
+            $or: [
+              { 'job.title': { $regex: regex } },
+              { 'job.description': { $regex: regex } },
+              { 'freelancer.fullName': { $regex: regex } },
+              { 'freelancer.skills': { $regex: regex } },
+            ],
+          },
+        });
+      }
+
+       if (filters?.status) {
+    pipeline.push({
+      $match: { status: filters.status },
+    });
+  }
+
+  if (filters?.time) {
+    const now = new Date();
+    let startDate: Date | null = null;
+
+    if (filters.time === 'today') {
+      startDate = new Date(now);
+      startDate.setHours(0, 0, 0, 0);
+    } else if (filters.time === 'week') {
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 7);
+    } else if (filters.time === 'month') {
+      startDate = new Date(now);
+      startDate.setMonth(now.getMonth() - 1);
     }
+
+    if (startDate) {
+      pipeline.push({
+        $match: { createdAt: { $gte: startDate } },
+      });
+    }
+  }
+
+      pipeline.push({ $count: 'total' });
+
+      const result = await Proposal.aggregate<{ total: number }>(pipeline);
+      return result[0]?.total || 0;
+  }
 
     async countAppliedProposals(freelancerId: string, search?: string, filter?: string): Promise<number> {
         const pipeline: PipelineStage[] = [
@@ -122,36 +191,304 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
         const result = await Proposal.aggregate(pipeline);
         return result[0]?.total || 0;
     }
-
-    async findProposals(clientId:string,skip: number, limit: number): Promise<IProposal[]> {
-        return await this.find({
-            clientId:new Types.ObjectId(clientId),
-            proposalType:'freelancer-applied'
-        },{ skip, limit, sort: { createdAt: -1 } })
-        .populate({
-            path: 'jobId',
-            select: 'title description'
-        })
-        .populate({
-            path: 'freelancerId',
-            select: 'fullName profilePicture email country description skills preferredJobFields linkedinUrl githubUrl portfolioUrl '
-        })
-    }
-
-    async findInvitationsSent(clientId:string): Promise<IProposal[]> {
-        return await this.find({
+    
+    async findProposals(clientId:string,skip: number, limit: number,search?: string,filters?: { status?: string; time?: string}): Promise<IProposal[]> {
+      const pipeline: PipelineStage[] = [
+        {
+          $match: {
             clientId: new Types.ObjectId(clientId),
-            proposalType:'client-invited'
-        })
-        .populate({
-            path: 'jobId',
-            select: 'title description'
-        })
-        .populate({
-            path: 'freelancerId',
-            select: 'fullName profilePicture email country description skills preferredJobFields linkedinUrl githubUrl portfolioUrl '
-        })
+            proposalType: 'freelancer-applied',
+          },
+        },
+        {
+          $lookup: {
+            from: 'jobs',
+            localField: 'jobId',
+            foreignField: '_id',
+            as: 'job',
+          },
+        },
+        { $unwind: '$job' },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'freelancerId',
+            foreignField: '_id',
+            as: 'freelancer',
+          },
+        },
+        { $unwind: '$freelancer' },
+      ];
+
+      if (search) {
+        const regex = new RegExp(search, 'i');
+        pipeline.push({
+          $match: {
+            $or: [
+              { 'job.title': { $regex: regex } },
+              { 'job.description': { $regex: regex } },
+              { 'freelancer.fullName': { $regex: regex } },
+              { 'freelancer.skills': { $regex: regex } },
+            ],
+          },
+        });
+      }
+
+      if (filters?.status) {
+    pipeline.push({
+      $match: {
+        status: filters.status,
+      },
+    });
+  }
+
+   if (filters?.time) {
+    const now = new Date();
+    let startDate: Date | null = null;
+
+    if (filters.time === 'today') {
+      startDate = new Date(now);
+      startDate.setHours(0, 0, 0, 0);
+    } else if (filters.time === 'week') {
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 7);
+    } else if (filters.time === 'month') {
+      startDate = new Date(now);
+      startDate.setMonth(now.getMonth() - 1);
     }
+
+    if (startDate) {
+      pipeline.push({
+        $match: {
+          createdAt: { $gte: startDate },
+        },
+      });
+    }
+  }
+
+      pipeline.push(
+        {
+          $project: {
+            _id: 1,
+            proposalType:1,
+            status: 1,
+            coverLetter: 1,
+            proposedBudget: 1,
+            duration: 1,
+            attachments: 1,
+            createdAt: 1,
+            viewed: 1,
+            job: {
+              _id: '$job._id',
+              title: '$job.title',
+              description: '$job.description',
+            },
+            freelancer: {
+              _id: '$freelancer._id',
+              fullName: '$freelancer.fullName',
+              profilePicture: '$freelancer.profilePicture',
+              email: '$freelancer.email',
+              country: '$freelancer.country',
+              description: '$freelancer.description',
+              skills: '$freelancer.skills',
+              preferredJobFields: '$freelancer.preferredJobFields',
+              linkedinUrl: '$freelancer.linkedinUrl',
+              githubUrl: '$freelancer.githubUrl',
+              portfolioUrl: '$freelancer.portfolioUrl',
+            },
+          },
+        },
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limit }
+      );
+
+      return await Proposal.aggregate<IProposal>(pipeline);
+    }
+
+    async findInvitationsSent(clientId: string,search?: string,filters?: { status?: string; time?: string}): Promise<IProposal[]> {
+      const pipeline: PipelineStage[] = [
+        {
+          $match: {
+            clientId: new Types.ObjectId(clientId),
+            proposalType: 'client-invited',
+          },
+        },
+        {
+          $lookup: {
+            from: 'jobs',
+            localField: 'jobId',
+            foreignField: '_id',
+            as: 'job',
+          },
+        },
+        { $unwind: '$job' },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'freelancerId',
+            foreignField: '_id',
+            as: 'freelancer',
+          },
+        },
+        { $unwind: '$freelancer' },
+      ];
+
+      if (search) {
+        const regex = new RegExp(search, 'i');
+        pipeline.push({
+          $match: {
+            $or: [
+              { 'job.title': { $regex: regex } },
+              { 'job.description': { $regex: regex } },
+              { 'freelancer.fullName': { $regex: regex } },
+              { 'freelancer.skills': { $regex: regex } },
+            ],
+          },
+        });
+      }
+
+      if (filters?.status) {
+        pipeline.push({
+          $match: {
+            status: filters.status,
+          },
+        });
+      }
+
+      if (filters?.time) {
+        const now = new Date();
+        let startDate: Date | null = null;
+
+        if (filters.time === 'today') {
+          startDate = new Date(now);
+          startDate.setHours(0, 0, 0, 0);
+        } else if (filters.time === 'week') {
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - 7);
+        } else if (filters.time === 'month') {
+          startDate = new Date(now);
+          startDate.setMonth(now.getMonth() - 1);
+        }
+
+        if (startDate) {
+          pipeline.push({
+            $match: {
+              createdAt: { $gte: startDate },
+            },
+          });
+        }
+      }
+
+      pipeline.push({
+        $project: {
+          _id: 1,
+          status: 1,
+          proposedBudget: 1,
+          duration: 1,
+          createdAt: 1,
+          job: {
+            _id: '$job._id',
+            title: '$job.title',
+            description: '$job.description',
+          },
+          freelancer: {
+            _id: '$freelancer._id',
+            fullName: '$freelancer.fullName',
+            profilePicture: '$freelancer.profilePicture',
+            email: '$freelancer.email',
+            country: '$freelancer.country',
+            description: '$freelancer.description',
+            skills: '$freelancer.skills',
+            preferredJobFields: '$freelancer.preferredJobFields',
+            linkedinUrl: '$freelancer.linkedinUrl',
+            githubUrl: '$freelancer.githubUrl',
+            portfolioUrl: '$freelancer.portfolioUrl',
+          },
+        },
+      },
+      { $sort: { createdAt: -1 } },
+    );
+
+  return await Proposal.aggregate<IProposal>(pipeline);
+}
+    async countInvitationsSent(clientId: string, search?: string,filters?: { status?: string; time?: string}): Promise<number>{
+        const pipeline: PipelineStage[] = [
+      {
+        $match: {
+          clientId: new Types.ObjectId(clientId),
+          proposalType: 'client-invited',
+        },
+      },
+      {
+        $lookup: {
+          from: 'jobs',
+          localField: 'jobId',
+          foreignField: '_id',
+          as: 'job',
+        },
+      },
+      { $unwind: '$job' },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'freelancerId',
+          foreignField: '_id',
+          as: 'freelancer',
+        },
+      },
+      { $unwind: '$freelancer' },
+    ];
+
+    if (search) {
+      const regex = new RegExp(search, 'i');
+      pipeline.push({
+        $match: {
+          $or: [
+            { 'job.title': { $regex: regex } },
+            { 'job.description': { $regex: regex } },
+            { 'freelancer.fullName': { $regex: regex } },
+            { 'freelancer.skills': { $regex: regex } },
+          ],
+        },
+      });
+    }
+
+    if (filters?.status) {
+      pipeline.push({
+        $match: { status: filters.status },
+      });
+    }
+
+    if (filters?.time) {
+      const now = new Date();
+      let startDate: Date | null = null;
+
+      if (filters.time === 'today') {
+        startDate = new Date(now);
+        startDate.setHours(0, 0, 0, 0);
+      } else if (filters.time === 'week') {
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 7);
+      } else if (filters.time === 'month') {
+        startDate = new Date(now);
+        startDate.setMonth(now.getMonth() - 1);
+      }
+
+      if (startDate) {
+        pipeline.push({
+          $match: {
+            createdAt: { $gte: startDate },
+          },
+        });
+      }
+    }
+
+    pipeline.push({ $count: 'total' });
+
+    const result = await Proposal.aggregate<{ total: number }>(pipeline);
+    return result[0]?.total || 0;
+  }
 
     async findJobInvitations(freelancerId: string,skip: number,limit: number,search?: string,sortBy?: SortOption): Promise<JobInvitationView[]> {
         const pipeline: PipelineStage[] = [
@@ -242,8 +579,6 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
         return await Proposal.aggregate<JobInvitationView>(pipeline);
     }
 
-
-
     async countJobInvitesByFreelancer(freelancerId: string, search?: string): Promise<number> {
         const pipeline: PipelineStage[] = [
             {
@@ -292,91 +627,84 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
         return result[0]?.totalCount || 0;
     }
 
-async findAppliedProposalsByFreelancer(
-  freelancerId: string,
-  skip: number,
-  limit: number,
-  search?: string,
-  filter?: string,
-): Promise<IAppliedProposal[]> {
-  const pipeline: PipelineStage[] = [
-    {
-      $match: {
-        freelancerId: new Types.ObjectId(freelancerId),
-        proposalType: 'freelancer-applied',
-      },
-    },
-    {
-      $lookup: {
-        from: 'jobs',
-        localField: 'jobId',
-        foreignField: '_id',
-        as: 'jobDetails',
-      },
-    },
-    { $unwind: '$jobDetails' },
-    {
-      $lookup: {
-        from: 'users',
-        localField: 'clientId',
-        foreignField: '_id',
-        as: 'clientDetails',
-      },
-    },
-    { $unwind: '$clientDetails' },
-  ];
+    async findAppliedProposalsByFreelancer(freelancerId: string,skip: number,limit: number,search?: string,filter?: string,): Promise<IAppliedProposal[]> {
+      const pipeline: PipelineStage[] = [
+        {
+          $match: {
+            freelancerId: new Types.ObjectId(freelancerId),
+            proposalType: 'freelancer-applied',
+          },
+        },
+        {
+          $lookup: {
+            from: 'jobs',
+            localField: 'jobId',
+            foreignField: '_id',
+            as: 'jobDetails',
+          },
+        },
+        { $unwind: '$jobDetails' },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'clientId',
+            foreignField: '_id',
+            as: 'clientDetails',
+          },
+        },
+        { $unwind: '$clientDetails' },
+      ];
 
-  if (search) {
-    const regex = new RegExp(search, 'i');
-    pipeline.push({
-      $match: {
-        'jobDetails.title': { $regex: regex },
-      },
-    });
-  }
+      if (search) {
+        const regex = new RegExp(search, 'i');
+        pipeline.push({
+          $match: {
+            'jobDetails.title': { $regex: regex },
+          },
+        });
+      }
 
-  if (filter && ['pending', 'accepted', 'rejected'].includes(filter)) {
-    pipeline.push({
-      $match: {
-        status: filter,
-      },
-    });
-  }
+      if (filter && ['pending', 'accepted', 'rejected'].includes(filter)) {
+        pipeline.push({
+          $match: {
+            status: filter,
+          },
+        });
+      }
 
-  pipeline.push(
-     {
-    $project: {
-      _id: 1,
-      jobId: 1,
-      freelancerId: 1,
-      clientId: 1,
-      proposalType: 1,
-      status: 1,
-      proposedBudget: 1,
-      duration: 1,
-      attachments: 1,
-      viewedByReceiver: 1,
-      createdAt: 1,
-      updatedAt: 1,
-      jobDetails: {
-        jobId: '$jobDetails._id',
-        title: '$jobDetails.title',
+      pipeline.push(
+        {
+        $project: {
+          _id: 1,
+          jobId: 1,
+          freelancerId: 1,
+          clientId: 1,
+          proposalType: 1,
+          status: 1,
+          proposedBudget: 1,
+          duration: 1,
+          attachments: 1,
+          viewedByReceiver: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          jobDetails: {
+            jobId: '$jobDetails._id',
+            title: '$jobDetails.title',
+          },
+          clientDetails: {
+            clientId: '$clientDetails._id',
+            fullName: '$clientDetails.fullName',
+          },
+        },
       },
-      clientDetails: {
-        clientId: '$clientDetails._id',
-        fullName: '$clientDetails.fullName',
-      },
-    },
-  },
-    { $sort: { createdAt: -1 } },
-    { $skip: skip },
-    { $limit: limit }
-  );
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limit }
+      );
 
-  return await Proposal.aggregate(pipeline);
-}
+      return await Proposal.aggregate(pipeline);
+    }
 
-     
 
 }
 

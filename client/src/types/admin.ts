@@ -5,8 +5,8 @@ export interface User {
     username: string;
     email: string;
     role:UserRole
-    isBlocked: boolean;
-
+    isBlocked?: boolean;
+    status?: string;
 }
 
 export enum UserRole {

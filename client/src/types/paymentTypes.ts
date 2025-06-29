@@ -12,15 +12,15 @@ export interface PaymentIntentPayload {
 //* interface for freelancer side
 export interface contractResponse {
     _id:string;
-    clientId:{
+    client:{
         _id:string;
         fullName:string;
     }
-    freelancerId:{
+    freelancer:{
         _id:string;
         fullName:string;
     }
-    jobId:{
+    job:{
         _id:string;
         title:string;
     }
@@ -28,6 +28,6 @@ export interface contractResponse {
     transactionId:string;
     amount:number;
     contractStatus:'pending'| 'active'| 'submitted'|  'completed'| 'cancelled';
-    startedAt:Date;
+    createdAt:Date;
     completedAt?:Date;
 }

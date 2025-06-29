@@ -166,9 +166,9 @@ const Contracts = () => {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {contracts.map((contract) => (
                     <tr key={contract._id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{contract.jobId.title}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.clientId.fullName}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">{new Date(contract.startedAt).toLocaleDateString()}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{contract.job.title}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.client.fullName}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">{new Date(contract.createdAt).toLocaleDateString()}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {contract.completedAt ? new Date(contract.completedAt).toLocaleDateString() : 'N/A'}
                       </td>
@@ -205,7 +205,7 @@ const Contracts = () => {
                             {reviews.some(
                               (review) =>
                                 review.reviewerId === user?._id &&
-                                review.reviewedUserId === contract.clientId._id &&
+                                review.reviewedUserId === contract.client._id &&
                                 review.contractId === contract._id
                             ) ? (
                               <span className="text-xs text-green-600 font-medium">Review Submitted</span>
@@ -226,7 +226,7 @@ const Contracts = () => {
                       <td>
                         {user?._id && (
                           <button>
-                            <ChatButton senderId={user._id} receiverId={contract.clientId._id} />
+                            <ChatButton senderId={user._id} receiverId={contract.client._id} />
                           </button>
                         )}
                       </td>
@@ -259,7 +259,7 @@ const Contracts = () => {
         }}
         onSubmit={(reviewData) =>
           selectedContract && handleReviewSubmit(
-            selectedContract.clientId._id, 
+            selectedContract.client._id, 
             reviewData, 
             selectedContract._id
           )

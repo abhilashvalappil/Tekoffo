@@ -1,5 +1,5 @@
 
-import { IAdminService,IUserRepository,ICategoryRepository,ICategory, FetchUserResponse, IJobRepository, IPlatformRepository, IContractRepository, ITransactionRepository, ITransactionWithUsername, UserPublicInfo } from '../interfaces';
+import { IAdminService,IUserRepository,ICategoryRepository,ICategory, IJobRepository, IPlatformRepository, IContractRepository, ITransactionRepository, ITransactionWithUsername, UserPublicInfo, User } from '../interfaces';
 import { MESSAGES } from '../constants/messages';
 import { ConflictError,NotFoundError } from "../errors/customErrors";
 import { onlineUsers } from '../utils/socketManager';
@@ -26,10 +26,7 @@ export class AdminService implements IAdminService {
         this.transactionRepository = transactionRepository;
     }
 
-        async fetchUsers(userId:string, page: number, limit: number): Promise<{
-            data:FetchUserResponse;
-            meta: { total: number; page: number; pages: number; limit: number };
-        }> {
+        async fetchUsers(userId:string, page: number, limit: number,search?:string): Promise<PaginatedResponse<User>> {
             
             const user = await this.userRepository.findUserById(userId);
             if (!user) {
@@ -37,22 +34,22 @@ export class AdminService implements IAdminService {
             }
             
             const skip = (page - 1) * limit;
-            const users = await this.userRepository.findUsers(skip, limit);
-            const total = await this.userRepository.countUsers();
+            const [users,total] = await Promise.all([
+                this.userRepository.findUsers(skip, limit, search),
+                this.userRepository.countUsers(search)
+            ])
 
             if(!users){
                 throw new NotFoundError(MESSAGES.NO_USERS_FOUND)
             }
             return {
-                data: {
-                    users:users.map(user => ({
+                  data: users.map(user => ({
                     _id: user._id,
                     username: user.username,
                     email: user.email,
                     role: user.role,
                     isBlocked: user.isBlocked,
                 })),
-            },
                 meta: {
                     total: total,
                     page,
@@ -60,6 +57,16 @@ export class AdminService implements IAdminService {
                     limit,
                 },
             };         
+        }
+
+        async getTotalUsersCountByRole(userId:string): Promise<{clientsCount:number,freelancersCount:number}> {
+            const user = await this.userRepository.findUserById(userId);
+            if(!user){
+                throw new NotFoundError(MESSAGES.NO_USERS_FOUND)
+            }
+            const clientsCount = await this.userRepository.getTotalClientsCount()
+            const freelancersCount = await this.userRepository.getTotalFreelancersCount()
+            return{clientsCount,freelancersCount}
         }
 
         async updateUserStatus(userId:string, isBlocked: boolean): Promise<{message:string; user: UserPublicInfo}> {
@@ -127,7 +134,7 @@ export class AdminService implements IAdminService {
                 return{message:MESSAGES.CATEGORY_UPDATED_SUCCESSFULLY}
         }
 
-        async fetchCategories(userId:string, page: number, limit: number): Promise<PaginatedResponse<ICategory>> {
+        async fetchCategories(userId:string, page: number, limit: number,search?:string): Promise<PaginatedResponse<ICategory>> {
             const user = await this.userRepository.findUserById(userId);
             if (!user) {
                 throw new NotFoundError(MESSAGES.INVALID_USER);
@@ -135,8 +142,8 @@ export class AdminService implements IAdminService {
 
             const skip = (page - 1) * limit;
             const [categories, total] = await Promise.all([
-                this.categoryRepository.getAllCategories(skip, limit),
-                this.categoryRepository.countCategories(),
+                this.categoryRepository.getAllCategories(skip, limit, search),
+                this.categoryRepository.countCategories(search),
             ]);
         
             return {

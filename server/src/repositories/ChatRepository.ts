@@ -115,8 +115,6 @@ class ChatRepository extends BaseRepository<IChat> implements IChatRepository {
         ]);
     }
 
-
-
 }
 
 export default new ChatRepository();

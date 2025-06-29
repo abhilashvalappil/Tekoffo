@@ -1,6 +1,6 @@
 
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Globe, Mail, Pencil } from 'lucide-react';
 import ClientProfileSidebar from './ProfileSidebar';
 import { useSelector, useDispatch } from 'react-redux';
@@ -12,6 +12,8 @@ import { profileFormSchema,ProfileFormData } from '../../../utils/validations/Pr
 import ClientNavbar from '../shared/Navbar';
 import { clientNavItems } from '../shared/NavbarItems';
 import Footer from '../../shared/Footer';
+import { fetchActiveJobPosts, fetchClientProfile } from '../../../api';
+import { UserProfileResponse } from '../../../types/userTypes';
 // import { profileFormSchema, ProfileFormData } from './profileFormSchema'; // Assuming schema is in a separate file
 
 interface FormErrors {
@@ -28,6 +30,9 @@ const DisplayProfile = () => {
   const [serverError, setServerError] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [profileData,setProfileData] = useState<UserProfileResponse>();
+  const [activeJobsCount, setActiveJobsCount] = useState<number>();
+  const [completedJobsCount, setCompletedJobsCount] = useState<number>();
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -43,6 +48,25 @@ const DisplayProfile = () => {
     companyName: user?.companyName || '',
     profilePicture: null,
   });
+  
+  const userId = user._id;
+  useEffect(() => {
+        const getTotalSpent = async()=>{
+          if (!userId) return;
+          const profile = await fetchClientProfile(userId)
+          setProfileData(profile)
+        }
+        getTotalSpent()
+      },[userId])
+
+    useEffect(() => {
+          const loadActiveProjects = async() => {
+            const { count, completed } = await fetchActiveJobPosts()
+            setActiveJobsCount(count)
+            setCompletedJobsCount(completed)
+          }
+          loadActiveProjects()
+        },[])
 
   // Handle form input changes
   const handleInputChange = (
@@ -210,16 +234,16 @@ const DisplayProfile = () => {
             {hasProfile && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
                 <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-lg">
-                  <h4 className="text-[#0A142F] font-semibold">Total Projects</h4>
-                  <p className="text-3xl font-bold mt-2 text-gray-900">24</p>
+                  <h4 className="text-[#0A142F] font-semibold">Completed Projects</h4>
+                  <p className="text-3xl font-bold mt-2 text-gray-900">{completedJobsCount}</p>
                 </div>
                 <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-lg">
-                  <h4 className="text-[#0A142F] font-semibold">Success Rate</h4>
-                  <p className="text-3xl font-bold mt-2 text-gray-900">95%</p>
+                  <h4 className="text-[#0A142F] font-semibold">Active Projects</h4>
+                  <p className="text-3xl font-bold mt-2 text-gray-900">{activeJobsCount}</p>
                 </div>
                 <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-lg">
                   <h4 className="text-[#0A142F] font-semibold">Total Spent</h4>
-                  <p className="text-3xl font-bold mt-2 text-gray-900">$48.5k</p>
+                  <p className="text-3xl font-bold mt-2 text-gray-900">{profileData?.total_Spent}</p>
                 </div>
               </div>
             )}

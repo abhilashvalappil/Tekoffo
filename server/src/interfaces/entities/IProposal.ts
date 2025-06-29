@@ -90,3 +90,33 @@ export interface IAppliedProposal{
     fullName: string;
   };
 }
+
+export interface ProposalWithPopulatedData {
+  _id: Types.ObjectId;
+  proposalType: 'freelancer-applied' | string;
+  status:string;
+  coverLetter?:string;
+  proposedBudget:number;
+  duration:string;
+  attachments?:string;
+  createdAt: Date;
+  viewed?:boolean;
+  job: {
+    _id: Types.ObjectId;
+    title: string;
+    description: string;
+  };
+  freelancer: {
+    _id: Types.ObjectId;
+    fullName: string;
+    email: string;
+    profilePicture?: string;
+    country: string;
+    description: string;
+    skills: string[];
+    preferredJobFields: string[];
+    linkedinUrl?: string;
+    githubUrl?: string;
+    portfolioUrl?: string;
+  };
+}

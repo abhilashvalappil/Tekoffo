@@ -44,7 +44,7 @@ export const JobCard = ({
   onViewReviews: (clientId: string) => void; // Add this type
 }) => {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-100 hover:border-gray-200 transition-all duration-200 mb-4 p-6">
+    <div className="bg-grey-50 rounded-lg shadow-sm border border-gray-100 hover:border-gray-200 transition-all duration-200 mb-4 p-6">
       <div className="flex flex-col space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">

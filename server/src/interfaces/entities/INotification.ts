@@ -1,16 +1,17 @@
-import mongoose, { Document,Types } from "mongoose";
+import { Document,Types } from "mongoose";
+import { NotificationType } from "../../types/notificationTypes";
+
 
 export interface INotification extends Document {
-    _id:string;
-    clientId:mongoose.Schema.Types.ObjectId;
-    freelancerId:mongoose.Schema.Types.ObjectId;
-    message: string;
-    read: boolean;
-    createdAt?: Date;
+  senderId: Types.ObjectId;
+  recipientId: Types.ObjectId;
+  type: NotificationType;
+  message: string;
+  isRead: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-export interface CreateNotificationDTO {
-    clientId:mongoose.Schema.Types.ObjectId;
-    freelancerId:mongoose.Schema.Types.ObjectId;
-    message: string;
-}
+ 
+ 
+

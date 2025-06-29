@@ -23,55 +23,6 @@ import { AppliedProposal } from '../../../types/proposalTypes';
 import { useDebounce } from '../../../hooks/customhooks/useDebounce';
 import { Category } from '../../../types/jobTypes';
 
-//* Interface for job data
-// interface Job {
-//   id: string;
-//   // clientId:string;
-//   clientId:{
-//     _id:string;
-//         fullName:string;
-//         profilePicture?:string;
-//         companyName?:string;
-//         country:string;
-//   }
-//   title: string;
-//   category: string;
-//   subcategory: string;
-//   description: string;
-//   requirements: string[];
-//   budget: string;
-//   duration: string;
-//   posted: string;
-//   clientName: string;
-//   clientLocation: string;
-//   clientRating: number;
-//   postedDate: string;
-// }
-
-//* Interface for raw job data from API
-// interface RawJob {
-//   _id: string;
-//   // clientId:string;
-//   clientId:{
-//     _id:string;
-//         fullName:string;
-//         profilePicture?:string;
-//         companyName?:string;
-//         country:string;
-//   }
-//   title: string;
-//   category: string;
-//   subCategory: string;
-//   description: string;
-//   requirements: string[];
-//   budget: number;
-//   duration: string;
-//   updatedAt: string;
-//   clientName: string;
-//   clientLocation: string;
-//   clientRating?: number;
-// }
-
 interface Client {
   id: string;
   fullName: string;
@@ -94,20 +45,6 @@ export interface JobFilters {
   subCategory?: string;
   budgetRange?: string;
 }
-
-// Utility function to calculate "posted" time
-// const getPostedTime = (createdAt: string): string => {
-//   const now = new Date();
-//   const posted = new Date(createdAt);
-//   const diffMs = now.getTime() - posted.getTime();
-//   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-//   const diffDays = Math.floor(diffHours / 24);
-
-//   if (diffHours < 1) return 'Just now';
-//   if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-//   return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-// };
-
  
 const AvailableJobs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -178,25 +115,6 @@ const AvailableJobs: React.FC = () => {
     setFilters(newFilters);
   }, [selectedCategory, selectedSubcategory, budgetRange]);
 
-  // const jobs: Job[] = rawJobs.map((job: JobDataType) => ({
-  //   id: job._id,
-  //   clientId:job.clientId,
-  //   title: job.title  ,
-  //   category: job.category,
-  //   subcategory: job.subCategory,
-  //   description: job.description,
-  //   requirements: job.requirements || [],
-  //   budget: job.budget.toString(),
-  //   duration: job.duration,
-  //   posted: getPostedTime(job.updatedAt),
-  //   clientName: job.clientId.fullName,
-  //   clientLocation: job.clientId.country,
-  //   // clientRating: job.clientId || 4.5,
-  //   postedDate: job.updatedAt || new Date().toISOString(),
-  // }));
-
-  // Get unique categories and subcategories
-
    const loadCategories = async () => {
       try {
         const fetchedCategories = await fetchListedCategories();
@@ -209,27 +127,6 @@ const AvailableJobs: React.FC = () => {
     useEffect(() => {
       loadCategories()
     },[])
-  
-  // const categories = [...new Set(jobs.map((job) => job.category))];
-  // const subcategories = [...new Set(jobs.map((job) => job.subCategory))];
-
-  // Memoized filtered jobs
-  // const filteredJobs = useMemo(() => {
-  //   return jobs.filter((job) => {
-  //     const matchesSearch =
-  //       job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //       job.description.toLowerCase().includes(searchTerm.toLowerCase());
-
-  //     const matchesCategory = !selectedCategory || job.category === selectedCategory;
-  //     const matchesSubcategory = !selectedSubcategory || job.subCategory === selectedSubcategory;
-  //     const matchesBudget =
-  //       (!budgetRange.min || parseInt(job.budget) >= parseInt(budgetRange.min)) &&
-  //       (!budgetRange.max || parseInt(job.budget) <= parseInt(budgetRange.max));
-
-  //     return matchesSearch && matchesCategory && matchesSubcategory && matchesBudget;
-  //   });
-  // }, [jobs, searchTerm, selectedCategory, selectedSubcategory, budgetRange]);
-
  
   const resetFilters = () => {
     setSelectedCategory('');

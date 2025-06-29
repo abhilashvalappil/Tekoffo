@@ -35,7 +35,7 @@ export default function PaymentForm({
   const navigate = useNavigate();
 
   const handlePayment = async () => {
-    if (!stripe || !elements || !proposalData || !totalAmount || !proposalData.freelancerId) {
+    if (!stripe || !elements || !proposalData || !totalAmount || !proposalData.freelancer._id) {
       setError('Invalid proposal data, amount, or Stripe initialization. Please try again.');
       return;
     }
@@ -44,18 +44,20 @@ export default function PaymentForm({
 
     try {
       // Validate proposal data
-      const { _id: proposalId, freelancerId, clientId, jobId } = proposalData;
+      const { _id: proposalId, freelancer, clientId, job } = proposalData;
+      const freelancerId = freelancer._id;
+      const jobId = job._id;
       if (!proposalId || !freelancerId || !clientId || !jobId) {
         throw new Error('Incomplete proposal data.');
       }
 
       const paymentIntentData = {
         proposalId,
-        freelancerId:freelancerId._id,
+        freelancerId:freelancerId,
         amount: amount,
         serviceFee:serviceFee,
         clientId: clientId._id,
-        jobId: jobId._id,
+        jobId: jobId,
       }
       const { clientSecret, transactionId } = await createPaymentIntent(paymentIntentData)
       console.log('console from paymentform',clientSecret, transactionId)

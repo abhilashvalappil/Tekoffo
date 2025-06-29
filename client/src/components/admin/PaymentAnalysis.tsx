@@ -1,15 +1,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { Wallet, ShieldCheck, CreditCard, ChevronLeft, ChevronRight } from 'lucide-react';
-import Sidebar from './Sidebar';
 import { fetchEscrowFunds, fetchPlatformRevenue } from '../../api';
 import { fetchAllTransactions } from '../../api/admin';
 import { TransactionWithUsername } from '../../types/transaction';
 
 const PaymentAnalysis = () => {
-   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    // const [selectedItem, setSelectedItem] = useState('users');
-    // const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [totalRevenue, setTotalRevenue] = useState(0);
     const [EscrowTotal, setEscrowTotal] = useState(0);
     const [transactions, setTransactions] = useState<TransactionWithUsername[]>([]);
@@ -18,11 +14,6 @@ const PaymentAnalysis = () => {
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
-
-    const toggleSidebar = () => {
-    setIsSidebarOpen(prev => !prev);
-  };
-
 
     useEffect(() => {
         const platformRevenu = async () => {
@@ -138,24 +129,17 @@ const PaymentAnalysis = () => {
     };
 
   return (
-    <div className="p-6 ml-64">
-        {/* Sidebar */}
-              {/* <Sidebar
-                selectedItem={selectedItem}
-                setSelectedItem={setSelectedItem}
-                isMobileMenuOpen={isMobileMenuOpen}
-                setIsMobileMenuOpen={setIsMobileMenuOpen}
-              /> */}
-
-               <Sidebar
-                  isOpen={isSidebarOpen}
-                  onToggle={toggleSidebar}
-                />
-
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Payment Analysis</h1>
-
+    <div className="min-h-screen bg-gray-300">
+      <div className="fixed top-0 w-full z-50 bg-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <h1 className="text-2xl font-bold text-gray-900">Payment Analytics</h1>
+          </div>
+        </div>
+      </div>
+      <div className="pt-25 ml-8 mr-10">
       {/* Cards Section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+      <div className=" grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
         {/* Platform Earnings */}
         <div className="bg-white p-6 rounded-xl shadow-md flex items-center justify-between">
           <div>
@@ -298,6 +282,7 @@ const PaymentAnalysis = () => {
             </>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

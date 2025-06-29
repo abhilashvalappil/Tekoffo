@@ -1,5 +1,5 @@
 
-import {IJobService, IUserRepository,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser, CreateGigDTO, IGigRepository, IGig, UpdateGigDTO, IContractRepository,  } from "../interfaces";
+import {IJobService, IUserRepository,ICategory,ICategoryRepository,IJobRepository,IProposalRepository, IUser, CreateGigDTO, IGigRepository, IGig, UpdateGigDTO, IContractRepository, INotificationRepository, INotification,  } from "../interfaces";
 import {MESSAGES} from '../constants/messages'
 import { ConflictError, NotFoundError, UnauthorizedError } from "../errors/customErrors";
 import { JobDataType, JobInputData, JobUpdateData } from '../interfaces/entities/IJob';
@@ -10,8 +10,10 @@ import { ProposalStatus } from "../interfaces/entities/IProposal";
 // import Stripe from "stripe";
 import dotenv from "dotenv";
 dotenv.config();
-// import { v4 as uuidv4 } from 'uuid';
 import { PaginatedResponse } from "../types/commonTypes";
+import { NotificationType, NotificationTypes } from "../types/notificationTypes";
+import { getIO } from "../config/socket";
+import { onlineUsers } from "../utils/socketManager";
 // const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-03-31.basil' });
 
 
@@ -22,15 +24,17 @@ export class JobService implements IJobService{
     private proposalRepository:IProposalRepository;
     private gigRepository: IGigRepository;
     private contractRepository: IContractRepository;
+    private notificationRepository: INotificationRepository;
 
 
-    constructor(categoryRepository:ICategoryRepository, userRepository: IUserRepository, jobRepository: IJobRepository, proposalRepository:IProposalRepository, gigRepository:IGigRepository, contractRepository: IContractRepository){
+    constructor(categoryRepository:ICategoryRepository, userRepository: IUserRepository, jobRepository: IJobRepository, proposalRepository:IProposalRepository, gigRepository:IGigRepository, contractRepository: IContractRepository, notificationRepository: INotificationRepository){
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.jobRepository = jobRepository;
         this.proposalRepository = proposalRepository;
         this.gigRepository = gigRepository;
         this.contractRepository = contractRepository;
+        this.notificationRepository = notificationRepository;
     }
 
     async fetchCategories(): Promise<{categories: ICategory[]}> {
@@ -160,8 +164,8 @@ export class JobService implements IJobService{
         if(!freelancer){
             throw new NotFoundError(MESSAGES.INVALID_USER)
         }
-        const jobExist = await this.jobRepository.findJobById(proposalDetails.jobId.toString());
-        if(!jobExist){
+        const job = await this.jobRepository.findJobById(proposalDetails.jobId.toString());
+        if(!job){
             throw new NotFoundError(MESSAGES.JOB_NOT_FOUND)
         }
         const proposalData = {
@@ -171,10 +175,24 @@ export class JobService implements IJobService{
         }
         
         await this.proposalRepository.createProposal(proposalData)
+
+        const notificationData: Partial<INotification> = {
+            senderId: new Types.ObjectId(freelancerId),
+            recipientId:new Types.ObjectId(proposalDetails.clientId),
+            type:NotificationTypes.PROPOSAL_SUBMITTED,
+            message: `${freelancer.fullName} submitted a proposal for your job "${job.title}".`,
+        }
+        const notification = await this.notificationRepository.createNotification(notificationData)
+        const io = getIO();
+        const recipientSocketId = onlineUsers.get(proposalDetails.clientId.toString());
+        if(recipientSocketId){
+            io.to(recipientSocketId).emit('notification',notification)
+        }
+
         return{message:MESSAGES.JOB_APPLIED}
     }
 
-    async getClientReceivedProposals(clientId:string, page: number, limit: number): Promise<{proposals:PaginatedResponse<IProposal>}> {
+    async getClientReceivedProposals(clientId:string, page: number, limit: number,search?:string,filters?: { status?: string; time?: string}): Promise<{proposals:PaginatedResponse<IProposal>}> {
 
         const userExist = await this.userRepository.findUserById(clientId)
         if(!userExist){
@@ -182,8 +200,8 @@ export class JobService implements IJobService{
         }
         const skip = (page - 1) * limit;
         const [proposals,total] = await Promise.all([
-             this.proposalRepository.findProposals(clientId,skip, limit),
-             this.proposalRepository.countReceivedProposals(clientId),
+             this.proposalRepository.findProposals(clientId,skip, limit, search, filters),
+             this.proposalRepository.countReceivedProposals(clientId, search, filters),
         ])
         return{proposals:{
             data:proposals,
@@ -214,7 +232,6 @@ export class JobService implements IJobService{
     }
 
     async updateProposalStatus(proposalId: string,status: string, userId: string): Promise<{proposal:IProposal | null}> {
-
             const userExist = await this.userRepository.findUserById(userId)
             if(!userExist){
                 throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
@@ -223,7 +240,36 @@ export class JobService implements IJobService{
             if(!proposalExist){
                 throw new NotFoundError(MESSAGES.PROPOSAL_NOT_FOUND)
             }
+            const job = await this.jobRepository.findJobById(proposalExist.jobId.toString())
+            if(!job){
+                throw new NotFoundError(MESSAGES.JOB_NOT_FOUND)
+            }
             const proposal = await this.proposalRepository.updateProposalStatus(proposalId,status as ProposalStatus)
+
+            let type: NotificationType;
+            let message: string;
+
+            if (status === 'accepted'){
+                type = NotificationTypes.PROPOSAL_ACCEPTED;
+                message = `${userExist.fullName} accepted your proposal for the job "${job.title}".`;
+            }else{
+                type = NotificationTypes.PROPOSAL_REJECTED;
+                 message = `${userExist.fullName} rejected your proposal for the job "${job.title}".`;
+            }
+
+            const notificationData: Partial<INotification> = {
+            senderId: new Types.ObjectId(userId),
+            recipientId:new Types.ObjectId(proposalExist.freelancerId),
+            type,
+            message,
+         }
+            const notification = await this.notificationRepository.createNotification(notificationData)
+            const io = getIO();
+            const recipientSocketId = onlineUsers.get(proposalExist.freelancerId.toString());
+            if(recipientSocketId){
+                io.to(recipientSocketId).emit('notification',notification)
+                console.log('Notification emitted to:', recipientSocketId);
+            }
             return {proposal}
         }
 
@@ -343,15 +389,29 @@ export class JobService implements IJobService{
             duration
         }
         await this.proposalRepository.createProposal(proposalData)
+
+        const notificationData: Partial<INotification> = {
+            senderId: new Types.ObjectId(clientId),
+            recipientId:new Types.ObjectId(freelancerId),
+            type:NotificationTypes.JOB_INVITATION,
+            message: `You’ve been invited by ${client.fullName} to apply for the job: "${job.title}".`,
+        }
+        const notification = await this.notificationRepository.createNotification(notificationData)
+        const io = getIO();
+        const recipientSocketId = onlineUsers.get(freelancerId);
+        if(recipientSocketId){
+            io.to(recipientSocketId).emit('notification',notification)
+        }
+
         return{message:MESSAGES.JOB_INVITATION_SENT}
     }
 
-    async getSentInvitations(clientId:string): Promise<{invitations:IProposal[]}> {
+    async getSentInvitations(clientId:string,search?:string,filters?: { status?: string; time?: string}): Promise<{invitations:IProposal[]}> {
         const client = await this.userRepository.findUserById(clientId)
         if(!client){
             throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
         }
-        const invitations = await this.proposalRepository.findInvitationsSent(clientId)
+        const invitations = await this.proposalRepository.findInvitationsSent(clientId, search, filters)
         return{invitations}
     }
 
@@ -392,12 +452,29 @@ export class JobService implements IJobService{
             throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
         }
 
-        const proposalExist = await this.proposalRepository.findProposalById(proposalId);
-        if(!proposalExist){
+        const proposal = await this.proposalRepository.findProposalById(proposalId);
+        if(!proposal){
             throw new NotFoundError(MESSAGES.PROPOSAL_NOT_FOUND)
+        }
+        const job = await this.jobRepository.findJobById(proposal.jobId.toString())
+        if(!job){
+            throw new NotFoundError(MESSAGES.JOB_NOT_FOUND)
         }
         const updatedStatus = ProposalStatus.PENDING;
         await this.proposalRepository.updateProposalStatus(proposalId,updatedStatus)
+
+        const notificationData: Partial<INotification> = {
+            senderId: new Types.ObjectId(freelancerId),
+            recipientId:new Types.ObjectId(proposal.clientId.toString()),
+            type:NotificationTypes.JOB_INVITATION_ACCEPTED,
+            message:  `${freelancer.fullName} accepted your job invitation for "${job.title}".`,
+        }
+        const notification = await this.notificationRepository.createNotification(notificationData)
+        const io = getIO();
+        const recipientSocketId = onlineUsers.get(proposal.clientId.toString())
+        if(recipientSocketId){
+            io.to(recipientSocketId).emit('notification',notification)
+        }
         return{message:MESSAGES.INVITATION_ACCEPTED}
     }
 
@@ -406,12 +483,30 @@ export class JobService implements IJobService{
          if(!freelancer){
             throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
         }
-        const proposalExist = await this.proposalRepository.findProposalById(proposalId);
-        if(!proposalExist){
+        const proposal = await this.proposalRepository.findProposalById(proposalId);
+        if(!proposal){
             throw new NotFoundError(MESSAGES.PROPOSAL_NOT_FOUND)
         }
+        const job = await this.jobRepository.findJobById(proposal.jobId.toString())
+        if(!job){
+            throw new NotFoundError(MESSAGES.JOB_NOT_FOUND)
+        }
+
         const updatedStatus = ProposalStatus.REJECTED;
         await this.proposalRepository.updateProposalStatus(proposalId,updatedStatus)
+
+        const notificationData: Partial<INotification> = {
+            senderId: new Types.ObjectId(freelancerId),
+            recipientId:new Types.ObjectId(proposal.clientId.toString()),
+            type:NotificationTypes.JOB_INVITATION_REJECTED,
+            message:   `${freelancer.fullName} declined your job invitation for "${job.title}".`,
+        }
+        const notification = await this.notificationRepository.createNotification(notificationData)
+        const io = getIO();
+        const recipientSocketId = onlineUsers.get(proposal.clientId.toString())
+        if(recipientSocketId){
+            io.to(recipientSocketId).emit('notification',notification)
+        }
         return{message:MESSAGES.INVITATION_REJECTED}
     }
 }

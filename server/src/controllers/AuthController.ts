@@ -168,6 +168,7 @@ export class AuthController {
           }
 
           const result = await this.authService.googleSignIn(credential);
+          this.cookieHandlerService.setCookie(res, result.accessToken);
           res.status(200).json({
             success: true,
             user: result.user,

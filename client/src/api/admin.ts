@@ -1,18 +1,13 @@
 import API from '../services/api'
 import { adminENDPOINTS } from '../constants/endpointUrl'
-import { FetchUserResponse, fetchedCategories, AddCategoryPayload, EditCategoryPayload } from '../types/admin'
+import { fetchedCategories, AddCategoryPayload, EditCategoryPayload, User } from '../types/admin'
 import { handleApiError } from '../utils/errors/errorHandler'
 import { TransactionWithUsername } from '../types/transaction'
+import { PaginatedResponse } from '../types/commonTypes'
 
-export const fetchUsers = async(page = 1, limit = 3): Promise<{
-    data:FetchUserResponse,
-    meta: { total: number, page: number, pages: number, limit: number }
-}> => {
+export const fetchUsers = async(page?:number, limit?:number,search?: string): Promise<PaginatedResponse<User>> => {
     try {
-        const response = await API.get(
-            adminENDPOINTS.GET_USERS,
-            { params: { page, limit } }
-        );
+        const response = await API.get(adminENDPOINTS.GET_USERS,{ params: { page, limit,search } });
         return response.data;
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -39,23 +34,20 @@ export const addCategory = async(categoryData:Partial<AddCategoryPayload>) => {
 
 export const updateCategory = async(categoryData:Partial<EditCategoryPayload>) => {
     try {
-        console.log('the edittt category datas aree',categoryData)
         const response = await API.put(adminENDPOINTS.UPDATE_CATEGORY,categoryData)
-        console.log('conosle from updatecategoryyyyy',response.data)
         return response.data;
     } catch (error) {
-        console.log('the edittcategory error is :',error)
         throw new Error(handleApiError(error));
     }
 }
 
-export const fetchCategories = async (page = 1, limit = 8): Promise<{
+export const fetchCategories = async (page?:number, limit?:number,search?: string): Promise<{
     data: fetchedCategories[],
     meta: { total: number, page: number, pages: number, limit: number }
   }> => {
     try {
       const result = await API.get(adminENDPOINTS.GET_CATEGORIES, {
-        params: { page, limit },
+        params: { page, limit, search },
       });
       return result.data;
     } catch (error) {
@@ -68,7 +60,6 @@ export const updateCategoryStatus = async(categoryId:string, isListed:boolean): 
     try {
         const response = await API.put(adminENDPOINTS.UPDATE_CATEGORY_STATUS,{categoryId,isListed})
         const updatedCategory = response.data.category;
-        console.log('console from admin.tsss updatecategorystaus',updatedCategory)
         return {
             _id: updatedCategory._id,
             catId: updatedCategory.catId, 
@@ -118,8 +109,16 @@ export const fetchEscrowFunds = async(): Promise<number> => {
 export const fetchAllTransactions = async(): Promise<TransactionWithUsername[]> => {
     try {
         const response = await API.get(adminENDPOINTS.GET_ALL_TRANSACTIONS)
-        console.log('console from fetchTransactions * ==== *',response.data.transactions)
         return response.data.transactions;
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
+
+export const getTotalUsersCountByRole = async(): Promise<{ clientsCount: number; freelancersCount: number }> => {
+    try {
+        const response = await API.get(adminENDPOINTS.GET_TOTAL_CLIENTS_COUNT)
+        return response.data;
     } catch (error) {
         throw new Error(handleApiError(error));
     }

@@ -12,6 +12,8 @@ import { fetchAndUpdateProposal, fetchInvitationsSent, getReceivedProposals } fr
 import { ProposalData, Proposal, Profile } from '../../../types/proposalTypes';
 import { Button } from '@mui/material';
 import { FaCheckCircle } from 'react-icons/fa';
+import { useDebounce } from '../../../hooks/customhooks/useDebounce';
+import { handleApiError } from '../../../utils/errors/errorHandler';
 
 
 const Proposals = () => {
@@ -27,7 +29,7 @@ const Proposals = () => {
   const [selectedProfile, setSelectedProfile] = useState<Profile | null>(null);
   const [proposalData, setProposalData] = useState<ProposalData[]>([]);
   const [sentInvitations, setSentInvitations] = useState<ProposalData[]>([]);
-   
+  const [filters, setFilters] = useState<{ status?: string; time?: string }>({});
   const {
     pagination,
     handlePageChange,
@@ -35,69 +37,78 @@ const Proposals = () => {
   } = usePagination({ total: 0, page: 1, pages: 1, limit: 5 });
 
   const navigate = useNavigate();
+  const debouncedSearchTerm = useDebounce(searchQuery, 500);
 
-  // Fetch received proposals
+  //* Fetch received proposals
   useEffect(() => {
     const loadProposals = async () => {
       try {
-        const response = await getReceivedProposals(pagination.page, pagination.limit);
+        const response = await getReceivedProposals(pagination.page, pagination.limit, debouncedSearchTerm,filters);
         setProposalData(response.data);
         updateMeta(response.meta.total, response.meta.pages);
-        // setTotalCount(response.meta.total);
       } catch (error) {
-        console.error('Error fetching proposals:', error);
+        handleApiError(error)
       }
     };
     loadProposals();
-  }, [pagination.page, pagination.limit,updateMeta]);
+  }, [pagination.page, pagination.limit,debouncedSearchTerm,filters,updateMeta]);
 
-  // Fetch sent invitations
+  //* Fetch sent invitations
   useEffect(() => {
     const loadSentInvitations = async () => {
       try {
-        const invitations = await fetchInvitationsSent();
+        const invitations = await fetchInvitationsSent(debouncedSearchTerm,filters);
         setSentInvitations(invitations);
       } catch (error) {
-        console.error('Error fetching sent invitations:', error);
+        handleApiError(error)
       }
     };
     loadSentInvitations();
-  }, []);
+  }, [pagination.page, pagination.limit,debouncedSearchTerm,filters,updateMeta]);
 
   const mapProposals = (data: ProposalData[], isSent: boolean): Proposal[] => {
     return data.map((item) => ({
       id: item._id.toString(),
       _id: item._id,
       jobId: {
-        _id: item.jobId._id,
-        title: item.jobId.title,
-        description: item.jobId.description,
+        _id: item.job._id,
+        title: item.job.title,
+        description: item.job.description,
       },
       freelancerId: {
-        _id: item.freelancerId._id,
-        fullName: item.freelancerId.fullName,
-        email: item.freelancerId.email,
+        _id: item.freelancer._id,
+        fullName: item.freelancer.fullName,
+        email: item.freelancer.email,
       },
-      title: item.jobId.title,
-      sender: isSent ? 'Your Company' : item.freelancerId.fullName,
-      receiver: isSent ? item.freelancerId.fullName : 'Your Company',
+      title: item.job.title,
+      sender: isSent ? 'Your Company' : item.freelancer.fullName,
+      receiver: isSent ? item.freelancer.fullName : 'Your Company',
       date: new Date(item.createdAt).toISOString().split('T')[0],
       status: item.status as 'pending' | 'accepted' | 'rejected',
       amount: item.proposedBudget,
       proposedBudget: item.proposedBudget,
-      description: isSent ? item.jobId.description : item.coverLetter || 'No cover letter provided',
+      description: isSent ? item.job.description : item.coverLetter || 'No cover letter provided',
       duration: item.duration,
-      senderEmail: item.freelancerId.email,
-      senderProfilePicture: item.freelancerId.profilePicture,
-      senderCountry: item.freelancerId.country,
-      senderDescription: item.freelancerId.description,
-      senderSkills: item.freelancerId.skills,
-      senderPreferredJobFields: item.freelancerId.preferredJobFields,
-      senderLinkedinUrl: item.freelancerId.linkedinUrl,
-      senderGithubUrl: item.freelancerId.githubUrl,
-      senderPortfolioUrl: item.freelancerId.portfolioUrl,
+      senderEmail: item.freelancer.email,
+      senderProfilePicture: item.freelancer.profilePicture,
+      senderCountry: item.freelancer.country,
+      senderDescription: item.freelancer.description,
+      senderSkills: item.freelancer.skills,
+      senderPreferredJobFields: item.freelancer.preferredJobFields,
+      senderLinkedinUrl: item.freelancer.linkedinUrl,
+      senderGithubUrl: item.freelancer.githubUrl,
+      senderPortfolioUrl: item.freelancer.portfolioUrl,
     }));
   };
+
+  useEffect(() => {
+  const newFilters: typeof filters = {};
+
+  if (statusFilter !== 'all') newFilters.status = statusFilter;
+  if (timeFilter !== 'all') newFilters.time = timeFilter;
+
+  setFilters(newFilters);
+}, [statusFilter, timeFilter]);
 
   // Filter proposals
   useEffect(() => {
@@ -115,44 +126,10 @@ const Proposals = () => {
           p.receiver.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter((p) => p.status === statusFilter);
-    }
-
-    // Apply time filter
-    if (timeFilter !== 'all') {
-      const today = new Date();
-      filtered = filtered.filter((p) => {
-        const proposalDate = new Date(p.date);
-        switch (timeFilter) {
-          case 'day':
-            return proposalDate.toDateString() === today.toDateString();
-          case 'week': {
-            const weekAgo = new Date();
-            weekAgo.setDate(today.getDate() - 7);
-            return proposalDate >= weekAgo;
-          }
-          case 'month': {
-            const monthAgo = new Date();
-            monthAgo.setMonth(today.getMonth() - 1);
-            return proposalDate >= monthAgo;
-          }
-          case 'year': {
-            const yearAgo = new Date();
-            yearAgo.setFullYear(today.getFullYear() - 1);
-            return proposalDate >= yearAgo;
-          }
-          default:
-            return true;
-        }
-      });
-    }
-
     setFilteredProposals(filtered);
   }, [activeeTab, searchQuery, statusFilter, timeFilter, proposalData, sentInvitations]);
 
+  
   const viewProposal = (proposal: Proposal) => {
     if (activeeTab === 'received' && !proposal.viewed) {
       setProposalData((prev) =>
@@ -183,7 +160,6 @@ const Proposals = () => {
   };
 
   const handleAcceptProposal = async (proposal: Proposal) => {
-    console.log('console from handleacceptproposal <<<<===>>>>>>>',proposal)
     setProposalData((prev) =>
       prev.map((item) =>
         item._id.toString() === proposal.id ? { ...item, status: 'accepted' } : item
@@ -219,42 +195,45 @@ const Proposals = () => {
     <div className="min-h-screen bg-white text-[#0A142F]">
       <ClientNavbar navItems={clientNavItems} activeTab={activeTab} setActiveTab={setActiveTab} />
        <Toaster position="top-center" />
-      <div className="container mx-auto px-30 py-20">
-        <h1 className="text-3xl font-bold mb-8">Proposal Management</h1>
+      <div className="container mx-auto px-4 sm:px-6 md:px-38 py-20">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center sm:text-left">
+        Proposal Management
+      </h1>
+
 
         {/* Tabs */}
-        <div className="flex mb-6 border-b">
+        <div className="flex flex-wrap justify-center sm:justify-start mb-6 border-b">
           <button
-            className={`pb-2 px-4 font-medium ${activeeTab === 'received' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+            className={`pb-2 px-4 font-medium text-sm sm:text-base ${activeeTab === 'received' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
             onClick={() => setActiveeTab('received')}
           >
             Received Proposals
           </button>
           <button
-            className={`pb-2 px-4 font-medium ${activeeTab === 'sent' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
+            className={`pb-2 px-4 font-medium text-sm sm:text-base ${activeeTab === 'sent' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
             onClick={() => setActiveeTab('sent')}
           >
-            Sent Invitations
+            Invitations Sent 
           </button>
         </div>
 
         {/* Search & Filters */}
-        <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
-          <div className="relative w-full md:w-64">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
+          <div className="relative w-full sm:w-64">
             <input
               type="text"
               placeholder="Search proposals..."
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <div className="relative w-full sm:w-auto">
               <select
-                className="appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full sm:w-auto appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
@@ -262,22 +241,23 @@ const Proposals = () => {
                 <option value="pending">Pending</option>
                 <option value="accepted">Accepted</option>
                 <option value="rejected">Rejected</option>
+                {activeeTab === 'sent' && <option value="invited">Invited</option>}
               </select>
               <Filter className="absolute left-3 top-2.5 text-gray-400" size={18} />
               <ChevronDown className="absolute right-2 top-2.5 text-gray-400" size={18} />
             </div>
 
-            <div className="relative">
+             <div className="relative w-full sm:w-auto">
               <select
-                className="appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full sm:w-auto appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 value={timeFilter}
                 onChange={(e) => setTimeFilter(e.target.value)}
               >
                 <option value="all">All Time</option>
-                <option value="day">Today</option>
+                <option value="today">Today</option>
                 <option value="week">This Week</option>
                 <option value="month">This Month</option>
-                <option value="year">This Year</option>
+                {/* <option value="year">This Year</option> */}
               </select>
               <Calendar className="absolute left-3 top-2.5 text-gray-400" size={18} />
               <ChevronDown className="absolute right-2 top-2.5 text-gray-400" size={18} />
@@ -289,7 +269,7 @@ const Proposals = () => {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           {filteredProposals.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divide-y divide-gray-200 text-sm">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
@@ -363,42 +343,42 @@ const Proposals = () => {
                         </td>
                       )}
                   
-                {activeeTab === 'sent' && (
-  <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
-    {proposal.status === 'pending' ? (
-      <Button
-        variant="contained"
-        size="small"
-        onClick={() => handleAcceptProposal(proposal)}
-        sx={{
-          background: 'linear-gradient(to right, #4ade80, #059669)', // green gradient
-          color: 'white',
-          fontSize: '0.75rem',
-          padding: '4px 12px',
-          borderRadius: '6px',
-          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
-          textTransform: 'none',
-          transition: 'all 0.2s ease-in-out',
-          '&:hover': {
-            background: 'linear-gradient(to right, #34d399, #047857)',
-          },
-        }}
-      >
-        Make Payment
-      </Button>
-    ) : proposal.status === 'accepted' ? (
-      <span
-        className="inline-flex items-center gap-2 px-3 py-1 text-white text-xs font-semibold rounded-md
-                   bg-gradient-to-r from-blue-500 to-indigo-600 shadow-md"
-      >
-        <FaCheckCircle className="text-white" />
-        Paid
-      </span>
-    ) : (
-      <span className="text-gray-500">-</span>
-    )}
-  </td>
-)}
+                    {activeeTab === 'sent' && (
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+                        {proposal.status === 'pending' ? (
+                          <Button
+                            variant="contained"
+                            size="small"
+                            onClick={() => handleAcceptProposal(proposal)}
+                            sx={{
+                              background: 'linear-gradient(to right, #4ade80, #059669)', // green gradient
+                              color: 'white',
+                              fontSize: '0.75rem',
+                              padding: '4px 12px',
+                              borderRadius: '6px',
+                              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
+                              textTransform: 'none',
+                              transition: 'all 0.2s ease-in-out',
+                              '&:hover': {
+                                background: 'linear-gradient(to right, #34d399, #047857)',
+                              },
+                            }}
+                          >
+                            Make Payment
+                          </Button>
+                        ) : proposal.status === 'accepted' ? (
+                          <span
+                            className="inline-flex items-center gap-2 px-3 py-1 text-white text-xs font-semibold rounded-md
+                                      bg-gradient-to-r from-blue-500 to-indigo-600 shadow-md"
+                          >
+                            <FaCheckCircle className="text-white" />
+                            Paid
+                          </span>
+                        ) : (
+                          <span className="text-gray-500">-</span>
+                        )}
+                      </td>
+                    )}
                 
                     </tr>
                   ))}
@@ -611,6 +591,7 @@ const Proposals = () => {
       <Footer />
     </div>
   );
+  
 };
 
 export default Proposals;

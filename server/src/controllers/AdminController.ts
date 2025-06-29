@@ -16,7 +16,6 @@ export class AdminController {
 
     async fetchUsers(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
         try {
-
             const userId = req.userId;
             if(!userId){
                 res.status(Http_Status.FORBIDDEN).json({error:MESSAGES.UNAUTHORIZED})
@@ -25,9 +24,31 @@ export class AdminController {
 
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 3;
+            const search = req.query.search as string;
 
-            const paginatedResponse = await this.adminService.fetchUsers(userId,page,limit);
+            if (isNaN(page) || page < 1){
+                res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid page number" });
+            }
+            if (isNaN(limit) || limit < 1){
+                res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
+            }
+
+            const paginatedResponse = await this.adminService.fetchUsers(userId,page,limit,search);
             res.status(Http_Status.OK).json(paginatedResponse)
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getTotalUsersCountByRole(req:AuthRequest, res:Response, next: NextFunction): Promise<void>{
+        try {
+            const userId = req.userId;
+            if(!userId){
+                res.status(Http_Status.FORBIDDEN).json({error:MESSAGES.UNAUTHORIZED})
+                return;
+            }
+            const {clientsCount,freelancersCount} = await this.adminService.getTotalUsersCountByRole(userId)
+            res.status(Http_Status.OK).json({clientsCount,freelancersCount})
         } catch (error) {
             next(error);
         }
@@ -89,6 +110,7 @@ export class AdminController {
 
           const page = parseInt(req.query.page as string) || 1;
           const limit = parseInt(req.query.limit as string) || 8;
+          const search = req.query.search as string;
 
           if (isNaN(page) || page < 1) {
               res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid page number" });
@@ -97,7 +119,7 @@ export class AdminController {
               res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
              }
       
-          const paginatedResponse = await this.adminService.fetchCategories(userId,page, limit);
+          const paginatedResponse = await this.adminService.fetchCategories(userId,page, limit,search);
     
         res.status(Http_Status.OK).json(paginatedResponse);
         } catch (error) {

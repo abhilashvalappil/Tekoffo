@@ -18,7 +18,7 @@ export interface IJobService {
     getAllJobs(page: number, limit: number,search?: string, filters?: { category?: string; subCategory?: string; budgetRange?: string }): Promise<{jobs:PaginatedResponse<JobDataType>}>
     getClientProfileByJob(clientId:string): Promise<{clientProfile:Partial<IUser> | null}>
     createProposal(freelancerId:string,proposalDetails:proposalDataType): Promise<{message:string}>
-    getClientReceivedProposals(clientId:string, page: number, limit: number): Promise<{proposals:PaginatedResponse<IProposal>}>
+    getClientReceivedProposals(clientId:string, page: number, limit: number,search?:string,filters?: { status?: string; time?: string}): Promise<{proposals:PaginatedResponse<IProposal>}>
     getProposal(proposalId: string, clientId: string): Promise<{proposal:IProposal | null}>
     updateProposalStatus(proposalId: string,status: string, userId: string): Promise<{proposal:IProposal | null}>
     getFreelancerAppliedProposals(freelancerId:string,page:number,limit:number, search?: string, filter?: string): Promise<{proposals: PaginatedResponse<IAppliedProposal>}>
@@ -28,7 +28,7 @@ export interface IJobService {
     deleteFreelancerGig(freelancerId:string, gigId:string): Promise<{message:string}>
     getFreelancersGigs(clientId:string, page: number, limit: number,search?:string): Promise<PaginatedResponse<IGig>>
     createFreelancerJobInvitation(clientId:string,jobId:string,freelancerId:string): Promise<{message:string}>
-    getSentInvitations(clientId:string): Promise<{invitations:IProposal[]}>
+    getSentInvitations(clientId:string, search?:string,filters?: { status?: string; time?: string}): Promise<{invitations:IProposal[]}>
     getJobInvitations(freelancerId:string,page: number, limit: number,search?:string,sortBy?:SortOption): Promise<{invitations:PaginatedResponse<JobInvitationView>}>
     getJobDetails(jobId:string): Promise<{jobData:JobDataType}>
     acceptJobInvitation(freelancerId:string,proposalId:string): Promise<{message:string}>

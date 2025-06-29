@@ -6,6 +6,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../../hooks/customhooks/useAuth';
 
 interface Client {
   fullName: string;
@@ -19,6 +20,8 @@ interface Props {
 }
 
 function ClientProfileSidebar({ client }: Props) {
+
+  const { handleLogout } = useAuth();
 
   return (
     <div className="lg:w-1/4 sticky top-8 h-fit">
@@ -103,7 +106,9 @@ function ClientProfileSidebar({ client }: Props) {
               <Bell size={20} />
               <span>Notifications</span>
             </li> */}
-            <li className="hover:bg-red-50 text-red-500 rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors mt-8">
+            <li 
+            onClick={handleLogout}
+            className="hover:bg-red-50 text-red-500 rounded-xl p-3 flex items-center gap-3 cursor-pointer transition-colors mt-8">
               <LogOut size={20} />
               <span>Logout</span>
             </li>

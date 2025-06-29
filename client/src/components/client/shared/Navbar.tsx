@@ -1,22 +1,16 @@
-// Navbar.tsx
 import React, { useEffect, useState } from 'react';
-import {
-  Briefcase,
-  Menu,
-  X,
-  LogOut,
-  User,
-  Settings,
-} from 'lucide-react';
+import {Briefcase,Menu,X,LogOut,User,Settings,Bell,} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../../redux/services/authService';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { handleApiError } from '../../../utils/errors/errorHandler';
-import { fetchUnreadChatCount } from '../../../api';
+import { fetchNotifications, fetchUnreadChatCount } from '../../../api';
+import NotificationDropdown from './NotificationDropdown';
 import type { JSX } from 'react';
-
+import { INotification } from '../../../types/notificationTypes';
+import socket from '../../../utils/socket';
 
 interface NavItem {
   icon: JSX.Element;
@@ -31,17 +25,43 @@ interface NavbarProps {
   setActiveTab: (tab: string) => void;
 }
 
+
 const ClientNavbar: React.FC<NavbarProps> = ({ navItems, activeTab, setActiveTab }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<INotification[]>([]);
   
 
   const userId = useSelector((state: RootState) => state.auth.user?._id || null);
   const user = useSelector((state: RootState) => state.auth.user);
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+
+  useEffect(() => {
+  const loadNotifications = async () => {
+    try {
+      const data = await fetchNotifications();
+      setNotifications(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  loadNotifications();
+}, []);
+
+    useEffect(() => {
+      socket.on('notification', (notification) => {
+        console.log('🔔 New live notification:', notification);
+        setNotifications((prev) => [notification, ...prev]);
+      });
+
+      return () => {
+        socket.off('notification');
+      };
+    }, []);
+
 
   useEffect(() => {
     const loadUnreadCount = async () =>{
@@ -81,59 +101,79 @@ const ClientNavbar: React.FC<NavbarProps> = ({ navItems, activeTab, setActiveTab
               <span className="ml-2 text-xl font-bold">Tekoffo</span>
             </a>
             <div className="hidden md:flex items-center ml-10 space-x-4">
-  {navItems.map((item) => {
-    const isMessagesTab = item.id === 'messages';
-    return item.path ? (
-      <Link
-        key={item.id}
-        to={item.path}
-        className={`relative flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-          activeTab === item.id
-            ? 'bg-white/20 text-white'
-            : 'text-gray-300 hover:bg-white/10 hover:text-white'
-        }`}
-      >
-        {item.icon}
-        <span className="ml-2">{item.label}</span>
+              {navItems.map((item) => {
+                const isMessagesTab = item.id === 'messages';
+                return item.path ? (
+                  <Link
+                    key={item.id}
+                    to={item.path}
+                    className={`relative flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      activeTab === item.id
+                        ? 'bg-white/20 text-white'
+                        : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    {item.icon}
+                    <span className="ml-2">{item.label}</span>
 
-        {isMessagesTab && unreadCount > 0 && (
-          <span className="absolute top-0 right-0 mt-0.5 ml-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-            {unreadCount}
-          </span>
-        )}
-      </Link>
-    ) : (
-      <button
-        key={item.id}
-        onClick={() => setActiveTab(item.id)}
-        className={`relative flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-          activeTab === item.id
-            ? 'bg-white/20 text-white'
-            : 'text-gray-300 hover:bg-white/10 hover:text-white'
-        }`}
-      >
-        {item.icon}
-        <span className="ml-2">{item.label}</span>
+                    {isMessagesTab && unreadCount > 0 && (
+                      <span className="absolute top-0 right-0 mt-0.5 ml-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </Link>
+                ) : (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`relative flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      activeTab === item.id
+                        ? 'bg-white/20 text-white'
+                        : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    {item.icon}
+                    <span className="ml-2">{item.label}</span>
 
-        {isMessagesTab && unreadCount > 0 && (
-          <span className="absolute top-0 right-0 mt-0.5 ml-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-            {unreadCount}
-          </span>
-        )}
-      </button>
-    );
-  })}
-</div>
-
+                    {isMessagesTab && unreadCount > 0 && (
+                      <span className="absolute top-0 right-0 mt-0.5 ml-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="hidden md:flex items-center space-x-6">
-            {/* <button className="text-gray-300 hover:text-white relative">
+            <div className="relative">
+            <button
+              onClick={() => setIsNotifOpen((prev) => !prev)}
+              className="text-gray-300 hover:text-white relative"
+            >
               <Bell className="w-6 h-6" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                2
-              </span>
-            </button> */}
+              {notifications.filter(n => !n.isRead).length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {notifications.filter(n => !n.isRead).length}
+                </span>
+              )}
+            </button>
+
+            {/* <NotificationDropdown isOpen={isNotifOpen} notifications={notifications} /> */}
+            <NotificationDropdown
+                isOpen={isNotifOpen}
+                notifications={notifications}
+                setNotifications={setNotifications}
+                onClose={() => setIsNotifOpen(false)}
+                // onMarkAllAsRead={() => {
+                //   const updated = notifications.map(n => ({ ...n, isRead: true }));
+                //   setNotifications(updated);
+                //   setUnreadCount(0);
+                // }}
+              />
+          </div>
+
             <div className="relative">
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}

@@ -66,7 +66,7 @@ export interface ProposalData {
     attachments?:string;
     createdAt:string;
     viewed?:boolean;
-    jobId: {
+    job: {
         _id: string;
         title: string;
         description: string;
@@ -75,7 +75,7 @@ export interface ProposalData {
         _id: string;
         fullName: string;
     };
-    freelancerId: {
+    freelancer: {
         _id: string;
         fullName: string;
         email:string;
@@ -137,22 +137,6 @@ export interface JobInvitationView {
   totalReviews: number;
 }
 
-// export interface AppliedProposal {
-//   _id: string;
-//   jobId: {
-//     _id: string;
-//     title: string;
-//   };
-//   clientId: {
-//     _id: string;
-//     fullName: string;
-//   };
-//   proposedBudget: number;
-//   proposalType: string;
-//   duration: string;
-//   status: 'accepted' | 'rejected' | 'pending';
-//   createdAt: string;
-// }
 
 export interface AppliedProposal {
    _id: string;               // ObjectId as string
@@ -180,3 +164,7 @@ export interface AppliedProposal {
 }
 
 
+export type ProposalFilters = {
+  status?: string;
+  time?: string;
+};

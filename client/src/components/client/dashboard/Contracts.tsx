@@ -132,9 +132,9 @@ const Contracts = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {contracts.map((contract) => (
                   <tr key={contract._id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap">{contract.jobId.title}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">{contract.freelancerId.fullName}</td>
-                    <td className="px-4 py-3 whitespace-nowrap">{new Date(contract.startedAt).toLocaleDateString()}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">{contract.job.title}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">{contract.freelancer.fullName}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">{new Date(contract.createdAt).toLocaleDateString()}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {contract.completedAt ? new Date(contract.completedAt).toLocaleDateString() : 'N/A'}
                     </td>
@@ -177,7 +177,7 @@ const Contracts = () => {
                           {reviews.some(
                             (review) =>
                               review.reviewerId === user?._id &&
-                              review.reviewedUserId === contract.freelancerId._id &&
+                              review.reviewedUserId === contract.freelancer._id &&
                               review.contractId === contract._id
                           ) ? (
                             <span className="text-xs text-green-600 font-medium">Review Submitted</span>
@@ -194,7 +194,7 @@ const Contracts = () => {
                                 open={isOpen}
                                 onClose={() => setIsOpen(false)}
                                 onSubmit={(reviewData) =>
-                                  handleReviewSubmit(contract.freelancerId._id, reviewData, contract._id)
+                                  handleReviewSubmit(contract.freelancer._id, reviewData, contract._id)
                                 }
                               />
                             </>
@@ -205,7 +205,7 @@ const Contracts = () => {
                     <td className="px-4 py-3 whitespace-nowrap">
                       {user?._id && (
                         <button>
-                          <ChatButton senderId={user._id} receiverId={contract.freelancerId._id} />
+                          <ChatButton senderId={user._id} receiverId={contract.freelancer._id} />
                         </button>
                       )}
                     </td>

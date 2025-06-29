@@ -186,8 +186,6 @@ export class JobController {
     async getClientProfileByJob(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
         try {
             const {clientId} = req.query;
-            // console.log('console from usercontroller getClientProfileByJob',clientId)
-
             if(typeof clientId !== 'string' || !clientId){
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.CLIENT_ID_MISSING})
                 return;
@@ -215,7 +213,7 @@ export class JobController {
                 };
                 
             const file = req.file;
-            console.log('Uploaded fileeeeeee:', file);
+            // console.log('Uploaded fileeeeeee:', file);
             const {message} = await this.jobService.createProposal(freelancerId,{
                 ...proposalDetails,
                 attachments:file ? file : undefined
@@ -236,6 +234,9 @@ export class JobController {
 
                 const page = parseInt(req.query.page as string) || 1;
                 const limit = parseInt(req.query.limit as string) || 8;
+                const search = req.query.search as string;
+                const status = req.query.status as string;
+                const time = req.query.time as string;
 
                 if (isNaN(page) || page < 1) {
                     res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid page number" });
@@ -244,7 +245,7 @@ export class JobController {
                     res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
                 }
 
-                const { proposals } = await this.jobService.getClientReceivedProposals(clientId,page,limit)
+                const { proposals } = await this.jobService.getClientReceivedProposals(clientId,page,limit,search,{status,time})
                 res.status(Http_Status.OK).json(proposals);
             } catch (error) {
                 next(error)
@@ -430,7 +431,12 @@ export class JobController {
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            const {invitations} = await this.jobService.getSentInvitations(clientId)
+
+            const search = req.query.search as string;
+            const status = req.query.status as string;
+            const time = req.query.time as string;
+
+            const {invitations} = await this.jobService.getSentInvitations(clientId,search,{status,time})
             res.status(Http_Status.OK).json({invitations})
         } catch (error) {
             next(error)
@@ -485,7 +491,7 @@ export class JobController {
                 return;
             }
             const proposalId = req.body.proposalId;
-            const message = await this.jobService.acceptJobInvitation(freelancerId,proposalId)
+            const {message} = await this.jobService.acceptJobInvitation(freelancerId,proposalId)
             res.status(Http_Status.OK).json({message})
         } catch (error) {
             next(error)

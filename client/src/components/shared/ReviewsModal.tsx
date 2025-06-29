@@ -3,18 +3,6 @@ import { useState } from "react";
 import { Star, X } from "lucide-react";
 import { IFrontendPopulatedReview } from "../../types/review";
 
-// interface Review {
-//   _id: string;
-//   reviewerId: {
-//     fullName: string;
-//     profilePicture: string;
-//   };
-//   rating: number;
-//   reviewText: string;
-//   createdAt?: string;
-//   helpful?: number;
-// }
-
 interface ReviewsModalProps {
   isOpen: boolean;
   onClose: () => void;

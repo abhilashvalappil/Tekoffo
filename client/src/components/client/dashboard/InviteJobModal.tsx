@@ -55,11 +55,11 @@ export default function InviteToJobModal({
         // Filter invitations for the current freelancer and extract job IDs
         const jobIdsInvitedTo = invitations
           .filter(invitation => {
-            const invitationFreelancerId = extractId(invitation.freelancerId);
+            const invitationFreelancerId = extractId(invitation.freelancer._id);
             console.log('Comparing freelancer IDs:', invitationFreelancerId, 'vs', freelancerId);
             return invitationFreelancerId === freelancerId;
           })
-          .map(invitation => extractId(invitation.jobId));
+          .map(invitation => extractId(invitation.job._id));
         
         console.log('Job IDs already invited to for this freelancer:', jobIdsInvitedTo);
         setInvitedJobs(jobIdsInvitedTo);

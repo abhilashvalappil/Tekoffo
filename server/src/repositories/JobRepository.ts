@@ -155,7 +155,6 @@ class JobRepository extends BaseRepository<JobDataType> implements IJobRepositor
                 query.budget = { $gte: min, $lte: max };
             }
         }
-
         return (
           (await this 
             .find(query, { skip, limit, sort: { createdAt: -1 } })  

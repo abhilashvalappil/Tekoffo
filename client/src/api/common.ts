@@ -6,6 +6,7 @@ import {SingUpFormData,Passwords} from '../types/auth'
 import { handleApiError } from '../utils/errors/errorHandler'
 import { IFrontendPopulatedReview, IReview } from '../types/review'
 import { ChatPartner, SocketMessage } from '../types/messageTypes'
+import { INotification } from '../types/notificationTypes'
  
 
 export const signUp = async(userData:SingUpFormData) => {
@@ -81,6 +82,32 @@ export const fetchUnreadChatCount = async(): Promise<number> => {
         throw new Error(handleApiError(error));
     }
 }
+
+export const fetchNotifications = async(): Promise<INotification[]> => {
+    try {
+        const response = await API.get(userENDPOINTS.GET_NOTIFICATIONS)
+        return response.data.notifications;
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
+
+export const markNotificationAsRead = async(notificationId: string): Promise<void> => {
+    try {
+        await API.put(userENDPOINTS.MARK_AS_READ(notificationId))
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
+
+export const markAllNotificationsAsRead = async(): Promise<void> => {
+    try {
+        await API.put(userENDPOINTS.MARK_ALL_NOTIFICATIONS_AS_READ)
+    } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
+
 
 
  

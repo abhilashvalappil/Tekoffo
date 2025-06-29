@@ -20,6 +20,7 @@ import { UserProfileResponse } from '../../../../types/userTypes';
 import { IFrontendPopulatedReview } from '../../../../types/review';
 import { usePagination } from '../../../../hooks/customhooks/usePagination';
 import { useDebounce } from '../../../../hooks/customhooks/useDebounce';
+import { handleApiError } from '../../../../utils/errors/errorHandler';
 
 
 export default function JobInvitationsPage() {
@@ -58,11 +59,15 @@ export default function JobInvitationsPage() {
   }, [pagination.page, pagination.limit,updateMeta,debouncedSearchTerm,sortOption]);
 
   const handleAccept = async(id: string) => {
-    setInvitations(invitations.map(invite => 
-      invite._id === id ? { ...invite, status: 'invited' } : invite
-    ));
-    const message = await acceptInvitation(id)
-    toast.success(message)
+    try{
+      setInvitations(invitations.map(invite => 
+        invite._id === id ? { ...invite, status: 'accepted' } : invite
+      ));
+      const message = await acceptInvitation(id)
+      toast.success(message)
+    }catch(error){
+      handleApiError(error)
+    }
   };
 
   const handleReject = async(id: string) => {
@@ -85,12 +90,9 @@ export default function JobInvitationsPage() {
     // setSelectedClientName('');
   };
 
-  // Add this function to handle viewing reviews
   const handleViewReviews = async(clientId: string) => {
     try {
-      // You'll need to create this API function to fetch client reviews
       const reviews = await fetchReviews(clientId);
-      
       setClientReviews(reviews);
       setIsReviewsModalOpen(true);
     } catch (error) {
@@ -106,7 +108,6 @@ export default function JobInvitationsPage() {
 
   const handleViewDetails = async(id: string) => {
     const jobData = await fetchJobData(id)
-    console.log('console from jobinvitation fetch jobdetailss : ',jobData)
     setSelectedJob(jobData)
     setIsModalOpen(true);
   };

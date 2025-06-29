@@ -2,7 +2,7 @@ import API from '../services/api'
 import { userENDPOINTS } from '../constants/endpointUrl'
 import { fetchedCategories } from '../types/admin'
 import { FreelancerData, Job, JobFormData } from '../types/userTypes'
-import { ProposalData } from '../types/proposalTypes'
+import { ProposalData, ProposalFilters } from '../types/proposalTypes'
 import { handleApiError } from '../utils/errors/errorHandler'
 import { PaymentIntentPayload } from '../types/paymentTypes'
 import { PaginatedResponse } from '../types/commonTypes'
@@ -63,9 +63,9 @@ export const getAllFreelancers = async(): Promise<FreelancerData[]> =>{
     }
 }
 
-export const getReceivedProposals = async(page:number, limit:number): Promise<PaginatedResponse<ProposalData>> => {
+export const getReceivedProposals = async(page:number, limit:number,search?: string, filters?:ProposalFilters): Promise<PaginatedResponse<ProposalData>> => {
     try {
-        const response = await API.get(userENDPOINTS.GET_RECEIVED_PROPOSALS,{params:{page,limit}})
+        const response = await API.get(userENDPOINTS.GET_RECEIVED_PROPOSALS,{params:{page,limit,search, ...filters}})
         return response.data
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -143,9 +143,9 @@ export const inviteFreelancerToJob = async(jobId:string, freelancerId:string): P
     }
 }
 
-export const fetchInvitationsSent = async(): Promise<ProposalData[]> => {
+export const fetchInvitationsSent = async(search?: string, filters?:ProposalFilters): Promise<ProposalData[]> => {
     try {
-        const response = await API.get(userENDPOINTS.GET_INVITATIONS_SENT)
+        const response = await API.get(userENDPOINTS.GET_INVITATIONS_SENT,{params:{search, ...filters}})
         return response.data.invitations;
     } catch (error) {
         throw new Error(handleApiError(error));

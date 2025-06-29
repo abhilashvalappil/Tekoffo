@@ -128,4 +128,16 @@ export class ChatController {
         }
     }
 
+    // async getNotifications(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
+    //     try {
+    //         const userId = req.userId;
+    //         if(!userId){
+    //             res.status(Http_Status.FORBIDDEN).json({error:MESSAGES.UNAUTHORIZED})
+    //             return;
+    //         }
+    //     } catch (error) {
+    //         next(error)
+    //     }
+    // }
+
 }

@@ -2,9 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import { Users, Briefcase, DollarSign, TrendingUp, Eye } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import Sidebar from './Sidebar';
+import {Sidebar} from './Sidebar';
 import { fetchMonthlyRevenueStats, fetchPlatformRevenue, fetchTotalActiveJobsCount, fetchUsers } from '../../api';
-// import { useJobs } from '../../hooks/customhooks/useJobs';
+import { useJobs } from '../../hooks/customhooks/useJobs';  
+import { userENDPOINTS } from '../../constants/endpointUrl';
 
 const AdminDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -12,7 +13,7 @@ const AdminDashboard = () => {
   const [totalJobs, setTotalJobs] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [revenueData, setRevenueData] = useState([]);
-
+  const { jobs } = useJobs(userENDPOINTS.GET_POSTED_JOBS, 1, 5); 
    const toggleSidebar = () => {
     setIsSidebarOpen(prev => !prev);
   };
@@ -66,19 +67,6 @@ const AdminDashboard = () => {
     { title: 'Growth Rate', value: '18.2%', change: '+5%', icon: TrendingUp, color: 'bg-orange-500' }
   ];
 
-  const recentJobs = [
-    { id: 1, title: 'Full Stack Developer', client: 'TechCorp', budget: '$5,000', status: 'active' },
-    { id: 2, title: 'UI/UX Designer', client: 'StartupXYZ', budget: '$2,500', status: 'pending' },
-    { id: 3, title: 'Content Writer', client: 'BlogMedia', budget: '$800', status: 'completed' },
-    { id: 4, title: 'Mobile App Developer', client: 'AppStudio', budget: '$8,000', status: 'active' }
-  ];
-
-  // const topFreelancers = [
-  //   { name: 'Sarah Johnson', rating: 4.9, jobs: 127, earnings: '$45,230' },
-  //   { name: 'Mike Chen', rating: 4.8, jobs: 98, earnings: '$38,950' },
-  //   { name: 'Elena Rodriguez', rating: 4.9, jobs: 156, earnings: '$52,100' }
-  // ];
-
   const StatCard = ({ stat }) => {
     const Icon = stat.icon;
     return (
@@ -87,7 +75,7 @@ const AdminDashboard = () => {
           <div>
             <p className="text-gray-600 text-sm">{stat.title}</p>
             <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-            <p className="text-green-600 text-sm">{stat.change} from last month</p>
+            {/* <p className="text-green-600 text-sm">{stat.change}  </p> */}
           </div>
           <div className={`${stat.color} p-3 rounded-lg`}>
             <Icon className="w-6 h-6 text-white" />
@@ -99,7 +87,7 @@ const AdminDashboard = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
+      case 'open': return 'bg-green-100 text-green-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'completed': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -108,12 +96,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen ml-64 bg-gray-300">
-      {/* <Sidebar
-        selectedItem={selectedItem}
-        setSelectedItem={setSelectedItem}
-        isMobileMenuOpen={isMobileMenuOpen}
-        setIsMobileMenuOpen={setIsMobileMenuOpen}
-      /> */}
        <Sidebar
         isOpen={isSidebarOpen}
         onToggle={toggleSidebar}
@@ -187,11 +169,11 @@ const AdminDashboard = () => {
               <Eye className="w-5 h-5 text-gray-500" />
             </div>
             <div className="space-y-4">
-              {recentJobs.map((job) => (
-                <div key={job.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+              {jobs.map((job) => (
+                <div key={job._id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
                   <div>
                     <h3 className="font-medium text-gray-900">{job.title}</h3>
-                    <p className="text-sm text-gray-600">{job.client}</p>
+                    <p className="text-sm text-gray-600">{job.clientId.fullName}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-medium text-gray-900">{job.budget}</p>

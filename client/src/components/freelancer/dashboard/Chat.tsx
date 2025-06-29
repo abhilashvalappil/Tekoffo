@@ -443,7 +443,6 @@ const handleRemoveMedia = () => {
 
  
   return (
-    // <div className="flex h-screen bg-white">
     <div className="min-h-screen bg-white flex flex-col">
        <div className="flex flex-1">
       {user && user.role === 'freelancer' ?(
@@ -466,7 +465,8 @@ const handleRemoveMedia = () => {
       />
       )}
       {/* Sidebar */}
-      <div className="w-1/3 h-[90vh] border-r border-gray-300 p-18 overflow-y-auto">
+      <div className="flex py-15 flex-1 h-[calc(100vh-64px)]">
+      <div className="w-1/3 border-r border-gray-300 p-4 overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">Messages</h2>
         <div className="space-y-3">
           {chats.map((chat) => (
@@ -506,8 +506,9 @@ const handleRemoveMedia = () => {
       </div>
 
       {/* Chat Window */}
-      <div className="p-15 flex-1 flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-gray-300">
+      <div className="p-15 flex-1 flex flex-col overflow-hidden">
+        {/* <div className="flex items-center justify-between p-4 border-b border-gray-300"> */}
+        <div className="fixed top-14 left-1/3 right-0 bg-gray-200 z-10 flex items-center justify-between p-4 border-b border-gray-300">
           <div className="flex items-center space-x-2">
             {selectedChat?.contact ? (
               <>
@@ -678,6 +679,7 @@ const handleRemoveMedia = () => {
             </div>
           </div>
         )}
+      </div>
       </div>
       </div>
       <Footer />

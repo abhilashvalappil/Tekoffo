@@ -27,15 +27,53 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     //   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
     // });
     const pc = new RTCPeerConnection({
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        {
-          urls: 'turn:openrelay.metered.ca:80',
-          username: 'openrelayproject',
-          credential: 'openrelayproject',
-        },
-      ],
-    });
+  iceServers: [
+    {
+      urls: "stun:bn-turn1.xirsys.com"
+    },
+    {
+      urls: "turn:bn-turn1.xirsys.com:80?transport=udp",
+      username: "Ja-V271T6aP605_jPbiEOJ5nOEGKsQT563HZAtVQJcPsLHySUSyXoOlsjp63Bv2wAAAAAGhhPXZhYmhp",
+      credential: "bcc9a060-54eb-11f0-aebe-0242ac140004"
+    },
+    {
+      urls: "turn:bn-turn1.xirsys.com:3478?transport=udp",
+      username: "Ja-V271T6aP605_jPbiEOJ5nOEGKsQT563HZAtVQJcPsLHySUSyXoOlsjp63Bv2wAAAAAGhhPXZhYmhp",
+      credential: "bcc9a060-54eb-11f0-aebe-0242ac140004"
+    },
+    {
+      urls: "turn:bn-turn1.xirsys.com:80?transport=tcp",
+      username: "Ja-V271T6aP605_jPbiEOJ5nOEGKsQT563HZAtVQJcPsLHySUSyXoOlsjp63Bv2wAAAAAGhhPXZhYmhp",
+      credential: "bcc9a060-54eb-11f0-aebe-0242ac140004"
+    },
+    {
+      urls: "turn:bn-turn1.xirsys.com:3478?transport=tcp",
+      username: "Ja-V271T6aP605_jPbiEOJ5nOEGKsQT563HZAtVQJcPsLHySUSyXoOlsjp63Bv2wAAAAAGhhPXZhYmhp",
+      credential: "bcc9a060-54eb-11f0-aebe-0242ac140004"
+    },
+    {
+      urls: "turns:bn-turn1.xirsys.com:443?transport=tcp",
+      username: "Ja-V271T6aP605_jPbiEOJ5nOEGKsQT563HZAtVQJcPsLHySUSyXoOlsjp63Bv2wAAAAAGhhPXZhYmhp",
+      credential: "bcc9a060-54eb-11f0-aebe-0242ac140004"
+    },
+    {
+      urls: "turns:bn-turn1.xirsys.com:5349?transport=tcp",
+      username: "Ja-V271T6aP605_jPbiEOJ5nOEGKsQT563HZAtVQJcPsLHySUSyXoOlsjp63Bv2wAAAAAGhhPXZhYmhp",
+      credential: "bcc9a060-54eb-11f0-aebe-0242ac140004"
+    }
+  ]
+});
+
+    // const pc = new RTCPeerConnection({
+    //   iceServers: [
+    //     { urls: 'stun:stun.l.google.com:19302' },
+    //     {
+    //       urls: 'turn:openrelay.metered.ca:80',
+    //       username: 'openrelayproject',
+    //       credential: 'openrelayproject',
+    //     },
+    //   ],
+    // });
 
 
     //* Listen for remote tracks

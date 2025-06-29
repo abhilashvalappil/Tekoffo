@@ -2,6 +2,7 @@ import Category from '../models/CategoryModel';
 import { ICategory, ICategoryRepository,createCategoryDTO } from '../interfaces';
 import BaseRepository from './BaseRepository';
 import {  } from '../interfaces';
+import { FilterQuery } from 'mongoose';
 
 
 class CategoryRepository extends BaseRepository<ICategory> implements ICategoryRepository {
@@ -51,12 +52,28 @@ class CategoryRepository extends BaseRepository<ICategory> implements ICategoryR
         return await this.findById(categoryId);
       }
 
-    async getAllCategories(skip: number, limit: number): Promise<ICategory[]> {
-        return await this.find({}, { skip, limit, sort: { createdAt: -1 } }) || [];  
+    async getAllCategories(skip: number, limit: number,search?: string): Promise<ICategory[]> {
+        const query: FilterQuery<ICategory> = {};
+        if(search && search.trim()){
+           const searchRegex = new RegExp(search,'i');
+           query.$or = [
+            {name: searchRegex},
+            {subCategories: searchRegex}
+          ]
+        }
+        return await this.find(query, { skip, limit, sort: { createdAt: -1 } }) || [];  
       }
 
-      async countCategories(): Promise<number> {
-        return await this.count();   
+      async countCategories(search?: string): Promise<number> {
+        const query: FilterQuery<ICategory> = {};
+        if (search && search.trim()) {
+          const searchRegex = new RegExp(search, 'i');
+          query.$or = [
+            { name: searchRegex },
+            { subCategories: searchRegex },  
+          ];
+        }
+        return await this.count(query);  
       }
       
 

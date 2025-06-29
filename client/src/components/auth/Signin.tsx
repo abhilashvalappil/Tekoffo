@@ -25,9 +25,8 @@ const SignIn = () => {
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
 
-    const {loading } = useSelector((state: RootState) => state.auth);
+  const {loading } = useSelector((state: RootState) => state.auth);
     
-
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     identifier: '',

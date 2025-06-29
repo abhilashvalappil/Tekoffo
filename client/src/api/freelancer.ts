@@ -195,7 +195,6 @@ export const fetchChatContacts = async(): Promise<Contact[]> => {
 export const fetchChatMessages = async (chatId:string): Promise<SocketMessage[]> => {
   try {
       const response = await API.get(userENDPOINTS.GET_MESSAGES,{params:{chatId}});
-    //   console.log('console from fetchChatMessages',response.data.messages)
       return response.data.messages;
   } catch (error) {
     throw new Error(handleApiError(error));
@@ -204,7 +203,6 @@ export const fetchChatMessages = async (chatId:string): Promise<SocketMessage[]>
 
 export const markMessagesAsRead = async(chatId:string) => {
     try {
-        console.log('console from markreaddddd',chatId)
          await API.put(userENDPOINTS.MARK_MESSAGES_AS_READ,{chatId})
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -232,7 +230,6 @@ export const withdrawAmount = async(amount:number): Promise<string> => {
 export const fetchTransactions = async(page:number,limit:number): Promise<PaginatedResponse<ITransaction>> => {
     try {
         const response = await API.get(userENDPOINTS.GET_TRANSACTIONS,{params:{page, limit}})
-        console.log(';l@@@@@@@@@@@@@@llllllllllllll=======',response.data.transactions)
         return response.data.transactions;
     } catch (error) {
         throw new Error(handleApiError(error));

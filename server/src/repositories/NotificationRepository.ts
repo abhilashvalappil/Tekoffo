@@ -1,20 +1,18 @@
 import Notification from '../models/NotificationModel';
-import { INotification,INotificationRepository, CreateNotificationDTO } from '../interfaces';
+import { INotification,INotificationRepository } from '../interfaces';
 import BaseRepository from './BaseRepository';
 import { UpdateResult } from 'mongoose';
  
-
-
 class NotificationRepository extends BaseRepository<INotification> implements INotificationRepository {
     constructor(){
         super(Notification)
     }
-    async createNotification(notification:CreateNotificationDTO):Promise<INotification> {
+    async createNotification(notification:Partial<INotification>):Promise<INotification> {
         return await this.create(notification)
     }
 
     async findNotifications(userId:string): Promise<INotification[]>{
-        return await this.find({freelancerId:userId})
+        return await this.find({recipientId:userId}).sort({ createdAt: -1 })
     }
 
     async findNotificationById(id:string): Promise<INotification | null>{
@@ -22,11 +20,11 @@ class NotificationRepository extends BaseRepository<INotification> implements IN
     }
 
     async updateNotification(id:string): Promise<INotification | null> {
-        return await this.updateById(id,{read:true})
+        return await this.updateById(id,{isRead:true})
     }
 
-    async updateAllNotifications(ids: string[]): Promise<UpdateResult> {
-        return await this.updateMany({ _id: { $in: ids } }, { read: true });
+    async updateAllNotifications(userId: string): Promise<UpdateResult> {
+        return await this.updateMany({recipientId:userId}, { isRead: true });
       }
 }
 

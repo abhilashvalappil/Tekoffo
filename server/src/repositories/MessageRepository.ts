@@ -1,6 +1,6 @@
-import { Types, UpdateResult } from 'mongoose';
+import { Types } from 'mongoose';
 import Message from '../models/MessageModel'
-import {ChatContactPreview, IMessage, IMessageRepository, MessagePayload } from '../interfaces';
+import { IMessage, IMessageRepository } from '../interfaces';
 import BaseRepository from './BaseRepository';
 
 

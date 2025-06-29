@@ -1,29 +1,45 @@
-import mongoose, { Schema, Types } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import { INotification } from "../interfaces";
 
 const NotificationSchema: Schema<INotification> = new Schema({
-    clientId: {
+    senderId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    freelancerId: {
+    recipientId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
+    },
+    type: {
+      type: String,
+      required: true,
+      enum: [
+        'proposal-received',
+        'proposal-accepted',
+        'proposal-rejected',
+        'job-invitation',
+        'job-invitation-accepted',
+        'job-invitation-rejected',
+        'job-submitted',
+        'message',
+        'payment-success',
+        'payment-released',
+        'review-received',
+        'admin-alert',
+      ],
     },
     message: {
         type:String,
         required:true
     },
-    read:{
+    isRead:{
         type:Boolean,
         default:false
     },
-    createdAt:{
-        type:Date,
-        default: Date.now
-    }
-})
+},
+{ timestamps: true }
+)
 
 export default mongoose.model<INotification>('Notification', NotificationSchema);

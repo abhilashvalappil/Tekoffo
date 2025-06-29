@@ -10,10 +10,8 @@ export interface ICategoryRepository {
     findCategoryById(catId: string): Promise<ICategory | null>;
     findSubCategoriesMatch(subCategories: string[]): Promise<ICategory | null>
     SubCategoriesMatch(subCategories: string[], id: string): Promise<ICategory | null>
-    // findSubCategoriesMatch(subcategories: string[]): Promise<ICategory | null>;
-    // getAllCategories(): Promise<ICategory[]>
-    getAllCategories(skip: number, limit: number): Promise<ICategory[]>
+    getAllCategories(skip: number, limit: number,search?: string): Promise<ICategory[]>
     updateCategoryStatus(categorId: string, isListed: boolean): Promise<ICategory | null>;
     getListedCategories(): Promise<ICategory[]>
-    countCategories(): Promise<number>
+    countCategories(search?: string): Promise<number>
 }
