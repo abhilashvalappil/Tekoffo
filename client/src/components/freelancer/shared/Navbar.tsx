@@ -112,7 +112,6 @@ const Navbar: React.FC<NavbarProps> = ({
               )}
             </button>
 
-            {/* <NotificationDropdown isOpen={isNotifOpen} notifications={notifications} /> */}
             <NotificationDropdown
                 isOpen={isNotifOpen}
                 notifications={notifications}
