@@ -1,4 +1,7 @@
 // src/config/index.ts
+import dotenv from 'dotenv';
+dotenv.config();
+
 export default {
     USER_EMAIL: process.env.USER_EMAIL,
     USER_PASS: process.env.USER_PASS,

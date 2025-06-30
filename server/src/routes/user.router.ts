@@ -30,6 +30,8 @@ import MessageRepository from "../repositories/MessageRepository";
 import ChatRepository from "../repositories/ChatRepository";
 import TransactionRepository from "../repositories/TransactionRepository";
 import PlatformRepository from "../repositories/PlatformRepository";
+import dotenv from 'dotenv';
+dotenv.config();
 
 const userRouter = Router();
 
