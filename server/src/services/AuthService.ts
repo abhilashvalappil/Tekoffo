@@ -8,7 +8,8 @@ import { redisClient } from "../config/redis";
 import { MESSAGES } from '../constants/messages';
 import { JWT_SECRET } from "../config";
 import { ValidationError,ConflictError,NotFoundError,UnauthorizedError } from "../errors/customErrors";
-
+import dotenv from 'dotenv';
+dotenv.config();
 
  
 
@@ -265,18 +266,12 @@ export class AuthService implements IAuthService {
               throw new UnauthorizedError(MESSAGES.ACCOUNT_BLOCKED);
              }
           }
-          
-    
-          // const userResponse: IUserResponse = {
-          //   _id: user._id,
-          //   username: user.username,
-          //   email: user.email,
-          //   role: user.role,
-          // };
+     
           const accessToken = this.jwtService.generateAccessToken(user._id,user.role,user.email)
           const refreshToken = this.jwtService.generateRefreshToken(user._id,user.role,user.email);
           await redisClient.set(user._id.toString(),refreshToken)
-           const userResponse: IUserResponse = {
+
+        const userResponse: IUserResponse = {
         _id: user._id.toString(),
         username: user.username,
         email: user.email,
