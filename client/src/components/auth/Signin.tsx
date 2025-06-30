@@ -230,6 +230,7 @@ const validateForm = (): boolean => {
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
             width="100%"
+             ux_mode="popup"
             // width="352px" 
           />
 
