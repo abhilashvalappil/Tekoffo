@@ -1,8 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Clock, DollarSign, Briefcase, FileText, LayoutDashboard, ClipboardList, MessageSquare } from 'lucide-react';
-import ClientNavbar from '../shared/Navbar';
+import { Clock, DollarSign} from 'lucide-react';
 import { fetchProposal } from '../../../api';  
 import { ProposalData } from '../../../types/proposalTypes';
 import { loadStripe } from '@stripe/stripe-js';
@@ -19,7 +18,7 @@ interface LocationState {
 }
 
 export default function PaymentReview() {
-  const [activeTab, setActiveTab] = useState('payment');
+  // const [activeTab, setActiveTab] = useState('payment');
   const [proposalData, setProposalData] = useState<ProposalData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -63,17 +62,8 @@ export default function PaymentReview() {
   const serviceFee = amount * SERVICE_FEE_PERCENTAGE;
   const totalAmount = amount + serviceFee;
 
-  const navItems = [
-    { icon: <LayoutDashboard className="h-5 w-5" />, label: 'Overview', id: 'overview', path: '/client/overview' },
-    { icon: <Briefcase className="h-5 w-5" />, label: 'Post a Job', id: 'post', path: '/client/post-job' },
-    { icon: <ClipboardList className="h-5 w-5" />, label: 'My Job Posts', id: 'my-jobs', path: '/client/myjobs' },
-    { icon: <FileText className="h-5 w-5" />, label: 'Proposals', id: 'proposals', path: '/client/proposals' },
-    { icon: <MessageSquare className="h-5 w-5" />, label: 'Messages', id: 'messages', path: '/client/messages' },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-100">
-      <ClientNavbar navItems={navItems} activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="pt-20 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-md mx-auto rounded-xl overflow-hidden bg-white text-[#0A142F] shadow-md border border-gray-200 relative">
           <div className="py-4 px-6 bg-[#0A142F]">
