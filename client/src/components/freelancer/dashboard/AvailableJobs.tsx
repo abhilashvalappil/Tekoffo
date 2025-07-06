@@ -1,13 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import {Clock,Briefcase,Tags,DollarSign,Calendar,ChevronRight,Filter,Search,X,Building2,MapPin,User,} from 'lucide-react';
-import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../hooks/customhooks/useAuth';
-import { RootState } from '../../../redux/store';
 import { JobDataType, useJobs } from '../../../hooks/customhooks/useJobs';
-import Navbar from '../shared/Navbar';
-import { navItems } from '../shared/NavbarItems';
 import JobDetailsModal from './JobApply';
 import { userENDPOINTS } from '../../../constants/endpointUrl';
 import { useClient } from '../../../hooks/customhooks/useClients';
@@ -16,7 +11,6 @@ import { checkStripeAccount, fetchListedCategories } from '../../../api';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
-import Footer from '../../shared/Footer';
 import { Toaster, toast } from 'react-hot-toast';
 import { fetchAppliedProposalsByFreelancer } from '../../../api';
 import { AppliedProposal } from '../../../types/proposalTypes';
@@ -53,14 +47,10 @@ const AvailableJobs: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
   const [budgetRange, setBudgetRange] = useState<BudgetRange>({ min: '', max: '' });
-  const [activeTab, setActiveTab] = useState<string>('jobs');
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedJob, setSelectedJob] = useState<JobDataType | null>(null);
   const [isClientModalOpen, setIsClientModalOpen] = useState<boolean>(false);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  // const [appliedProposals, setAppliedProposals] = useState<{ data: Proposal[] }>({ data: [] });
   const [appliedProposals, setAppliedProposals] = useState<{ data: AppliedProposal[] }>({ data: [] });
   const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
   const [filters, setFilters] = useState<JobFilters>({});
@@ -71,11 +61,7 @@ const AvailableJobs: React.FC = () => {
     pages: 1,
     limit: 4,
   });
-
-  const { handleLogout } = useAuth();
-  const user = useSelector((state: RootState) => state.auth.user);
   const navigate = useNavigate();
-
   const debouncedSearchTerm = useDebounce(searchTerm,500)
 
   //* Fetch jobs and client customhooks
@@ -89,7 +75,6 @@ const AvailableJobs: React.FC = () => {
   useEffect(() => {
     const loadProposals = async() => {
       const appliedJobs = await fetchAppliedProposalsByFreelancer();
-      console.log('console from available jobs =======',appliedJobs.data)
       setAppliedProposals(appliedJobs)
       const jobIds = appliedJobs.data.map((proposal) => proposal.jobId);
       setAppliedJobIds(jobIds)
@@ -178,20 +163,11 @@ const AvailableJobs: React.FC = () => {
   return (
     <div className="min-h-screen bg-white text-[#0A142F]">
        <Toaster position="top-center" reverseOrder={false} />
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-        isProfileOpen={isProfileOpen}
-        setIsProfileOpen={setIsProfileOpen}
-        user={user}
-        handleLogout={handleLogout}
-        navItems={navItems}
-      />
 
       {/* Main Content */}
-      <main className="pt-20 p-4 md:p-8 lg:p-20 bg-[#F8FAFC] z-10 relative">
+      {/* <main className="pt-20 p-4 ml-48 md:p-8 lg:p-20 bg-[#F8FAFC] z-10 relative"> */}
+      <main className="pt-20 p-4 md:p-8 lg:p-20 bg-[#F8FAFC] z-10 relative md:ml-60">
+
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="flex flex-col gap-4 mb-8">
@@ -462,7 +438,6 @@ const AvailableJobs: React.FC = () => {
         }}
         client={selectedClient}
       />
-       <Footer />
     </div>
   );
 };

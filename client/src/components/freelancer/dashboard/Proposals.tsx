@@ -1,32 +1,21 @@
 
 import { useEffect, useState } from 'react';
-import { Search, Filter, Check, X, ChevronDown } from 'lucide-react';
-import Navbar from '../shared/Navbar';
-import { navItems } from '../shared/NavbarItems';
+import { Search, Filter, X, ChevronDown } from 'lucide-react';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import { fetchAppliedProposalsByFreelancer } from '../../../api';
 import { handleApiError } from '../../../utils/errors/errorHandler';
-import { useAuth } from '../../../hooks/customhooks/useAuth';
 import { AppliedProposal } from '../../../types/proposalTypes';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../redux/store';
-import Footer from '../../shared/Footer';
 import { useDebounce } from '../../../hooks/customhooks/useDebounce';
  
 
 const FreelancerProposals = () => {
-  const [activeTab, setActiveTab] = useState('proposals');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  // const [timeFilter, setTimeFilter] = useState('all');
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const [proposals, setProposals] = useState<AppliedProposal[]>([]);
   const [error, setError] = useState('')
-  // const [totalCount,setTotalCount] = useState(0);
   const { pagination, handlePageChange, updateMeta } = usePagination({
     total: 0,
     page: 1,
@@ -34,8 +23,6 @@ const FreelancerProposals = () => {
     limit: 6,
   });
   
-  const user = useSelector((state: RootState) => state.auth.user);
-  const { handleLogout } = useAuth();
   const debouncedSearchTerm = useDebounce(searchQuery, 500);
   
   useEffect(() => {
@@ -44,7 +31,6 @@ const FreelancerProposals = () => {
         const response = await fetchAppliedProposalsByFreelancer(pagination.page,pagination.limit,debouncedSearchTerm,statusFilter)
         setProposals(response.data)
         updateMeta(response.meta.total, response.meta.pages);
-        // setTotalCount(response.meta.total);
       } catch (error) {
         const errormessage = handleApiError(error)
         setError(errormessage)
@@ -53,41 +39,13 @@ const FreelancerProposals = () => {
     loadAppliedProposals()
   },[pagination.page, pagination.limit,updateMeta,debouncedSearchTerm,statusFilter])
 
-   
-  
 
   return (
-    <div className="min-h-screen bg-white text-[#0A142F]">
-      <Navbar 
-      navItems={navItems} 
-      activeTab={activeTab} 
-      setActiveTab={setActiveTab}
-      isMenuOpen={isMenuOpen}
-      setIsMenuOpen={setIsMenuOpen}
-      isProfileOpen={isProfileOpen}
-      setIsProfileOpen={setIsProfileOpen}
-      handleLogout={handleLogout}
-      user={user}
-       />
-      <div className="container mx-auto px-30 py-20">
+    // <div className="min-h-screen ml-38 bg-white text-[#0A142F]">
+    <div className="min-h-screen bg-white text-[#0A142F] ml-0 md:ml-64">
+      {/* <div className="container mx-auto px-30 py-20"> */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <h1 className="text-3xl font-bold mb-8">Proposal Management</h1>
-
-        {/* Tabs */}
-        <div className="flex mb-6 border-b">
-          <button
-            className={`pb-2 px-4 font-medium ${activeTab === 'sent' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
-            onClick={() => setActiveTab('sent')}
-          >
-            Applied Proposals
-          </button>
-          {/* <button
-            className={`pb-2 px-4 font-medium ${activeTab === 'received' ? 'border-b-2 border-blue-600 text-blue-600' : ''}`}
-            onClick={() => setActiveTab('received')}
-          >
-            Received Proposals
-          </button> */}
-        </div>
-
         {/* Search & Filters */}
         <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
           <div className="relative w-full md:w-64">
@@ -116,22 +74,6 @@ const FreelancerProposals = () => {
               <Filter className="absolute left-3 top-2.5 text-gray-400" size={18} />
               <ChevronDown className="absolute right-2 top-2.5 text-gray-400" size={18} />
             </div>
-
-            {/* <div className="relative">
-              <select
-                className="appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={timeFilter}
-                onChange={(e) => setTimeFilter(e.target.value)}
-              >
-                <option value="all">All Time</option>
-                <option value="day">Today</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="year">This Year</option>
-              </select>
-              <Calendar className="absolute left-3 top-2.5 text-gray-400" size={18} />
-              <ChevronDown className="absolute right-2 top-2.5 text-gray-400" size={18} />
-            </div> */}
           </div>
         </div>
         {error && (
@@ -148,7 +90,7 @@ const FreelancerProposals = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{activeTab === 'received' ? 'From' : 'To'}</th>
+                  {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{activeTab === 'received' ? 'From' : 'To'}</th> */}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -166,9 +108,6 @@ const FreelancerProposals = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm">{new Date(proposal.createdAt).toLocaleDateString()}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">{proposal.proposedBudget}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {/* <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                      {proposal.status}
-                    </span> */}
                     <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           proposal.status === 'accepted'
@@ -241,28 +180,10 @@ const FreelancerProposals = () => {
                 <p className="text-sm text-gray-500 mb-1">Cover Letter</p>
                 <p className="text-sm">This is a sample cover letter for the proposal.</p>
               </div>
-
-              {activeTab === 'received' && (
-                <div className="flex justify-end space-x-3">
-                  <button
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center"
-                  >
-                    <X size={16} className="mr-1" />
-                    Reject
-                  </button>
-                  <button
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
-                  >
-                    <Check size={16} className="mr-1" />
-                    Accept
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </div>
       )}
-       <Footer />
     </div>
   );
 };

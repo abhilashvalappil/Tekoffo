@@ -3,9 +3,6 @@ import {Briefcase,DollarSign, CheckCircle, Handshake} from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '../../../redux/store';
-import ClientNavbar from '../shared/Navbar';
-import { clientNavItems } from '../shared/NavbarItems';
-import Footer from '../../shared/Footer';
 import { fetchActiveJobPosts, fetchClientProfile } from '../../../api';
 import { JobDataType } from '../../../types/invitationTypes';
 import { UserProfileResponse } from '../../../types/userTypes';
@@ -13,7 +10,6 @@ import { useFetchContracts } from '../../../hooks/customhooks/useFetchContracts'
 
 
 const ClientDashboard = () => {
-  const [activeTab, setActiveTab] = useState('overview');
   const [activeJobsCount, setActiveJobsCount] = useState<number>();
   const [completedJobsCount, setCompletedJobsCount] = useState<number>();
   const [activeContractsCount,setActiveContractsCount] = useState<number>();
@@ -58,11 +54,9 @@ const ClientDashboard = () => {
  
   return (
     <div className="min-h-screen bg-[#F8FAFC]">
-      {/* Navigation Bar */}
-      <ClientNavbar navItems={clientNavItems} activeTab={activeTab} setActiveTab={setActiveTab} />
-
       {/* Main Content */}
-      <main className="pt-20 p-8">
+      <main className="pt-20 p-4 md:ml-60">
+
         {/* Header */}
         <header className="max-w-7xl mx-auto mb-8">
           <h1 className="text-2xl font-bold text-[#0A142F]">Welcome back, {user?.username}!</h1>
@@ -122,10 +116,6 @@ const ClientDashboard = () => {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-500 capitalize">{job.status}</span>
-                        {/* <button className="px-4 py-1 bg-[#0A142F] text-white rounded-lg hover:bg-[#0A142F]/90 transition-colors text-sm font-medium flex items-center">
-                          View Details
-                          <ExternalLink className="h-4 w-4 ml-1" />
-                        </button> */}
                       </div>
                     </div>
                   ))
@@ -133,7 +123,6 @@ const ClientDashboard = () => {
                   <p className="text-sm text-gray-500">No active jobs found.</p>
                 )}
               </div>
-
             </div>
 
         {/* contracts*/}
@@ -144,47 +133,46 @@ const ClientDashboard = () => {
             </h2>
             <div className="space-y-4">
               {/* <h2 className="text-xl font-bold mb-4">Active Contracts</h2> */}
-              {filteredActiveContracts && filteredActiveContracts.length > 0 ? (
-                <div className="space-y-4">
-                  {filteredActiveContracts.map(contract => (
-                    <div
-                      key={contract._id}
-                      className="border rounded-lg p-4 shadow hover:shadow-md transition"
-                    >
-                      <h3 className="font-semibold text-lg">
-                        {contract.job.title}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        Freelancer: {contract.freelancer.fullName}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Amount: ${contract.amount}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        Started At: {new Date(contract.createdAt).toLocaleDateString()}
-                      </p>
-                      <p className="text-sm text-green-600 font-medium">
-                        Status: {contract.contractStatus}
-                      </p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500">No active contracts found.</p>
-                  )}
-                </div>
-                <button 
-                onClick={() => navigate('/client/contracts')}
-                className="mt-4 w-full py-2 bg-[#0A142F] text-white rounded-lg hover:bg-[#0A142F]/90 transition-colors text-sm font-medium">
-                  View All Contracts
-                </button>
-              </div>
-                    </div>
+        {filteredActiveContracts && filteredActiveContracts.length > 0 ? (
+          <div className="space-y-4">
+            {filteredActiveContracts.map(contract => (
+              <div
+                key={contract._id}
+                className="border rounded-lg p-4 shadow hover:shadow-md transition"
+              >
+                <h3 className="font-semibold text-lg">
+                  {contract.job.title}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Freelancer: {contract.freelancer.fullName}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Amount: ${contract.amount}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Started At: {new Date(contract.createdAt).toLocaleDateString()}
+                </p>
+                <p className="text-sm text-green-600 font-medium">
+                  Status: {contract.contractStatus}
+                </p>
                   </div>
-                </main>
-                <Footer />
+                ))}
               </div>
-            );
-          }
+            ) : (
+              <p className="text-gray-500">No active contracts found.</p>
+            )}
+          </div>
+          <button 
+          onClick={() => navigate('/client/contracts')}
+          className="mt-4 w-full py-2 bg-[#0A142F] text-white rounded-lg hover:bg-[#0A142F]/90 transition-colors text-sm font-medium">
+            View All Contracts
+          </button>
+        </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
 
   export default ClientDashboard;

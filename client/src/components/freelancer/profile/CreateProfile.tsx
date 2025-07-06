@@ -71,7 +71,7 @@ function CreateFreelancerProfile() {
 
       const result = await dispatch(createFreelancerProfile(formDataToSend));
       if (createFreelancerProfile.fulfilled.match(result)) {
-        navigate('/freelancer-dashboard');
+        navigate('/freelancer');
       } else {
         throw new Error(result.error.message || 'Failed to create profile');
       }

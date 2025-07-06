@@ -4,8 +4,6 @@ import { Search, Filter, ChevronDown } from 'lucide-react';
 import { useFetchContracts } from '../../../hooks/customhooks/useFetchContracts';
 import { fetchSubmittedReviews, submitContract, submitReview } from '../../../api';
 import toast, { Toaster } from 'react-hot-toast';
-import Navbar from '../shared/Navbar';
-import { navItems } from '../shared/NavbarItems';
 import { handleApiError } from '../../../utils/errors/errorHandler';
 import { useDebounce } from '../../../hooks/customhooks/useDebounce';
 import Pagination from '@mui/material/Pagination';
@@ -15,18 +13,12 @@ import { usePagination } from '../../../hooks/customhooks/usePagination';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import ChatButton from '../shared/ChatButton';
-import Footer from '../../shared/Footer';
-import { useAuth } from '../../../hooks/customhooks/useAuth';
 import { IReview } from '../../../types/review';
 import { contractResponse } from '../../../types/paymentTypes';
 
 const Contracts = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  // const [timeFilter, setTimeFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<string>('contracts');
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedContract, setSelectedContract] = useState<contractResponse | null>(null);
   const [reviews,setReviews] = useState<IReview[]>([])
@@ -38,7 +30,6 @@ const Contracts = () => {
   });
 
   const user = useSelector((state: RootState) => state.auth.user);
-  const { handleLogout } = useAuth();
   const debouncedSearchTerm = useDebounce(searchQuery,500)
   const { contracts, loading, error, meta, refetch } = useFetchContracts(pagination.page, pagination.limit, debouncedSearchTerm, statusFilter);
 
@@ -85,18 +76,8 @@ const Contracts = () => {
   if (error) return <p>Error loading contracts: {error.message}</p>;
 
   return (
-    <div className="min-h-screen bg-white text-[#0A142F]">
-       <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-        isProfileOpen={isProfileOpen}
-        setIsProfileOpen={setIsProfileOpen}
-        user={user}
-         handleLogout={handleLogout}
-        navItems={navItems}
-      />
+    // <div className="min-h-screen ml-38 bg-white text-[#0A142F]">
+    <div className="min-h-screen bg-white text-[#0A142F] ml-0 md:ml-38">
       <Toaster position="top-center" reverseOrder={false}/>
       <div className="container mx-auto px-30 py-20">
         <h1 className="text-3xl font-bold mb-8">Contracts Management</h1>
@@ -129,20 +110,6 @@ const Contracts = () => {
               <Filter className="absolute left-3 top-2.5 text-gray-400" size={18} />
               <ChevronDown className="absolute right-2 top-2.5 text-gray-400" size={18} />
             </div>
-
-            {/* <div className="relative">
-              <select
-                className="appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={timeFilter}
-                onChange={(e) => setTimeFilter(e.target.value)}
-              >
-                <option value="all">All Time</option>
-                <option value="month">This Month</option>
-                <option value="year">This Year</option>
-              </select>
-              <Calendar className="absolute left-3 top-2.5 text-gray-400" size={18} />
-              <ChevronDown className="absolute right-2 top-2.5 text-gray-400" size={18} />
-            </div> */}
           </div>
         </div>
 
@@ -156,7 +123,7 @@ const Contracts = () => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contract</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th>
+                    {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</th> */}
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Value</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -169,9 +136,9 @@ const Contracts = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{contract.job.title}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.client.fullName}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">{new Date(contract.createdAt).toLocaleDateString()}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {/* <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {contract.completedAt ? new Date(contract.completedAt).toLocaleDateString() : 'N/A'}
-                      </td>
+                      </td> */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.amount}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
@@ -248,7 +215,7 @@ const Contracts = () => {
           />
         </Stack>
       </div>
-      <Footer />
+      {/* <Footer /> */}
       
       {/* ReviewModal outside the table */}
       <ReviewModal

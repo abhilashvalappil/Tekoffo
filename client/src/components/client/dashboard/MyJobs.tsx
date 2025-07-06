@@ -2,14 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { Briefcase, Tags, DollarSign, Calendar, ChevronRight, Filter, Search, X, Trash2, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { updateJobPost, deleteJobPost, fetchJobs, fetchListedCategories } from '../../../api';
-import ClientNavbar from '../shared/Navbar';
-import { clientNavItems } from '../shared/NavbarItems';
 import { JobFormSchema, JobFormData } from '../../../utils/validations/JobFormValidation';
 import { handleApiError } from '../../../utils/errors/errorHandler';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
-import Footer from '../../shared/Footer';
 import { Job} from '../../../types/userTypes';
 import { Category } from '../../../types/jobTypes';
 import Swal from 'sweetalert2';
@@ -25,12 +22,10 @@ const MyJobPosts = () => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('my-jobs');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [categories,setCategories] = useState<Category[]>([]);
   const [filters, setFilters] = useState<{ category?: string; subCategory?: string; status?: string }>({});
-  // const [myJobs, setMyJobs] = useState<Job[]>([]);
   const {
     pagination,
     handlePageChange,
@@ -76,7 +71,6 @@ const MyJobPosts = () => {
   loadCategories()
  },[])
 
-  // const statuses = [...new Set(myJobPosts.map(job => job.status))];
   const statuses = ['open', 'inprogress', 'completed'];
    
   const handleDeleteJob = async (id:string) => {
@@ -178,7 +172,7 @@ const MyJobPosts = () => {
       setFormData(prev => ({ 
         ...prev, 
         [name]: value,
-        subCategory: '' // Reset subcategory when category changes
+        subCategory: ''  
       }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -354,8 +348,8 @@ const MyJobPosts = () => {
   return (
     <div className="min-h-screen bg-white text-[#0A142F]">
       <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
-      <ClientNavbar navItems={clientNavItems} activeTab={activeTab} setActiveTab={setActiveTab} />
-      <div className="pt-16 p-4 md:p-20">
+      <div className="pt-16 p-4 ml-0 md:ml-48 md:p-20">
+
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col gap-4 mb-8">
             <div className="flex justify-between items-center">
@@ -556,7 +550,6 @@ const MyJobPosts = () => {
       {isModalOpen && selectedJob && (
         <EditJobModal job={selectedJob} onSave={handleSaveJob} onClose={handleCloseModal} />
       )}
-       <Footer />
     </div>
   );
 };

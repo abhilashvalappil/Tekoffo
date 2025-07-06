@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Search, Calendar, Filter, Eye, Check, X, ChevronDown, User } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
-import ClientNavbar from '../shared/Navbar';
-import { clientNavItems } from '../shared/NavbarItems';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
-import Footer from '../../shared/Footer';
 import { fetchAndUpdateProposal, fetchInvitationsSent, getReceivedProposals } from '../../../api';
 import { ProposalData, Proposal, Profile } from '../../../types/proposalTypes';
 import { Button } from '@mui/material';
@@ -20,7 +17,6 @@ const Proposals = () => {
   const [activeeTab, setActiveeTab] = useState<'received' | 'sent'>('received');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<string>('proposals');
   const [timeFilter, setTimeFilter] = useState<string>('all');
   const [filteredProposals, setFilteredProposals] = useState<Proposal[]>([]);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
@@ -89,6 +85,7 @@ const Proposals = () => {
       proposedBudget: item.proposedBudget,
       description: isSent ? item.job.description : item.coverLetter || 'No cover letter provided',
       duration: item.duration,
+      attachments:item.attachments,
       senderEmail: item.freelancer.email,
       senderProfilePicture: item.freelancer.profilePicture,
       senderCountry: item.freelancer.country,
@@ -193,9 +190,10 @@ const Proposals = () => {
 
   return (
     <div className="min-h-screen bg-white text-[#0A142F]">
-      <ClientNavbar navItems={clientNavItems} activeTab={activeTab} setActiveTab={setActiveTab} />
        <Toaster position="top-center" />
-      <div className="container mx-auto px-4 sm:px-6 md:px-38 py-20">
+      {/* <div className="container mx-auto px-4 ml-34 sm:px-6 md:px-38 py-20"> */}
+      <div className="container mx-auto px-4 sm:px-6 md:px-38 md:ml-34 py-20">
+
         <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center sm:text-left">
         Proposal Management
       </h1>
@@ -404,83 +402,105 @@ const Proposals = () => {
       </div>
 
       {/* Proposal Details Modal */}
-      {isModalOpen && selectedProposal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-screen overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">{selectedProposal.title}</h2>
-                <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-                  <X size={24} />
-                </button>
-              </div>
+     {isModalOpen && selectedProposal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div className="w-full max-w-3xl bg-white text-[#0A142F] rounded-2xl shadow-2xl border border-gray-200 overflow-y-auto max-h-[90vh] relative">
+      <div className="p-6">
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-[#0A142F]">{selectedProposal.title}</h2>
+            <p className="text-sm text-gray-500">{new Date(selectedProposal.date).toLocaleDateString()}</p>
+          </div>
+          <button onClick={() => setIsModalOpen(false)} className="hover:bg-gray-100 p-2 rounded-full">
+            <X size={20} />
+          </button>
+        </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <p className="text-sm text-gray-500">{activeeTab === 'received' ? 'From' : 'To'}</p>
-                  <p className="font-medium">{activeeTab === 'received' ? selectedProposal.sender : selectedProposal.receiver}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">{activeeTab === 'received' ? 'To' : 'From'}</p>
-                  <p className="font-medium">{activeeTab === 'received' ? selectedProposal.receiver : selectedProposal.sender}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Date</p>
-                  <p className="font-medium">{new Date(selectedProposal.date).toLocaleDateString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Amount</p>
-                  <p className="font-medium">${selectedProposal.amount.toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Status</p>
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      selectedProposal.status === 'accepted'
-                        ? 'bg-green-100 text-green-800'
-                        : selectedProposal.status === 'rejected'
-                        ? 'bg-red-100 text-red-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}
-                  >
-                    {selectedProposal.status.charAt(0).toUpperCase() + selectedProposal.status.slice(1)}
-                  </span>
-                </div>
-                {selectedProposal.duration && (
-                  <div>
-                    <p className="text-sm text-gray-500">Duration</p>
-                    <p className="font-medium">{selectedProposal.duration}</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-6">
-                <p className="text-sm text-gray-500 mb-1">{activeeTab === 'received' ? 'Cover Letter' : 'Job Description'}</p>
-                <p className="text-sm">{selectedProposal.description}</p>
-              </div>
-
-              {activeeTab === 'received' && selectedProposal.status === 'pending' && (
-                <div className="flex justify-end space-x-3">
-                  <button
-                    onClick={() => handleRejectProposal(selectedProposal)}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center"
-                  >
-                    <X size={16} className="mr-1" />
-                    Reject
-                  </button>
-                  <button
-                    onClick={() => handleAcceptProposal(selectedProposal)}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
-                  >
-                    <Check size={16} className="mr-1" />
-                    Accept
-                  </button>
-                </div>
-              )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-sm md:text-base">
+          <div>
+            <p className="text-gray-500 mb-1">{activeeTab === 'received' ? 'From' : 'To'}</p>
+            <p className="font-medium">{activeeTab === 'received' ? selectedProposal.sender : selectedProposal.receiver}</p>
+          </div>
+          <div>
+            <p className="text-gray-500 mb-1">{activeeTab === 'received' ? 'To' : 'From'}</p>
+            <p className="font-medium">{activeeTab === 'received' ? selectedProposal.receiver : selectedProposal.sender}</p>
+          </div>
+          <div>
+            <p className="text-gray-500 mb-1">Amount</p>
+            <p className="font-medium text-[#0A142F]">${selectedProposal.amount.toLocaleString()}</p>
+          </div>
+          <div>
+            <p className="text-gray-500 mb-1">Status</p>
+            <span
+              className={`px-3 py-1 text-xs rounded-full font-semibold ${
+                selectedProposal.status === 'accepted'
+                  ? 'bg-green-100 text-green-700'
+                  : selectedProposal.status === 'rejected'
+                  ? 'bg-red-100 text-red-700'
+                  : 'bg-yellow-100 text-yellow-700'
+              }`}
+            >
+              {selectedProposal.status.charAt(0).toUpperCase() + selectedProposal.status.slice(1)}
+            </span>
+          </div>
+          {selectedProposal.duration && (
+            <div>
+              <p className="text-gray-500 mb-1">Duration</p>
+              <p className="font-medium">{selectedProposal.duration}</p>
             </div>
+          )}
+        </div>
+
+        <div className="mt-6">
+          <p className="text-gray-500 mb-2">
+            {activeeTab === 'received' ? 'Cover Letter' : 'Job Description'}
+          </p>
+          <div className="bg-gray-100 border border-gray-200 p-4 rounded-xl text-[#0A142F]">
+            {selectedProposal.description}
           </div>
         </div>
-      )}
+
+        {selectedProposal.attachments && (
+          <div className="mt-6">
+            <p className="text-gray-500 mb-2">Attachment</p>
+            <div className="bg-gray-100 border border-gray-200 p-3 rounded-lg flex justify-between items-center hover:bg-gray-200 transition">
+              <span className="truncate">{selectedProposal.attachments.split('/').pop()}</span>
+              <a
+                href={selectedProposal.attachments.replace('/upload/', '/upload/fl_attachment:false/')}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline text-sm"
+              >
+                View
+              </a>
+            </div>
+          </div>
+        )}
+
+        {activeeTab === 'received' && selectedProposal.status === 'pending' && (
+          <div className="flex justify-end mt-8 space-x-3">
+            <button
+              onClick={() => handleRejectProposal(selectedProposal)}
+              className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center"
+            >
+              <X size={16} className="mr-1" />
+              Reject
+            </button>
+            <button
+              onClick={() => handleAcceptProposal(selectedProposal)}
+              className="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center"
+            >
+              <Check size={16} className="mr-1" />
+              Accept
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
+
 
       {/* Profile Modal */}
       {isProfileModalOpen && selectedProfile && (
@@ -588,7 +608,6 @@ const Proposals = () => {
           </div>
         </div>
       )}
-      <Footer />
     </div>
   );
   

@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import userRouter from './routes/user.router';
 import adminRouter from './routes/admin.router';
-import { OAuth2Client } from 'google-auth-library';
+// import { OAuth2Client } from 'google-auth-library';
 import cookieParser from 'cookie-parser'
 import morganMiddleware from './middlewares/morgan.middleware';
 import { errorHandler } from './errors/errorHandler';
@@ -16,7 +16,7 @@ dotenv.config();
 
 const app = express();
 const mongoUrl = process.env.MONGO_URL;
-const client = new OAuth2Client(process.env.CLIENT_ID);
+// const client = new OAuth2Client(process.env.CLIENT_ID);
 const CLIENT_URL = process.env.CLIENT_URL
 
 const server = http.createServer(app);
@@ -42,21 +42,28 @@ app.use(morganMiddleware);
 app.use('/', userRouter);
 app.use('/admin',adminRouter)
 
+app.get("/", (req, res) => {
+  res.send("Hello, TypeScript!");
+});
+
  if (!mongoUrl) {
   throw new Error("MONGO_URL is not defined in environment variables");
 }
 mongoose
   .connect(mongoUrl)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+  .then(() => {
+    console.log('MongoDB connected');
 
-app.get("/", (req, res) => {
-  res.send("Hello, TypeScript!");
-});
+    const PORT = process.env.PORT || 3000;
+    server.listen(PORT, () =>
+      console.log(`Server running at http://localhost:${PORT}`)
+    );
+  })
+  .catch((err) => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  });
 
 app.use(errorHandler);
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server running on port http://localhost:${PORT}`));
 
 export default app;

@@ -8,12 +8,8 @@ import { RootState } from '../../../redux/store';
 import socket from '../../../utils/socket';
 import VideoCall from '../video/VideoCall';
 import Navbar from '../shared/Navbar';
-import { navItems } from '../shared/NavbarItems';
-import { useAuth } from '../../../hooks/customhooks/useAuth';
-import ClientNavbar from '../../client/shared/Navbar';
-import { clientNavItems } from '../../client/shared/NavbarItems';
-import Footer from '../../shared/Footer';
-// import { useLocation } from 'react-router-dom';
+import ClientSidebar from '../../client/shared/Sidebar';
+import FreelancerSidebar from '../shared/FreelancerSidebar';
 
 const ChatBox: React.FC = () => {
   const [chats, setChats] = useState<Contact[]>([]);
@@ -29,16 +25,14 @@ const ChatBox: React.FC = () => {
   // const [selectedMedia, setSelectedMedia] = useState<File | null>(null);
   const [media, setMedia] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('messages');
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const user = useSelector((state: RootState) => state.auth.user);
-  const { handleLogout } = useAuth();
+   
 
 
   const selectedChat = chats.find((chat) => chat._id === selectedChatId);
   const currentUserId = useSelector((state: RootState) => state.auth.user?._id);
+  const currentUser = useSelector((state: RootState) => state.auth.user)
   
 
   // Initialize socket connection and user join
@@ -160,7 +154,6 @@ const ChatBox: React.FC = () => {
     if (!currentUserId) return;
 
     const handleReceiveMessage = (message: SocketMessage) => {
-      console.log('now&&&&&&&&',message)
       setChats((prevChats) =>
         prevChats.map((chat) => {
           if (chat._id === message.chatId) {
@@ -239,11 +232,6 @@ const ChatBox: React.FC = () => {
     if (newMessage.trim()) formData.append('content', newMessage.trim());
     if (media) formData.append('media', media);
 
-      // const message = await sendMessage({
-      //   chatId: selectedChatId,
-      //   content: newMessage.trim(),
-      //   receiverId: selectedChat?.contact._id,
-      // });
       const message = await sendMessage(formData);
 
       const newMsg = {
@@ -329,22 +317,6 @@ const ChatBox: React.FC = () => {
   }) => {
     console.log('Message deleted received:', { messageId, chatId, content });
     
-  //   setChats((prevChats) =>
-  //     prevChats.map((chat) => {
-  //       if (chat._id === chatId) {
-  //         return {
-  //           ...chat,
-  //           messages: chat.messages?.map((msg) =>
-  //             msg._id === messageId
-  //               ? { ...msg, content: content, isDeleted: true }
-  //               : msg
-  //           ),
-  //         };
-  //       }
-  //       return chat;
-  //     })
-  //   );
-  // };
    setChats((prevChats) =>
     prevChats.map((chat) => {
       if (chat._id === chatId) {
@@ -441,265 +413,235 @@ const handleRemoveMedia = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [selectedChat?.messages]);
 
- 
-  return (
-    <div className="min-h-screen bg-white flex flex-col">
-       <div className="flex flex-1">
-      {user && user.role === 'freelancer' ?(
-      <Navbar
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              isMenuOpen={isMenuOpen}
-              setIsMenuOpen={setIsMenuOpen}
-              isProfileOpen={isProfileOpen}
-              setIsProfileOpen={setIsProfileOpen}
-              user={user}
-               handleLogout={handleLogout}
-              navItems={navItems}
-            />
-      ) : (
-         <ClientNavbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        navItems={clientNavItems}
-      />
-      )}
+return (
+  <div className="min-h-screen bg-white flex flex-col">
+    <div className="flex flex-1">
       {/* Sidebar */}
-      <div className="flex py-15 flex-1 h-[calc(100vh-64px)]">
-      <div className="w-1/3 border-r border-gray-300 p-4 overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4">Messages</h2>
-        <div className="space-y-3">
-          {chats.map((chat) => (
-            <div
-              key={chat._id}
-              onClick={() => handleChatSelection(chat._id)}
-              className={`flex items-center justify-between p-3 rounded-xl cursor-pointer hover:bg-gray-100 ${
-                selectedChatId === chat._id ? 'bg-gray-200' : ''
-              }`}
-            >
-              <div className="flex items-center space-x-3">
-                <div className="relative">
-                  <img
-                    src={chat.contact.profilePicture}
-                    alt={chat.contact.fullName}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
-                  {/* Online status indicator */}
-                  <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
-                    onlineUsers[chat.contact._id] ? 'bg-green-400' : 'bg-gray-400'
-                  }`} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="font-semibold text-gray-800">{chat.contact.fullName}</span>
-                  <span className="text-sm text-gray-500">{chat.contact.companyName}</span>
-                </div>
-              </div>
+      <>
+  {/* Mobile Sidebar (drawer) */}
+  <div
+    className={`fixed top-0 left-0 z-50 h-full w-60 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${
+      isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+    } md:hidden`}
+  >
+    <button
+      onClick={() => setIsSidebarOpen(false)}
+      className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
+    >
+      ✕
+    </button>
+    {currentUser.role === 'client' ? <ClientSidebar /> : <FreelancerSidebar />}
+  </div>
 
-              {chat.unreadCount > 0 && (
-                <div className="bg-green-400 text-white text-xs px-2 py-0.5 rounded-full min-w-[20px] text-center">
-                  {chat.unreadCount}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+  {/* Desktop Sidebar */}
+    <div className="hidden md:block fixed top-0 left-0 w-60 h-full bg-white border-r border-gray-200 z-40">
+      {currentUser.role === 'client' ? <ClientSidebar /> : <FreelancerSidebar />}
+    </div>
+  </>
+      <Navbar onSidebarToggle={() => setIsSidebarOpen(true)} />
+      {/* <div className="flex-1 flex flex-col mt-18 ml-60 md:flex-row h-[calc(100vh-64px)]"> */}
+      <div className="flex-1 flex flex-col mt-18 md:ml-60 md:flex-row h-[calc(100vh-64px)]">
 
-      {/* Chat Window */}
-      <div className="p-15 flex-1 flex flex-col overflow-hidden">
-        {/* <div className="flex items-center justify-between p-4 border-b border-gray-300"> */}
-        <div className="fixed top-14 left-1/3 right-0 bg-gray-200 z-10 flex items-center justify-between p-4 border-b border-gray-300">
-          <div className="flex items-center space-x-2">
-            {selectedChat?.contact ? (
-              <>
-                <div className="relative">
-                  <img
-                    src={selectedChat.contact.profilePicture}
-                    alt={selectedChat.contact.fullName}
-                    className="w-10 h-10 rounded-full"
-                  />
-                  <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
-                    onlineUsers[selectedChat.contact._id] ? 'bg-green-400' : 'bg-gray-400'
-                  }`} />
-                </div>
-                <div>
-                  <div className="font-semibold text-gray-800">{selectedChat.contact.fullName}</div>
-                  <div className="text-sm text-gray-500">
-                    {someoneTyping
-                      ? 'Typing...'
-                      : onlineUsers[selectedChat.contact._id]
-                      ? 'Online'
-                      : 'Offline'}
+        {/* Contacts */}
+        <div className="w-full md:w-1/3 lg:w-1/4 border-r border-gray-200 p-4 overflow-y-auto">
+          <h2 className="text-lg font-semibold mb-4 text-gray-700">Messages</h2>
+          <div className="space-y-3">
+            {chats.map((chat) => (
+              <div
+                key={chat._id}
+                onClick={() => handleChatSelection(chat._id)}
+                className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition hover:bg-gray-100 ${
+                  selectedChatId === chat._id ? 'bg-gray-100' : ''
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <img
+                      src={chat.contact.profilePicture}
+                      alt={chat.contact.fullName}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <span
+                      className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+                        onlineUsers[chat.contact._id]
+                          ? 'bg-green-500'
+                          : 'bg-gray-400'
+                      }`}
+                    ></span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">{chat.contact.fullName}</p>
+                    <p className="text-xs text-gray-500">{chat.contact.companyName}</p>
                   </div>
                 </div>
-              </>
-            ) : (
-              <div className="text-gray-500 italic">Select a chat to start messaging</div>
-            )}
+                {chat.unreadCount > 0 && (
+                  <div className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">
+                    {chat.unreadCount}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-           {selectedChat && (
+        </div>
+
+        {/* Chat window */}
+        <div className="flex-1 flex flex-col relative overflow-hidden">
+          {/* Header */}
+          <div className="sticky top-0 z-10 bg-white px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+          {selectedChat?.contact ? (
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <img
+                  src={selectedChat.contact.profilePicture}
+                  alt={selectedChat.contact.fullName}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+                <span
+                  className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+                    onlineUsers[selectedChat.contact._id] ? 'bg-green-500' : 'bg-gray-400'
+                  }`}
+                ></span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">
+                  {selectedChat.contact.fullName}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {someoneTyping
+                    ? 'Typing...'
+                    : onlineUsers[selectedChat.contact._id]
+                    ? 'Online'
+                    : 'Offline'}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-500 italic">Select a chat to start messaging</p>
+          )}
+
+          {selectedChat && (
             <button
               onClick={() => setShowCallPage(true)}
-              className="flex items-center space-x-1 bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-full"
+              className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white text-sm px-3 py-1 rounded-full"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M4 6h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z"
-                />
-              </svg>
-              <span>Video Call</span>
+              📞 <span className="hidden sm:inline">Video Call</span>
             </button>
           )}
-                </div>
+        </div>
 
-        {selectedChat ? (
-          <>
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {selectedChat?.messages?.map((msg) => {
-                const isSentByUser = msg.senderId === currentUserId;
-                const isSelected = selectedMessageId === msg._id;
-                return (
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {selectedChat?.messages?.map((msg) => {
+              const isSentByUser = msg.senderId === currentUserId;
+              const isSelected = selectedMessageId === msg._id;
+
+              return (
+                <div
+                  key={msg._id}
+                  className={`flex ${isSentByUser ? 'justify-end' : 'justify-start'}`}
+                >
                   <div
-                    key={msg._id}
-                    className={`flex ${isSentByUser ? 'justify-end' : 'justify-start'}`}
+                    onClick={() => setSelectedMessageId(isSelected ? null : msg._id)}
+                    className={`max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg px-4 py-2 rounded-lg text-white select-none cursor-pointer ${
+                      isSentByUser ? 'bg-blue-600' : 'bg-gray-400'
+                    } ${msg.isDeleted ? 'italic opacity-60' : ''} ${isSelected ? 'ring-2 ring-red-500' : ''}`}
                   >
-                     
-                    <div
-                onClick={() => setSelectedMessageId(isSelected ? null : msg._id)}
-                className={`max-w-xs px-4 py-2 rounded-lg text-white cursor-pointer select-none ${
-                  isSentByUser ? 'bg-blue-600' : 'bg-gray-400'
-                } ${isSelected ? 'ring-2 ring-red-500' : ''} ${msg.isDeleted ? 'italic opacity-50' : ''}`}
-              >
-                {/* {msg.content} */}
-                 {msg.mediaUrl ? (
-          // Check media file type by extension or mime type if available
-          msg.mediaUrl.match(/\.(mp4|webm|ogg)$/i) ? (
-            <video
-              src={msg.mediaUrl}
-              controls
-              className="max-w-full rounded"
-            />
-          ) : (
-            <img
-              src={msg.mediaUrl}
-              alt="media"
-              className="max-w-full rounded"
-            />
-          )
-        ) : (
-          msg.content
-        )}
-              </div>
-       {isSelected && isSentByUser && !msg.isDeleted && (
-        <button
-          onClick={() => handleDeleteMessage(msg._id)}
-          className="ml-2 text-red-600 hover:text-red-800 font-semibold"
-        >
-          Delete
-        </button>
-      )}
+                    {msg.mediaUrl ? (
+                      msg.mediaUrl.match(/\.(mp4|webm|ogg)$/i) ? (
+                        <video src={msg.mediaUrl} controls className="max-w-full rounded" />
+                      ) : (
+                        <img src={msg.mediaUrl} alt="media" className="max-w-full rounded" />
+                      )
+                    ) : (
+                      msg.content
+                    )}
                   </div>
-                );
-              })}
-              {someoneTyping && (
-                <div className="text-sm text-gray-500 italic ml-2">Typing...</div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+                  {isSelected && isSentByUser && !msg.isDeleted && (
+                    <button
+                      onClick={() => handleDeleteMessage(msg._id)}
+                      className="ml-2 text-red-600 hover:text-red-800 text-xs font-semibold"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+            {someoneTyping && <div className="text-sm italic text-gray-500">Typing...</div>}
+            <div ref={messagesEndRef} />
+          </div>
 
-            {/* Message Input */}
-            {/* <div className="p-4 border-t border-gray-300 flex items-center space-x-2">
+          {/* Input */}
+          <div className="p-3 border-t border-gray-300">
+            {media && mediaPreview && (
+              <div className="mb-3 relative w-fit">
+                {media.type.startsWith('image/') ? (
+                  <img src={mediaPreview} alt="Preview" className="h-32 rounded" />
+                ) : (
+                  <video src={mediaPreview} controls className="h-32 rounded" />
+                )}
+                <button
+                  onClick={handleRemoveMedia}
+                  className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
               <input
                 type="text"
                 value={newMessage}
                 onChange={handleTyping}
                 placeholder="Type a message..."
-                className="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none"
+                className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-sm focus:outline-none"
               />
+              <input
+                type="file"
+                accept="image/*,video/*"
+                onChange={handleMediaSelect}
+                className="hidden"
+                id="mediaInput"
+              />
+              <label
+                htmlFor="mediaInput"
+                className="cursor-pointer bg-gray-100 p-2 rounded-full"
+              >
+                📎
+              </label>
               <button
                 onClick={handleSend}
                 className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700"
               >
                 Send
               </button>
-            </div> */}
-            <div className="p-4 border-t border-gray-300">
-      {media && mediaPreview && (
-        <div className="mb-2 relative">
-          {media.type.startsWith('image/') ? (
-            <img src={mediaPreview} alt="Preview" className="h-32 rounded" />
-          ) : (
-            <video src={mediaPreview} controls className="h-32 rounded" />
-          )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Call Modal */}
+    {showCallPage && selectedChatId && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        {/* <div className="bg-white rounded-lg shadow-lg p-4 relative w-full max-w-2xl h-[80%] w-[95%] sm:w-[90%] md:w-[80%] lg:w-[70%] xl:w-[60%]"> */}
+         <div className="bg-white rounded-lg shadow-lg p-4 relative w-[95%] sm:w-[90%] md:w-[80%] lg:w-[70%] xl:w-[60%] max-w-2xl h-[80%]">
           <button
-            onClick={handleRemoveMedia}
-            className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full"
+            onClick={() => setShowCallPage(false)}
+            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
           >
             ✕
           </button>
+          <VideoCall
+            roomId={selectedChatId}
+            onCallEnd={() => setShowCallPage(false)}
+          />
         </div>
-      )}
+      </div>
+    )}
+  </div>
+);
 
-      <div className="flex items-center space-x-2">
-        <input
-          type="text"
-          value={newMessage}
-          onChange={handleTyping}
-          placeholder="Type a message..."
-          className="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none"
-        />
-        <input type="file" accept="image/*,video/*" onChange={handleMediaSelect} className="hidden" id="mediaInput" />
-        <label htmlFor="mediaInput" className="cursor-pointer bg-gray-200 px-3 py-2 rounded-full">
-          📎
-        </label>
-        <button
-          onClick={handleSend}
-          className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700"
-        >
-          Send
-        </button>
-      </div>
-    </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <div className="text-2xl mb-2">💬</div>
-              <div className="text-lg font-medium">Welcome to Messages</div>
-              <div className="text-sm">Select a conversation to start chatting</div>
-            </div>
-          </div>
-        )}
-      </div>
-      </div>
-      </div>
-      <Footer />
-      {showCallPage && selectedChatId && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white rounded-lg shadow-lg p-4 relative w-full max-w-2xl h-[80%]">
-      <button
-        onClick={() => setShowCallPage(false)}
-        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-      >
-        ✕
-      </button>
-      <VideoCall roomId={selectedChatId} 
-      onCallEnd={() => setShowCallPage(false)} 
-      />
-    </div>
-  </div>
-)}
-  </div>
-  );
 };
 
 export default ChatBox;

@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Briefcase, FileText, FolderTree, ScrollText, DollarSign, Clock} from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
-import ClientNavbar from '../shared/Navbar';
-import { clientNavItems } from '../shared/NavbarItems';
 import { createJob } from '../../../api';
 import { JobFormSchema, JobFormData } from '../../../utils/validations/JobFormValidation';
 import { fetchListedCategories } from '../../../api';
 import { useNavigate } from 'react-router-dom';
-import Footer from '../../shared/Footer';
 import { Category } from '../../../types/jobTypes';
 
 
@@ -16,7 +13,6 @@ type FormErrors = Partial<Record<keyof JobFormData, string>> & { general?: strin
 
 
 const PostJob: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('post');
   const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState<JobFormData>({
     title: '',
@@ -137,8 +133,9 @@ const PostJob: React.FC = () => {
 
   return (
     <>
-      <ClientNavbar navItems={clientNavItems} activeTab={activeTab} setActiveTab={setActiveTab} />
-      <div className="p-8 max-w-5xl mx-auto">
+      {/* <div className="p-18 max-w-5xl mx-auto"> */}
+      <div className="px-4 sm:px-6 md:px-8 lg:px-12 py-18 max-w-5xl mx-auto">
+
         <h1 className="text-3xl font-bold text-[#0A142F] mb-2">Post a New Job</h1>
         <p className="text-gray-600 mb-8">Fill in the details below to post your job and find the perfect freelancer.</p>
 
@@ -352,7 +349,6 @@ const PostJob: React.FC = () => {
           </div>
         </form>
       </div>
-       <Footer />
     </>
   );
 };

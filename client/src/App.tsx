@@ -8,6 +8,7 @@ import PublicRoutes from './routes/PublicRoutes'
 import ClientRoutes from './routes/ClientRoutes'
 import FreelancerRoutes from './routes/FreelancerRoutes';
 import { User, useSocketConnection } from './hooks/customhooks/useSocket';
+import ErrorBoundary from './components/shared/ErrorBoundary';
 
  
   const App: React.FC = () => {
@@ -16,12 +17,14 @@ import { User, useSocketConnection } from './hooks/customhooks/useSocket';
     useSocketConnection(user as User);
 
   return (
+    <ErrorBoundary>
   <Routes>
       {PublicRoutes()}
       {AdminRoutes()}
       {ClientRoutes()}
       {FreelancerRoutes()}
     </Routes>
+    </ErrorBoundary>
   )
 }
 

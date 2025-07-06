@@ -3,18 +3,11 @@ import { FaArrowUp, FaArrowDown, FaWallet } from "react-icons/fa";
 import Modal from "react-modal";
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
-import ProfileSidebar from "./ProfileSidebar";
-import { useSelector } from "react-redux";
-import { RootState } from "../../../redux/store";
-import Navbar from '../shared/Navbar';
-import { navItems } from '../shared/NavbarItems';
 import { fetchTransactions, fetchWallet } from "../../../api";
 import { IWallet } from "../../../types/wallet";
 import WithdrawForm from "./WithdrawForm";
 import { handleApiError } from "../../../utils/errors/errorHandler";
 import { ITransaction } from "../../../types/transaction";
-import { useAuth } from "../../../hooks/customhooks/useAuth";
-import Footer from "../../shared/Footer";
 import { usePagination } from "../../../hooks/customhooks/usePagination";
 Modal.setAppElement("#root");  
 
@@ -23,18 +16,12 @@ const Wallet: React.FC = () => {
   const [wallet, setWallet] = useState<IWallet | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [transactions, setTransactions] = useState<ITransaction[]>([]);
-  const [activeTab, setActiveTab] = useState<string>('contracts');
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const { pagination, handlePageChange, updateMeta } = usePagination({
       total: 0,
       page: 1,
       pages: 1,
       limit: 4,
     });
-
-  const user = useSelector((state: RootState) => state.auth.user);
-  const { handleLogout } = useAuth();
 
   useEffect(() => {
     loadWallet();
@@ -73,25 +60,8 @@ const Wallet: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white text-gray-800">
-       <Navbar
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              isMenuOpen={isMenuOpen}
-              setIsMenuOpen={setIsMenuOpen}
-              isProfileOpen={isProfileOpen}
-              setIsProfileOpen={setIsProfileOpen}
-              user={user}
-               handleLogout={handleLogout}
-              navItems={navItems}
-            />
       <div className="container mx-auto px-4 py-22">
         <div className="flex flex-col lg:flex-row gap-8">
-          <ProfileSidebar
-            freelancer={{
-              fullName: user?.fullName || "Anonymous User",
-              profilePicture: user?.profilePicture,
-            }}
-          />
 
           <div className="max-w-4xl mx-auto mr-94.5 mt-0 px-6 md:px-10 font-sans space-y-10">
             {/* Wallet Card */}
@@ -251,7 +221,6 @@ const Wallet: React.FC = () => {
           onSuccess={loadWallet}
         />
       </Modal>
-      <Footer />
     </div>
   );
 };

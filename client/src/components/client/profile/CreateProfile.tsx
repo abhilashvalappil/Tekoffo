@@ -12,7 +12,6 @@ import { handleApiError } from '../../../utils/errors/errorHandler';
 function CreateProfile() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  // const user = useSelector((state: RootState) => state.auth.user);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(

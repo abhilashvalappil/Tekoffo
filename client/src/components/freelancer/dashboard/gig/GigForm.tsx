@@ -1,14 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import Navbar from '../../shared/Navbar';
-import { navItems } from '../../shared/NavbarItems';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../../redux/store';
 import { useNavigate } from 'react-router-dom';
 import { GigFormData,GigFormSchema } from '../../../../utils/validations/GigFormValidation';
-import Footer from '../../../shared/Footer';
 import { createGig, fetchListedCategories } from '../../../../api';
-import { useAuth } from '../../../../hooks/customhooks/useAuth';
 import { handleApiError } from '../../../../utils/errors/errorHandler';
 
 interface Category {
@@ -22,9 +16,6 @@ type FormErrors = Partial<Record<keyof GigFormData, string>>;
 
 const CreateGig: React.FC = () => {
   const [step, setStep] = useState(1);
-  const [activeTab, setActiveTab] = useState<string>('jobs');
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState<GigFormData>({
       title: '',
@@ -37,10 +28,7 @@ const CreateGig: React.FC = () => {
       requirements: [],
     });
 
-  const user = useSelector((state: RootState) => state.auth.user);
-  const navigate = useNavigate();
-  const { handleLogout } = useAuth();
-
+     const navigate = useNavigate();
      const [errors, setErrors] = useState<FormErrors>({});
 
      const loadCategories = async () => {
@@ -92,7 +80,6 @@ const CreateGig: React.FC = () => {
     return;
   }
   try {
-     console.log('console form gigform.tsx',formData)
      const message = await createGig(formData)
      toast.success(message)
      setTimeout(() => {
@@ -105,22 +92,9 @@ const CreateGig: React.FC = () => {
 
   return (
     <>
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-        isProfileOpen={isProfileOpen}
-        setIsProfileOpen={setIsProfileOpen}
-        user={user}
-        handleLogout={handleLogout}
-        navItems={navItems}
-      />
     <div className="min-h-screen pt-25 bg-gray-100  ">
-      
       <div className="max-w-3xl mx-auto p-8 pt-5 py-8 mb-16 bg-white shadow-2xl rounded-2xl">
         <h1 className="text-3xl font-bold text-gray-800 mb-8">Create Gig</h1>
-
         <form onSubmit={handleSubmit} className="space-y-5">
            <Toaster position="top-center" reverseOrder={false} />
           {step === 1 && (
@@ -278,7 +252,6 @@ const CreateGig: React.FC = () => {
           )}
         </form>
       </div>
-       <Footer />
     </div>
     </>
   );

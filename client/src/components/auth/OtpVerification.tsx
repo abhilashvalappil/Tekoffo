@@ -118,9 +118,9 @@ const VerifyOtp = () => {
       if (register.fulfilled.match(result)) {
         const role = result.payload.user.role;
         if(role == 'freelancer'){
-          navigate('/freelancer-dashboard')
+          navigate('/freelancer')
         }else if(role == 'client'){
-          navigate('/client-dashboard')
+          navigate('/client')
         }
       }else if(register.rejected.match(result)){
         setServerError(result.payload as string)

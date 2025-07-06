@@ -1,126 +1,162 @@
+import { lazy, Suspense } from "react";
 import { Route} from "react-router-dom";
 import FreelancerHome from "../components/freelancer/dashboard/FreelancerDashboard";
 import ProtectedRoute from "./ProtectedRoute";
-import CreateFreelancerProfile from "../components/freelancer/profile/CreateProfile"; 
-import FreelancerProfile from "../components/freelancer/profile/Profile";
-import AvailableJobs from "../components/freelancer/dashboard/AvailableJobs";
-import CompleteOnboarding from "../components/freelancer/dashboard/CompleteOnboarding";
-import OnboardingSuccess from "../components/freelancer/dashboard/OnboardingSuccess";
-import FreelancerProposals from "../components/freelancer/dashboard/Proposals";
-import Contracts from "../components/freelancer/dashboard/Contracts";
-import CreateGig from "../components/freelancer/dashboard/gig/GigForm";
-import MyGigs from "../components/freelancer/dashboard/gig/Gigs";
-import JobInvitationsPage from "../components/freelancer/dashboard/invitations/JobInvitations";
-import ChatBox from "../components/freelancer/dashboard/Chat";
-import Wallet from "../components/freelancer/profile/Wallet";
+import FreelancerLayout from "../components/freelancer/shared/Layout";
+import Loader from "../components/shared/Loader";
+
+
+const FreelancerProfile = lazy(() => import("../components/freelancer/profile/Profile"));
+const CreateFreelancerProfile = lazy(() => import("../components/freelancer/profile/CreateProfile"));
+const Wallet = lazy(() => import("../components/freelancer/profile/Wallet"));
+const AvailableJobs = lazy(() => import("../components/freelancer/dashboard/AvailableJobs"));
+const FreelancerProposals = lazy(() => import("../components/freelancer/dashboard/Proposals"));
+const Contracts = lazy(() => import("../components/freelancer/dashboard/Contracts"));
+const CreateGig = lazy(() => import("../components/freelancer/dashboard/gig/GigForm"));
+const MyGigs = lazy(() => import("../components/freelancer/dashboard/gig/Gigs"));
+const JobInvitationsPage = lazy(() => import("../components/freelancer/dashboard/invitations/JobInvitations"));
+const CompleteOnboarding = lazy(() => import("../components/freelancer/dashboard/CompleteOnboarding"));
+const OnboardingSuccess = lazy(() => import("../components/freelancer/dashboard/OnboardingSuccess"));
+const ChatBox = lazy(() => import("../components/freelancer/dashboard/Chat"));
 
  
 const FreelancerRoutes = () => (
   <>
     <Route
-      path="/freelancer-dashboard"
+      path="/freelancer"
       element={
         <ProtectedRoute allowedRoles={["freelancer"]}>
-          <FreelancerHome />
+          <FreelancerLayout />
         </ProtectedRoute>
       }
-    />
+    >
+     <Route index element={<FreelancerHome />} />
+     
+     <Route
+        path="profile"
+        element={
+          <Suspense fallback={<Loader />}>
+            <ProtectedRoute allowedRoles={["freelancer"]}>
+              <FreelancerProfile />
+            </ProtectedRoute>
+          </Suspense>
+        }
+      />
+
+     <Route
+        path="createprofile"
+        element={
+          <Suspense fallback={<Loader />}>
+            <ProtectedRoute allowedRoles={["freelancer"]}>
+              <CreateFreelancerProfile />
+            </ProtectedRoute>
+          </Suspense>
+        }
+      />
+
+     <Route
+        path="wallet"
+        element={
+          <Suspense fallback={<Loader />}>
+            <ProtectedRoute allowedRoles={["freelancer"]}>
+              <Wallet />
+            </ProtectedRoute>
+          </Suspense>
+        }
+      />
+
     <Route
-      path="/freelancer/profile" 
-       element={
-         <ProtectedRoute allowedRoles={["freelancer"]}>
-       <FreelancerProfile />
-         </ProtectedRoute>
-       } />
-
-    <Route 
-      path="/freelancer/createprofile" 
+        path="jobs"
         element={
-          <ProtectedRoute allowedRoles={["freelancer"]}>
-        <CreateFreelancerProfile />
-          </ProtectedRoute>
-        } />
-
-    <Route 
-      path="/freelancer/wallet" 
+          <Suspense fallback={<Loader />}>
+            <ProtectedRoute allowedRoles={["freelancer"]}>
+              <AvailableJobs />
+            </ProtectedRoute>
+          </Suspense>
+        }
+      />
+    
+     <Route
+        path="proposals"
         element={
-          <ProtectedRoute allowedRoles={["freelancer"]}>
-        <Wallet />
-          </ProtectedRoute>
-        } />
+          <Suspense fallback={<Loader />}>
+            <FreelancerProposals />
+          </Suspense>
+        }
+      />
 
-    <Route 
-    path="/freelancer/jobs" 
-     element={
-        <ProtectedRoute allowedRoles={["freelancer"]}>
-     <AvailableJobs />
-      </ProtectedRoute>
-     } />
+     <Route
+        path="contracts"
+        element={
+          <Suspense fallback={<Loader />}>
+            <Contracts />
+          </Suspense>
+        }
+      />
+ 
+     <Route
+        path="create-gig"
+        element={
+          <Suspense fallback={<Loader />}>
+            <CreateGig />
+          </Suspense>
+        }
+      />
 
-    <Route 
-    path="/freelancer/proposals" 
-     element={
-        <ProtectedRoute allowedRoles={["freelancer"]}>
-     <FreelancerProposals />
-      </ProtectedRoute>
-     } />
+   
 
-    <Route 
-    path="/freelancer/contracts" 
-     element={
-        <ProtectedRoute allowedRoles={["freelancer"]}>
-     <Contracts />
-      </ProtectedRoute>
-     } />
+     <Route
+        path="gigs"
+        element={
+          <Suspense fallback={<Loader />}>
+            <MyGigs />
+          </Suspense>
+        }
+      />
 
-    <Route 
-    path="/freelancer/create-gig" 
-     element={
-        <ProtectedRoute allowedRoles={["freelancer"]}>
-     <CreateGig />
-      </ProtectedRoute>
-     } />
-
-    <Route 
-    path="/freelancer/gigs" 
-     element={
-        <ProtectedRoute allowedRoles={["freelancer"]}>
-     <MyGigs />
-      </ProtectedRoute>
-     } />
-
-    <Route 
-    path="/freelancer/invitations" 
-     element={
-        <ProtectedRoute allowedRoles={["freelancer"]}>
-     <JobInvitationsPage />
-      </ProtectedRoute>
-     } />
-
-    <Route 
-    path="/messages" 
-     element={
-        <ProtectedRoute allowedRoles={["freelancer","client"]}>
-     <ChatBox />
-      </ProtectedRoute>
-     } />
+    
+    <Route
+        path="invitations"
+        element={
+          <Suspense fallback={<Loader />}>
+            <JobInvitationsPage />
+          </Suspense>
+        }
+      />
+  
 
     <Route 
     path="/freelancer/complete-onboarding" 
      element={
+           <Suspense fallback={<Loader />}>
         <ProtectedRoute allowedRoles={["freelancer"]}>
-     <CompleteOnboarding />
+          <CompleteOnboarding />
       </ProtectedRoute>
+        </Suspense>
      } />
 
-    <Route 
+   
+</Route>
+
+ <Route 
     path="/onboarding/success" 
      element={
+           <Suspense fallback={<Loader />}>
         <ProtectedRoute allowedRoles={["freelancer"]}>
-     <OnboardingSuccess />
+          <OnboardingSuccess />
       </ProtectedRoute>
+           </Suspense>
      } />
 
+  <Route 
+    path="/messages" 
+     element={
+            <Suspense fallback={<Loader />}>
+              <ProtectedRoute allowedRoles={["freelancer","client"]}>
+                <ChatBox />
+            </ProtectedRoute>
+          </Suspense>
+     } />
   </>
 );
 

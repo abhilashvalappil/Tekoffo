@@ -3,9 +3,6 @@ import { Briefcase, ChevronRight, DollarSign, Clock, Repeat, User, Search } from
 import toast, { Toaster } from 'react-hot-toast';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
-import ClientNavbar from '../shared/Navbar';
-import Footer from '../../shared/Footer';
-import { clientNavItems } from '../shared/NavbarItems';
 import { fetchFreelancersGigs, fetchJobs, fetchReviews, inviteFreelancerToJob } from '../../../api';
 import { FreelancerGigListDTO } from '../../../types/gigTypes';
 import ReviewsModal from '../../shared/ReviewsModal';
@@ -23,7 +20,6 @@ const FreelancerGigs = () => {
   const [gigs, setGigs] = useState<FreelancerGigListDTO[]>([]);
   const [jobs, setJobs] = useState<Job[]>([])
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('gigs');
   const [showReviews, setShowReviews] = useState<boolean>(false);
   const [showInviteModal, setShowInviteModal] = useState<boolean>(false);
   const [selectedFreelancerId, setSelectedFreelancerId] = useState<string | null>(null);
@@ -69,7 +65,6 @@ const FreelancerGigs = () => {
   }
 
   const handleViewReviews = async(freelancerId:string) => {
-    console.log('console from handleviewReviewssssss',freelancerId)
     const reviews = await fetchReviews(freelancerId)
     setReviews(reviews)
     setShowReviews(true);
@@ -78,8 +73,7 @@ const FreelancerGigs = () => {
   return (
     <div className="min-h-screen bg-white text-[#0A142F]">
       <Toaster position="top-center" reverseOrder={false} />
-      <ClientNavbar navItems={clientNavItems} activeTab={activeTab} setActiveTab={setActiveTab} />
-      <div className="pt-16 p-4 md:p-20">
+      <div className="pt-16 p-4 md:p-20 lg:ml-48">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-2xl md:text-3xl font-bold text-[#0A142F] mb-8">Freelancer Gigs</h1>
           <div className="relative">
@@ -134,7 +128,6 @@ const FreelancerGigs = () => {
                                 setShowReviews(true);
                                 handleViewReviews(gig.freelancer._id);
                               }}
-                            // onClick={() => handleViewReviews(gig.freelancerId._id)}
                             className="text-[#0A142F]/70 hover:text-[#0A142F] underline text-sm transition-colors"
                           >
                             View Ratings & Reviews
@@ -225,7 +218,6 @@ const FreelancerGigs = () => {
         onSendInvite={handleSendInvite}
         jobs={jobs}
       />
-      <Footer />
     </div>
   );
 };

@@ -1,20 +1,16 @@
 
 
 import React, { useEffect, useState } from 'react';
-import { Globe, Mail, Pencil } from 'lucide-react';
-import ClientProfileSidebar from './ProfileSidebar';
+import { Globe, Lock, Mail, Pencil } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { Link, useNavigate } from 'react-router-dom';
 import { updateUserProfile } from '../../../redux/services/userService';
 import { z } from 'zod';
 import { profileFormSchema,ProfileFormData } from '../../../utils/validations/ProfileValidation';
-import ClientNavbar from '../shared/Navbar';
-import { clientNavItems } from '../shared/NavbarItems';
-import Footer from '../../shared/Footer';
 import { fetchActiveJobPosts, fetchClientProfile } from '../../../api';
 import { UserProfileResponse } from '../../../types/userTypes';
-// import { profileFormSchema, ProfileFormData } from './profileFormSchema'; // Assuming schema is in a separate file
+import ChangePasswordModal from './ChangePassword';
 
 interface FormErrors {
   fullName?: string;
@@ -25,7 +21,6 @@ interface FormErrors {
 }
 
 const DisplayProfile = () => {
-  const [activeTab, setActiveTab] = useState('profile');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -33,6 +28,7 @@ const DisplayProfile = () => {
   const [profileData,setProfileData] = useState<UserProfileResponse>();
   const [activeJobsCount, setActiveJobsCount] = useState<number>();
   const [completedJobsCount, setCompletedJobsCount] = useState<number>();
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -40,7 +36,7 @@ const DisplayProfile = () => {
 
   const hasProfile = !!user && !!user.fullName;
 
-  // Initialize form data with user values or defaults
+  // Initialize form data
   const [formData, setFormData] = useState<ProfileFormData>({
     fullName: user?.fullName || '',
     description: user?.description || '',
@@ -156,35 +152,43 @@ const DisplayProfile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-white text-gray-800">
-      <ClientNavbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        navItems={clientNavItems}
-      />
-      <div className="container mx-auto px-4 py-22">
+      <div className="container ml-60 mx-auto px-4 py-22">
         <div className="flex flex-col lg:flex-row gap-8">
-          <ClientProfileSidebar
-            client={{
-              fullName: user?.fullName || 'Anonymous User',
-              companyName: user?.companyName,
-              profilePicture: user?.profilePicture,
-            }}
-          />
-
           <div className="lg:w-3/4">
             {hasProfile ? (
               <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex justify-between items-start mb-6">
                   <h1 className="text-3xl font-bold text-gray-900">Profile Details</h1>
-                  <button
-                    onClick={handleEditClick}
-                    className="flex items-center gap-2 bg-[#0A142F] text-white px-4 py-2 rounded-lg hover:bg-[#1a2b5f] transition"
-                  >
-                    <Pencil size={16} />
-                    Edit Profile
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleEditClick}
+                      className="flex items-center gap-2 bg-[#0A142F] text-white px-4 py-2 rounded-lg hover:bg-[#1a2b5f] transition"
+                    >
+                      <Pencil size={16} />
+                      Edit Profile
+                    </button>
+                    <button
+                      onClick={() => setIsChangePasswordOpen(true)}
+                      className="flex items-center gap-2 border border-[#0A142F] text-[#0A142F] px-4 py-2 rounded-lg hover:bg-[#f0f4ff] transition"
+                    >
+                      <Lock size={16} />
+                      Change Password
+                    </button>
+                  </div>
                 </div>
-
+                <div className="flex items-center gap-6 mb-8">
+                  <img
+                    src={user?.profilePicture || '/default-avatar.png'}
+                    alt="Profile"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-[#0A142F]"
+                  />
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{user?.fullName || 'Anonymous User'}</h2>
+                    {user?.companyName && (
+                      <p className="text-[#0A142F] flex items-center gap-1">Company: {user.companyName}</p>
+                    )}
+                  </div>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-6">
                     <div>
@@ -361,7 +365,10 @@ const DisplayProfile = () => {
           </div>
         </div>
       </div>
-      <Footer />
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
     </div>
   );
 }

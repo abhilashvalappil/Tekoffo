@@ -4,15 +4,12 @@ import { Search, Filter, ChevronDown} from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useFetchContracts } from '../../../hooks/customhooks/useFetchContracts';
 import { approveContract, fetchSubmittedReviews, submitReview } from '../../../api';
-import ClientNavbar from '../shared/Navbar';
-import { clientNavItems } from '../shared/NavbarItems';
 import { handleApiError } from '../../../utils/errors/errorHandler';
 import { useDebounce } from '../../../hooks/customhooks/useDebounce';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
 import ReviewModal from '../../shared/Rating';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
-import Footer from '../../shared/Footer';
 import { IReview } from '../../../types/review';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
@@ -21,8 +18,6 @@ import ChatButton from '../../freelancer/shared/ChatButton';
 const Contracts = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  // const [timeFilter, setTimeFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<string>('contracts');
   const [isOpen, setIsOpen] = useState(false);
   const [reviews,setReviews] = useState<IReview[]>([])
   const { pagination, handlePageChange, updateMeta } = usePagination({
@@ -75,10 +70,10 @@ const Contracts = () => {
 
   return (
   <div className="min-h-screen bg-white text-[#0A142F]">
-    <ClientNavbar activeTab={activeTab} setActiveTab={setActiveTab} navItems={clientNavItems} />
     <Toaster position="top-center" reverseOrder={false} />
 
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+    {/* <div className="max-w-7xl mx-auto ml-64 px-4 sm:px-6 lg:px-8 py-20"> */}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 lg:ml-64 py-20">
       <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Contracts Management</h1>
 
       {/* Search & Filters */}
@@ -231,8 +226,6 @@ const Contracts = () => {
         </Stack>
       </div>
     </div>
-
-    <Footer />
   </div>
 );
 

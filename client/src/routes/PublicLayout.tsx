@@ -10,9 +10,9 @@ const PublicLayout = () => {
   if (state.isAuthenticated && state.user) {
     switch (state.user.role) {
       case 'freelancer':
-        return <Navigate to="/freelancer-dashboard" replace />;
+        return <Navigate to="/freelancer" replace />;
       case 'client':
-        return <Navigate to="/client-dashboard" replace />;
+        return <Navigate to="/client" replace />;
       case 'admin' :
         return <Navigate to="/admin/dashboard" replace />;
       default:

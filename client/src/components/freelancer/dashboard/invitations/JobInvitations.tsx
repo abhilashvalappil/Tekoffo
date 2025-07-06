@@ -4,11 +4,6 @@ import { ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
-import Navbar from '../../shared/Navbar';
-import { navItems } from '../../shared/NavbarItems';
-import { useAuth } from '../../../../hooks/customhooks/useAuth';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../../../redux/store';
 import { acceptInvitation, fetchAndUpdateProposalToReject, fetchClientProfile, fetchJobData, fetchJobInvitations, fetchReviews, SortOption } from '../../../../api';
 import { JobInvitationView } from '../../../../types/proposalTypes';
 import JobDetailsModal from './JobDetailsModal';
@@ -27,14 +22,9 @@ export default function JobInvitationsPage() {
   const [invitations, setInvitations] = useState<JobInvitationView[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState<SortOption>('newest');
-  const [activeTab, setActiveTab] = useState<string>('invitations');
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedJob, setSelectedJob] = useState<JobDataType | null>(null);
-  // const [showReviews, setShowReviews] = useState<boolean>(false);
   const [isUserProfileModalOpen, setIsUserProfileModalOpen] = useState<boolean>(false);
-  // const [selectedClientName, setSelectedClientName] = useState<string>('');
   const [userProfile, setUserProfile] = useState<UserProfileResponse>()
   const [isReviewsModalOpen, setIsReviewsModalOpen] = useState<boolean>(false);
   const [clientReviews, setClientReviews] = useState<IFrontendPopulatedReview[]>([]);
@@ -45,8 +35,6 @@ export default function JobInvitationsPage() {
       limit: 5,
     });
 
-  const { handleLogout } = useAuth();
-  const user = useSelector((state: RootState) => state.auth.user);
   const debouncedSearchTerm = useDebounce(searchQuery,500)
 
   useEffect(() => {
@@ -81,13 +69,11 @@ export default function JobInvitationsPage() {
   const handleViewProfile = async(clientId: string) => {
     const data = await fetchClientProfile(clientId)
     setUserProfile(data)
-    // setSelectedClientName(clientId);
     setIsUserProfileModalOpen(true);
   };
 
   const handleCloseUserProfileModal = () => {
     setIsUserProfileModalOpen(false);
-    // setSelectedClientName('');
   };
 
   const handleViewReviews = async(clientId: string) => {
@@ -118,25 +104,19 @@ export default function JobInvitationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-        isProfileOpen={isProfileOpen}
-        setIsProfileOpen={setIsProfileOpen}
-        user={user}
-        handleLogout={handleLogout}
-        navItems={navItems}
-      />
-      <div className="container mx-auto px-28 py-28">
-          <Toaster position="top-center" />
+    
+    // <div className="min-h-screen ml-38 bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-gray-50 text-gray-900 ml-0 md:ml-64">
+      {/* <div className="container mx-auto px-28 py-20"> */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <Toaster position="top-center" />
+
         <div className="flex flex-col gap-4 mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-[#0A142F]">
             Job Invitations
           </h1>
         </div>
+        
         <div className="mb-6 flex items-center justify-between gap-4">
           <div className="relative flex-grow max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -175,7 +155,7 @@ export default function JobInvitationsPage() {
               onReject={handleReject}
               onViewProfile={handleViewProfile}
               onViewDetails={handleViewDetails}
-              onViewReviews={handleViewReviews} // Add this prop
+              onViewReviews={handleViewReviews} 
             />
           ))}
         </div>

@@ -1,29 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Globe, Mail, X } from 'lucide-react';
+import { Globe, Lock, Mail, Pencil, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import ProfileSidebar from './ProfileSidebar';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../redux/store';
 import { updateFreelancerProfile } from '../../../redux/services/userService';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import Navbar from '../shared/Navbar';
-import { navItems } from '../shared/NavbarItems';
 import { freelancerProfileSchema, FreelancerProfileFormData } from '../../../utils/validations/ProfileValidation';
-import { useAuth } from '../../../hooks/customhooks/useAuth';
-import Footer from '../../shared/Footer';
+import ChangePasswordModal from '../../client/profile/ChangePassword';
 
 function FreelancerProfile() {
-  // const [activeTab, setActiveTab] = useState<string>('contracts');
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.auth.user);
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(user?.profilePicture || null);
-
-  const { handleLogout } = useAuth();
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  
 
   // const hasProfile = user && (user.description || user.skills?.length > 0 || user.country);
   const hasProfile =
@@ -128,31 +121,14 @@ function FreelancerProfile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white text-gray-800">
-       <Navbar
-        // activeTab={activeTab}
-        // setActiveTab={setActiveTab}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-        isProfileOpen={isProfileOpen}
-        setIsProfileOpen={setIsProfileOpen}
-        user={user}
-         handleLogout={handleLogout}
-        navItems={navItems}
-      />
-      <div className="container mx-auto px-4 py-22">
+      <div className="container ml-60 mx-auto px-4 py-22">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar */}
-          <ProfileSidebar
-            freelancer={{
-              fullName: user?.fullName || 'Anonymous User',
-              profilePicture: user?.profilePicture,
-            }}
-          />
 
           {/* Main Content */}
           <div className="lg:w-3/4">
+           {hasProfile ? (
             <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-              <div className="flex justify-between items-center mb-6">
+              {/* <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold text-[#0A142F]">Profile Details</h1>
                 <button
                   onClick={() => setIsModalOpen(true)}
@@ -160,7 +136,40 @@ function FreelancerProfile() {
                 >
                   Edit Profile
                 </button>
-              </div>
+              </div> */}
+              <div className="flex justify-between items-start mb-6">
+                  <h1 className="text-3xl font-bold text-gray-900">Profile Details</h1>
+                  <div className="flex gap-3">
+                    <button
+                    onClick={() => setIsModalOpen(true)}
+                      // onClick={handleEditClick}
+                      className="flex items-center gap-2 bg-[#0A142F] text-white px-4 py-2 rounded-lg hover:bg-[#1a2b5f] transition"
+                    >
+                      <Pencil size={16} />
+                      Edit Profile
+                    </button>
+                    <button
+                      onClick={() => setIsChangePasswordOpen(true)}
+                      className="flex items-center gap-2 border border-[#0A142F] text-[#0A142F] px-4 py-2 rounded-lg hover:bg-[#f0f4ff] transition"
+                    >
+                      <Lock size={16} />
+                      Change Password
+                    </button>
+                  </div>
+                </div>
+                 <div className="flex items-center gap-6 mb-8">
+                  <img
+                    src={user?.profilePicture || '/default-avatar.png'}
+                    alt="Profile"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-[#0A142F]"
+                  />
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{user?.fullName || 'Anonymous User'}</h2>
+                    {user?.companyName && (
+                      <p className="text-[#0A142F] flex items-center gap-1">Company: {user.companyName}</p>
+                    )}
+                  </div>
+                </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <div>
@@ -260,28 +269,18 @@ function FreelancerProfile() {
                 </div>
               </div>
             </div>
-
-            {/* Stats Cards */}
-            {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-              <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-lg">
-                <h4 className="text-[#0A142F] font-semibold">Projects Completed</h4>
-                <p className="text-3xl font-bold mt-2 text-[#0A142F]">
-                  {user?.projectsCompleted || 0}
-                </p>
-              </div>
-              <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-lg">
-                <h4 className="text-[#0A142F] font-semibold">Average Rating</h4>
-                <p className="text-3xl font-bold mt-2 text-[#0A142F]">
-                  {user?.averageRating || 'N/A'}
-                </p>
-              </div>
-              <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-lg">
-                <h4 className="text-[#0A142F] font-semibold">Total Earned</h4>
-                <p className="text-3xl font-bold mt-2 text-[#0A142F]">
-                  {user?.total_Earnings ? `$${user?.total_Earnings}` : '$0'}
-                </p>
-              </div>
-            </div> */}
+            ) : (
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 text-center">
+              <h1 className="text-2xl font-bold mb-4 text-gray-900">No Profile Found</h1>
+              <p className="text-gray-600 mb-6">It looks like you haven't created a profile yet. Create one to showcase your details!</p>
+              <Link
+                to="/client/createprofile"
+                className="inline-block bg-[#0A142F] text-white px-6 py-3 rounded-lg hover:bg-[#1a2b5f] transition"
+              >
+                Create Profile
+              </Link>
+            </div>
+          )}
           </div>
         </div>
       </div>
@@ -431,7 +430,10 @@ function FreelancerProfile() {
           </div>
         </div>
       )}
-      <Footer />
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
     </div>
   );
 }

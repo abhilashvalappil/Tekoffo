@@ -32,6 +32,7 @@ export interface Proposal{
   amount: number;
   description: string;
   duration?: string;
+  attachments?:string;
   senderEmail?: string;
   senderProfilePicture?: string;
   senderCountry?: string;

@@ -1,133 +1,130 @@
 
+import { lazy, Suspense } from "react";
 import { Route} from "react-router-dom";
 import ClientDashboard from "../components/client/dashboard/ClientDashboard";
 import ProtectedRoute from "./ProtectedRoute";
-import CreateProfile from "../components/client/profile/CreateProfile";
-import DisplayProfile from "../components/client/profile/Profile";
-import ChangePassword from "../components/client/profile/ChangePassword";
-import PostJob from "../components/client/dashboard/PostJob";
-import MyJobPosts from "../components/client/dashboard/MyJobs";
-// import Freelancers from "../components/client/dashboard/AvailableFreelancers";
-import Proposals from "../components/client/dashboard/Proposals";
-import PaymentReview from "../components/client/payment/PaymentReview";
-import PaymentSuccess from "../pages/PaymentSuccess";
-import Contracts from "../components/client/dashboard/Contracts";
-import FreelancerGigsList from "../components/client/dashboard/GigPosts";
+import ClientLayout from "../components/client/shared/Layout";
+import Loader from "../components/shared/Loader";
 
+const DisplayProfile = lazy(() => import("../components/client/profile/Profile"));
+const CreateProfile = lazy(() => import("../components/client/profile/CreateProfile"));
+const PostJob = lazy(() => import("../components/client/dashboard/PostJob"));
+const MyJobPosts = lazy(() => import("../components/client/dashboard/MyJobs"));
+const FreelancerGigsList = lazy(() => import("../components/client/dashboard/GigPosts"));
+const Proposals = lazy(() => import("../components/client/dashboard/Proposals"));
+const Contracts = lazy(() => import("../components/client/dashboard/Contracts"));
+const PaymentReview = lazy(() => import("../components/client/payment/PaymentReview"));
+const ChatBox = lazy(() => import("../components/freelancer/dashboard/Chat"));
+const PaymentSuccess = lazy(() => import("../pages/PaymentSuccess"));
  
+
 const ClientRoutes = () => (
   <>
-     
     <Route
-      path="/client-dashboard"
+    path="/client"
+    element={
+      <ProtectedRoute allowedRoles={["client"]}>
+        <ClientLayout />
+      </ProtectedRoute>
+    }
+  > 
+     
+     <Route index element={<ClientDashboard />} />
+
+    <Route 
+      path="createprofile" 
       element={
+         <Suspense fallback={<Loader />}>
         <ProtectedRoute allowedRoles={["client"]}>
-          <ClientDashboard />
+          <CreateProfile />
+       </ProtectedRoute>
+       </Suspense>
+    } 
+    />
+
+    <Route 
+      path="profile" 
+      element={
+           <Suspense fallback={<Loader />}>
+        <ProtectedRoute allowedRoles={["client"]}>
+          <DisplayProfile />
         </ProtectedRoute>
+          </Suspense>
+    } 
+    />
+
+     <Route
+      path="post-job"
+      element={
+        <Suspense fallback={<Loader />}>
+          <PostJob />
+        </Suspense>
+      }
+    />
+
+     <Route
+      path="myjobs"
+      element={
+        <Suspense fallback={<Loader />}>
+          <MyJobPosts />
+        </Suspense>
+      }
+    />
+
+     <Route
+      path="freelancer-gigs"
+      element={
+        <Suspense fallback={<Loader />}>
+          <FreelancerGigsList />
+        </Suspense>
+      }
+    />
+    <Route
+      path="proposals"
+      element={
+        <Suspense fallback={<Loader />}>
+          <Proposals />
+        </Suspense>
+      }
+    />
+
+    <Route
+      path="contracts"
+      element={
+        <Suspense fallback={<Loader />}>
+          <Contracts />
+        </Suspense>
       }
     />
 
     <Route 
-      path="/client/createprofile" 
+      path="payment-review"
       element={
-        <ProtectedRoute allowedRoles={["client"]}>
-          <CreateProfile />
-       </ProtectedRoute>
-    } 
-    />
-
-    <Route 
-      path="/client/profile" 
-      element={
-        <ProtectedRoute allowedRoles={["client"]}>
-          <DisplayProfile />
-        </ProtectedRoute>
-    } 
-    />
-
-    <Route 
-      path="/change-password"
-      element={
-        <ProtectedRoute allowedRoles={["client","freelancer"]}>
-          <ChangePassword />
-        </ProtectedRoute>
-     } 
-     />
-
-    <Route 
-      path="/client/post-job" 
-      element={
-        <ProtectedRoute allowedRoles={["client"]}>
-          <PostJob />
-        </ProtectedRoute>
-    } 
-    />
-
-    <Route 
-      path="/client/myjobs" 
-      element={
-        <ProtectedRoute allowedRoles={["client"]}>
-          <MyJobPosts />
-        </ProtectedRoute>
-    } 
-    />
-
-    {/* <Route 
-      path="/client/freelancers"
-      element={
-        <ProtectedRoute allowedRoles={["client"]}>
-          <Freelancers />
-        </ProtectedRoute>
-     } /> */}
-
-    <Route 
-      path="/client/freelancer-gigs"
-      element={
-        <ProtectedRoute allowedRoles={["client"]}>
-          <FreelancerGigsList />
-        </ProtectedRoute>
-     } />
-
-    <Route 
-      path="/client/proposals"
-      element={
-        <ProtectedRoute allowedRoles={["client"]}>
-          <Proposals />
-        </ProtectedRoute>
-     } />
-
-    {/* <Route 
-      path="/client/proposalss"
-      element={
-        <ProtectedRoute allowedRoles={["client"]}>
-          <JobTabs />
-        </ProtectedRoute>
-     } /> */}
-
-    <Route 
-      path="/client/contracts"
-      element={
-        <ProtectedRoute allowedRoles={["client"]}>
-          <Contracts />
-        </ProtectedRoute>
-     } />
-
-    <Route 
-      path="/client/payment-review"
-      element={
+           <Suspense fallback={<Loader />}>
         <ProtectedRoute allowedRoles={["client"]}>
           <PaymentReview />
         </ProtectedRoute>
+          </Suspense>
      } />
 
-    <Route 
-      path="/payment-success"
+     <Route
+      path="messages"
       element={
-        // <ProtectedRoute allowedRoles={["client"]}>
+        <Suspense fallback={<Loader />}>
+          <ChatBox />
+        </Suspense>
+      }
+    />
+
+    <Route 
+      path="payment-success"
+      element={
+        <Suspense fallback={<Loader />}>
           <PaymentSuccess />
-        // </ProtectedRoute>
+          </Suspense>
      } />
-     
+
+     </Route>
   </>
 );
 

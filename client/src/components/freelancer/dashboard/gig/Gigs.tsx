@@ -3,22 +3,15 @@ import {Briefcase, Star, ChevronRight, DollarSign, Clock, Repeat } from 'lucide-
 import { Toaster } from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../../redux/store';
-import Navbar from '../../shared/Navbar';
-import { navItems } from '../../shared/NavbarItems';
-import Footer from '../../../shared/Footer';
 import { Gig } from '../../../../types/gigTypes';
 import { fetchGigs } from '../../../../api';
 import { useNavigate } from 'react-router-dom';
 import EditGigModal from './EditGigModal';
 import { createGigHandlers } from './handlers/gigHandlers';
-import { useAuth } from '../../../../hooks/customhooks/useAuth';
 
 
 const MyGigs: React.FC = () => {
   const [gigs, setGigs] = useState<Gig[]>([]);
-  const [activeTab, setActiveTab] = useState<string>('jobs');
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedGig, setSelectedGig] = useState<Gig | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
@@ -26,8 +19,6 @@ const MyGigs: React.FC = () => {
 
   const user = useSelector((state: RootState) => state.auth.user);
   const navigate = useNavigate();
-
-   const { handleLogout } = useAuth();
 
   useEffect(() => {
     const loadGigs = async () => {
@@ -59,19 +50,8 @@ const MyGigs: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-white text-[#0A142F]">
+    <div className="min-h-screen bg-white text-[#0A142F] ml-0 md:ml-64">
       <Toaster position="top-center" reverseOrder={false} />
-      <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
-        isProfileOpen={isProfileOpen}
-        setIsProfileOpen={setIsProfileOpen}
-        user={user}
-        handleLogout={handleLogout}
-        navItems={navItems}
-      />
       <div className="pt-16 p-4 md:p-20">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col gap-4 mb-8">
@@ -226,7 +206,6 @@ const MyGigs: React.FC = () => {
           </div>
         </div>
       )}
-      <Footer />
     </div>
   );
 };

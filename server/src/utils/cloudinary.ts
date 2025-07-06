@@ -27,6 +27,8 @@ const storage = new CloudinaryStorage({
     cloudinary,
     params: async () => ({
       folder: 'proposals',
+       resource_type: 'raw',
+         type: 'upload',
       allowed_formats: ['pdf'],
     }),
   });

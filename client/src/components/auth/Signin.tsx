@@ -64,9 +64,9 @@ const validateForm = (): boolean => {
         if (signIn.fulfilled.match(result)) {
           const userRole = result.payload.user.role;
         if (userRole === 'freelancer') {
-          navigate('/freelancer-dashboard');
+          navigate('/freelancer');
         } else if (userRole === 'client') {
-          navigate('/client-dashboard');
+          navigate('/client');
         } else {
           navigate('/admin/dashboard');
         }
