@@ -67,7 +67,7 @@ export interface ProposalData {
     attachments?:string;
     createdAt:string;
     viewed?:boolean;
-    job: {
+    jobId: {
         _id: string;
         title: string;
         description: string;
@@ -76,7 +76,7 @@ export interface ProposalData {
         _id: string;
         fullName: string;
     };
-    freelancer: {
+    freelancerId: {
         _id: string;
         fullName: string;
         email:string;

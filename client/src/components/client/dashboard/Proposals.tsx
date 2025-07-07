@@ -67,34 +67,34 @@ const Proposals = () => {
       id: item._id.toString(),
       _id: item._id,
       jobId: {
-        _id: item.job._id,
-        title: item.job.title,
-        description: item.job.description,
+        _id: item.jobId._id,
+        title: item.jobId.title,
+        description: item.jobId.description,
       },
       freelancerId: {
-        _id: item.freelancer._id,
-        fullName: item.freelancer.fullName,
-        email: item.freelancer.email,
+        _id: item.freelancerId._id,
+        fullName: item.freelancerId.fullName,
+        email: item.freelancerId.email,
       },
-      title: item.job.title,
-      sender: isSent ? 'Your Company' : item.freelancer.fullName,
-      receiver: isSent ? item.freelancer.fullName : 'Your Company',
+      title: item.jobId.title,
+      sender: isSent ? 'Your Company' : item.freelancerId.fullName,
+      receiver: isSent ? item.freelancerId.fullName : 'Your Company',
       date: new Date(item.createdAt).toISOString().split('T')[0],
       status: item.status as 'pending' | 'accepted' | 'rejected',
       amount: item.proposedBudget,
       proposedBudget: item.proposedBudget,
-      description: isSent ? item.job.description : item.coverLetter || 'No cover letter provided',
+      description: isSent ? item.jobId.description : item.coverLetter || 'No cover letter provided',
       duration: item.duration,
       attachments:item.attachments,
-      senderEmail: item.freelancer.email,
-      senderProfilePicture: item.freelancer.profilePicture,
-      senderCountry: item.freelancer.country,
-      senderDescription: item.freelancer.description,
-      senderSkills: item.freelancer.skills,
-      senderPreferredJobFields: item.freelancer.preferredJobFields,
-      senderLinkedinUrl: item.freelancer.linkedinUrl,
-      senderGithubUrl: item.freelancer.githubUrl,
-      senderPortfolioUrl: item.freelancer.portfolioUrl,
+      senderEmail: item.freelancerId.email,
+      senderProfilePicture: item.freelancerId.profilePicture,
+      senderCountry: item.freelancerId.country,
+      senderDescription: item.freelancerId.description,
+      senderSkills: item.freelancerId.skills,
+      senderPreferredJobFields: item.freelancerId.preferredJobFields,
+      senderLinkedinUrl: item.freelancerId.linkedinUrl,
+      senderGithubUrl: item.freelancerId.githubUrl,
+      senderPortfolioUrl: item.freelancerId.portfolioUrl,
     }));
   };
 
@@ -192,7 +192,7 @@ const Proposals = () => {
     <div className="min-h-screen bg-white text-[#0A142F]">
        <Toaster position="top-center" />
       {/* <div className="container mx-auto px-4 ml-34 sm:px-6 md:px-38 py-20"> */}
-      <div className="container mx-auto px-4 sm:px-6 md:px-38 md:ml-34 py-20">
+      <div className="container mx-auto px-4 sm:px-6 md:px-38 md:ml-28 py-20">
 
         <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-center sm:text-left">
         Proposal Management

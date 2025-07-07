@@ -34,31 +34,36 @@ export default function PaymentForm({
   const [isCardValid, setIsCardValid] = useState(false);
   const navigate = useNavigate();
 
+  console.log('now at@@@@@@@@@@@',proposalData)
+
   const handlePayment = async () => {
-    if (!stripe || !elements || !proposalData || !totalAmount || !proposalData.freelancer._id) {
+    if (!stripe || !elements || !proposalData || !totalAmount || !proposalData.freelancerId._id) {
       setError('Invalid proposal data, amount, or Stripe initialization. Please try again.');
       return;
     }
     setIsProcessing(true);
     setError(null);
-
+ 
     try {
       // Validate proposal data
-      const { _id: proposalId, freelancer, clientId, job } = proposalData;
-      const freelancerId = freelancer._id;
-      const jobId = job._id;
-      if (!proposalId || !freelancerId || !clientId || !jobId) {
-        throw new Error('Incomplete proposal data.');
-      }
-
+      const { _id: proposalId, freelancerId, clientId, jobId } = proposalData;
+   
+      // const freelancer = freelancerId._id;
+      // const jobId = job._id;
+      
+      // if (!proposalId || !freelancer || !clientId || !jobId) {
+      //   throw new Error('Incomplete proposal data.');
+      // }
+ 
       const paymentIntentData = {
         proposalId,
-        freelancerId:freelancerId,
+        freelancerId:freelancerId._id,
         amount: amount,
         serviceFee:serviceFee,
         clientId: clientId._id,
-        jobId: jobId,
+        jobId: jobId._id,
       }
+      console.log('worlddddddddddddddddd')
       const { clientSecret, transactionId } = await createPaymentIntent(paymentIntentData)
       console.log('console from paymentform',clientSecret, transactionId)
 
@@ -88,7 +93,7 @@ export default function PaymentForm({
       } else if (paymentIntent?.status === 'requires_capture') {
         setSuccess?.('Payment authorized. Funds are held in the stripe.');
         await fetchAndUpdateProposal(proposalId,'accepted')
-        navigate('/payment-success', { replace: true });
+        navigate('/client/payment-success', { replace: true });
         await createContract(transactionId)
       }
     } catch (err) {

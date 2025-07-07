@@ -205,19 +205,19 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
             from: 'jobs',
             localField: 'jobId',
             foreignField: '_id',
-            as: 'job',
+            as: 'jobId',
           },
         },
-        { $unwind: '$job' },
+        { $unwind: '$jobId' },
         {
           $lookup: {
             from: 'users',
             localField: 'freelancerId',
             foreignField: '_id',
-            as: 'freelancer',
+            as: 'freelancerId',
           },
         },
-        { $unwind: '$freelancer' },
+        { $unwind: '$freelancerId' },
       ];
 
       if (search) {
@@ -225,10 +225,10 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
         pipeline.push({
           $match: {
             $or: [
-              { 'job.title': { $regex: regex } },
-              { 'job.description': { $regex: regex } },
-              { 'freelancer.fullName': { $regex: regex } },
-              { 'freelancer.skills': { $regex: regex } },
+              { 'jobId.title': { $regex: regex } },
+              { 'jobId.description': { $regex: regex } },
+              { 'freelancerId.fullName': { $regex: regex } },
+              { 'freelancerId.skills': { $regex: regex } },
             ],
           },
         });
@@ -278,23 +278,23 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
             attachments: 1,
             createdAt: 1,
             viewed: 1,
-            job: {
-              _id: '$job._id',
-              title: '$job.title',
-              description: '$job.description',
+            jobId: {
+              _id: '$jobId._id',
+              title: '$jobId.title',
+              description: '$jobId.description',
             },
-            freelancer: {
-              _id: '$freelancer._id',
-              fullName: '$freelancer.fullName',
-              profilePicture: '$freelancer.profilePicture',
-              email: '$freelancer.email',
-              country: '$freelancer.country',
-              description: '$freelancer.description',
-              skills: '$freelancer.skills',
-              preferredJobFields: '$freelancer.preferredJobFields',
-              linkedinUrl: '$freelancer.linkedinUrl',
-              githubUrl: '$freelancer.githubUrl',
-              portfolioUrl: '$freelancer.portfolioUrl',
+            freelancerId: {
+              _id: '$freelancerId._id',
+              fullName: '$freelancerId.fullName',
+              profilePicture: '$freelancerId.profilePicture',
+              email: '$freelancerId.email',
+              country: '$freelancerId.country',
+              description: '$freelancerId.description',
+              skills: '$freelancerId.skills',
+              preferredJobFields: '$freelancerId.preferredJobFields',
+              linkedinUrl: '$freelancerId.linkedinUrl',
+              githubUrl: '$freelancerId.githubUrl',
+              portfolioUrl: '$freelancerId.portfolioUrl',
             },
           },
         },
@@ -319,19 +319,19 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
             from: 'jobs',
             localField: 'jobId',
             foreignField: '_id',
-            as: 'job',
+            as: 'jobId',
           },
         },
-        { $unwind: '$job' },
+        { $unwind: '$jobId' },
         {
           $lookup: {
             from: 'users',
             localField: 'freelancerId',
             foreignField: '_id',
-            as: 'freelancer',
+            as: 'freelancerId',
           },
         },
-        { $unwind: '$freelancer' },
+        { $unwind: '$freelancerId' },
       ];
 
       if (search) {
@@ -339,10 +339,10 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
         pipeline.push({
           $match: {
             $or: [
-              { 'job.title': { $regex: regex } },
-              { 'job.description': { $regex: regex } },
-              { 'freelancer.fullName': { $regex: regex } },
-              { 'freelancer.skills': { $regex: regex } },
+              { 'jobId.title': { $regex: regex } },
+              { 'jobId.description': { $regex: regex } },
+              { 'freelancerId.fullName': { $regex: regex } },
+              { 'freelancerId.skills': { $regex: regex } },
             ],
           },
         });
@@ -387,23 +387,23 @@ class ProposalRepository extends BaseRepository<IProposal> implements IProposalR
           proposedBudget: 1,
           duration: 1,
           createdAt: 1,
-          job: {
-            _id: '$job._id',
-            title: '$job.title',
-            description: '$job.description',
+          jobId: {
+            _id: '$jobId._id',
+            title: '$jobId.title',
+            description: '$jobId.description',
           },
-          freelancer: {
-            _id: '$freelancer._id',
-            fullName: '$freelancer.fullName',
-            profilePicture: '$freelancer.profilePicture',
-            email: '$freelancer.email',
-            country: '$freelancer.country',
-            description: '$freelancer.description',
-            skills: '$freelancer.skills',
-            preferredJobFields: '$freelancer.preferredJobFields',
-            linkedinUrl: '$freelancer.linkedinUrl',
-            githubUrl: '$freelancer.githubUrl',
-            portfolioUrl: '$freelancer.portfolioUrl',
+          freelancerId: {
+            _id: '$freelancerId._id',
+            fullName: '$freelancerId.fullName',
+            profilePicture: '$freelancerId.profilePicture',
+            email: '$freelancerId.email',
+            country: '$freelancerId.country',
+            description: '$freelancerId.description',
+            skills: '$freelancerId.skills',
+            preferredJobFields: '$freelancerId.preferredJobFields',
+            linkedinUrl: '$freelancerId.linkedinUrl',
+            githubUrl: '$freelancerId.githubUrl',
+            portfolioUrl: '$freelancerId.portfolioUrl',
           },
         },
       },
