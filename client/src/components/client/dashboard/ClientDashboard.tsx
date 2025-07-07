@@ -26,6 +26,7 @@ const ClientDashboard = () => {
     ?.filter(contract => contract.contractStatus === 'active')
     .slice(0, 5);
 
+
     useEffect(() => {
       if (!userId) {
         navigate("/signin");  
@@ -96,7 +97,7 @@ const ClientDashboard = () => {
               
               <div className="space-y-6">
                 {aciveJobs.length > 0 ? (
-                  aciveJobs.map((job) => (
+                  aciveJobs.slice(0, 4).map((job) => (
                     <div key={job._id} className="border-2 rounded-lg p-4 hover:border-[#0A142F] transition-colors">
                       <div className="flex items-start justify-between mb-3">
                         <div>

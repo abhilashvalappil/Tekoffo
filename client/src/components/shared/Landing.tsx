@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from "react-router-dom";
-import { Search, Briefcase, Users, Trophy, ChevronRight, Code, PenTool, Calculator, GraduationCap, Scale, Menu, X } from 'lucide-react';
+import { Briefcase, Users, Trophy, ChevronRight, Code, PenTool, Calculator, GraduationCap, Scale, Menu, X } from 'lucide-react';
 
 function Landing() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -90,7 +90,7 @@ function Landing() {
               <p className="text-gray-300 mb-8 text-lg">
                 Work with the best freelance talent from around the world on our secure, flexible and cost-effective platform.
               </p>
-              <div className="relative mb-8">
+              {/* <div className="relative mb-8">
                 <input
                   type="text"
                   placeholder="What skill are you looking for?"
@@ -99,7 +99,7 @@ function Landing() {
                 <button className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#0A142F]">
                   <Search className="w-5 h-5" />
                 </button>
-              </div>
+              </div> */}
               <div className="flex flex-wrap gap-2">
                 {['Design', 'Writing', 'Data Entry', 'Web Development', 'Graphic Design'].map((skill) => (
                   <span key={skill} className="px-3 py-1 bg-white/10 rounded-full text-sm">

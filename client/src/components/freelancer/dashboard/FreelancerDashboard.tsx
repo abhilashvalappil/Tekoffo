@@ -139,7 +139,7 @@ const FreelancerHome = () => {
               </div>
               
               <div className="space-y-6">
-                {jobs.map((job) => (
+                {jobs.slice(0,4).map((job) => (
                   <div
                     key={job._id}
                     className="border-2 rounded-lg p-4 hover:border-[#0A142F] transition-colors"
