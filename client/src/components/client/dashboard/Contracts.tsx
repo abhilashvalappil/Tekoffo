@@ -24,7 +24,7 @@ const Contracts = () => {
     total: 0,
     page: 1,
     pages: 1, 
-    limit: 5,
+    limit: 6,
   });
 
   const debouncedSearchTerm = useDebounce(searchQuery,500)
