@@ -12,6 +12,9 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  const pendingCandidatesRef = useRef<RTCIceCandidate[]>([]);
+  const remoteDescriptionSetRef = useRef(false);
+
 
   const [isConnected, setIsConnected] = useState(false);
   const [isCallActive, setIsCallActive] = useState(false);
@@ -28,13 +31,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     // });
     const pc = new RTCPeerConnection({
       iceServers: [
-        {
-          //  urls: 'stun:stun.l.google.com:19302'
-           urls:[
-              'stun:stun.l.google.com:19302',
-              'stun:stun1.l.google.com:19302'
-            ]
-        },
+        { urls: 'stun:stun.l.google.com:19302' },
         {
           urls: 'turn:openrelay.metered.ca:80',
           username: 'openrelayproject',
@@ -109,29 +106,73 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     };
 
     //*receiving answer
+    // const handleAnswer = async (data: { answer: RTCSessionDescriptionInit; sender: string }) => {
+    //   console.log('Answer received from:', data.sender);
+    //   if (pcRef.current && data.answer) {
+    //     try {
+    //       await pcRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
+    //       console.log('Answer set successfully');
+    //       setIsCallActive(true);
+    //       setCallInitiated(false);
+    //     } catch (error) {
+    //       console.error('Error setting remote description:', error);
+    //     }
+    //   }
+    // };
     const handleAnswer = async (data: { answer: RTCSessionDescriptionInit; sender: string }) => {
-      console.log('Answer received from:', data.sender);
-      if (pcRef.current && data.answer) {
-        try {
-          await pcRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
-          console.log('Answer set successfully');
-          setIsCallActive(true);
-          setCallInitiated(false);
-        } catch (error) {
-          console.error('Error setting remote description:', error);
-        }
-      }
-    };
+  console.log('Answer received from:', data.sender);
+  if (pcRef.current && data.answer) {
+    try {
+      await pcRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
+      remoteDescriptionSetRef.current = true;
+      console.log('Answer set successfully');
 
-    const handleIceCandidate = async (data: { candidate: RTCIceCandidateInit; sender: string }) => {
-      if (pcRef.current && data.candidate) {
+      //* Add any queued candidates
+      for (const candidate of pendingCandidatesRef.current) {
         try {
-          await pcRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+          await pcRef.current.addIceCandidate(candidate);
         } catch (err) {
-          console.error('Error adding received ICE candidate', err);
+          console.error('Error adding queued ICE candidate', err);
         }
       }
-    };
+      pendingCandidatesRef.current = [];
+
+      setIsCallActive(true);
+      setCallInitiated(false);
+    } catch (error) {
+      console.error('Error setting remote description:', error);
+    }
+  }
+};
+
+
+    // const handleIceCandidate = async (data: { candidate: RTCIceCandidateInit; sender: string }) => {
+    //   if (pcRef.current && data.candidate) {
+    //     try {
+    //       await pcRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+    //     } catch (err) {
+    //       console.error('Error adding received ICE candidate', err);
+    //     }
+    //   }
+    // };
+    const handleIceCandidate = async (data: { candidate: RTCIceCandidateInit; sender: string }) => {
+  const iceCandidate = new RTCIceCandidate(data.candidate);
+
+  if (pcRef.current) {
+    if (remoteDescriptionSetRef.current) {
+      try {
+        await pcRef.current.addIceCandidate(iceCandidate);
+        console.log('ICE candidate added');
+      } catch (err) {
+        console.error('Error adding ICE candidate', err);
+      }
+    } else {
+      console.log('Queuing ICE candidate');
+      pendingCandidatesRef.current.push(iceCandidate);
+    }
+  }
+};
+
  
     const handleCallEnded = (data: { sender: string }) => {
       console.log('Call ended by:', data.sender);
