@@ -20,6 +20,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
   const [isIncomingCall, setIsIncomingCall] = useState(false);
   const [incomingOffer, setIncomingOffer] = useState<RTCSessionDescriptionInit | null>(null);
   const [callInitiated, setCallInitiated] = useState(false);
+  const pendingCandidates: RTCIceCandidateInit[] = [];
 
   //*PeerConnection
   const initializePeerConnection = useCallback(() => {
@@ -122,15 +123,35 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
       }
     };
 
+    // const handleIceCandidate = async (data: { candidate: RTCIceCandidateInit; sender: string }) => {
+    //   if (pcRef.current && data.candidate) {
+    //     try {
+    //       await pcRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+    //     } catch (err) {
+    //       console.error('Error adding received ICE candidate', err);
+    //     }
+    //   }
+    // };
     const handleIceCandidate = async (data: { candidate: RTCIceCandidateInit; sender: string }) => {
-      if (pcRef.current && data.candidate) {
-        try {
-          await pcRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
-        } catch (err) {
-          console.error('Error adding received ICE candidate', err);
-        }
-      }
-    };
+  if (!pcRef.current || !data.candidate) return;
+
+  const candidate = new RTCIceCandidate(data.candidate);
+
+  // Queue candidate if remoteDescription not set yet
+  if (!pcRef.current.remoteDescription) {
+    console.log('⏳ Queuing ICE candidate, remoteDescription not set yet');
+    pendingCandidates.push(candidate);
+    return;
+  }
+
+  try {
+    await pcRef.current.addIceCandidate(candidate);
+    console.log('✅ ICE candidate added');
+  } catch (err) {
+    console.error('❌ Error adding ICE candidate:', err);
+  }
+};
+
  
     const handleCallEnded = (data: { sender: string }) => {
       console.log('Call ended by:', data.sender);
@@ -232,6 +253,16 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
       if (!pcRef.current) return;
 
       await pcRef.current.setRemoteDescription(new RTCSessionDescription(incomingOffer));
+      for (const candidate of pendingCandidates) {
+  try {
+    await pcRef.current.addIceCandidate(candidate);
+    console.log('✅ Flushed queued ICE candidate');
+  } catch (err) {
+    console.error('❌ Error adding flushed ICE candidate', err);
+  }
+}
+pendingCandidates.length = 0;
+
       const answer = await pcRef.current.createAnswer();
       await pcRef.current.setLocalDescription(answer);
       
