@@ -19,7 +19,6 @@ export class PaymentController {private paymentService: IPaymentService; private
   async checkStripeAccount(req: AuthRequest,res: Response,next: NextFunction): Promise<void> {
     try {
       const freelancerId = req.userId;
-      console.log("console from checkstripeacoount controller", freelancerId);
       if (!freelancerId) {
         res.status(Http_Status.BAD_REQUEST).json({ error: MESSAGES.UNAUTHORIZED });
         return;
@@ -53,7 +52,6 @@ export class PaymentController {private paymentService: IPaymentService; private
         res.status(Http_Status.BAD_REQUEST).json({ error: MESSAGES.UNAUTHORIZED });
         return;
       }
-      // console.log('console from userconrtoler createpayment :', req.body.paymentIntentData)
       const { amount, serviceFee, freelancerId, clientId, jobId, proposalId } = req.body.paymentIntentData;
       const { clientSecret, transactionId } =
         await this.paymentService.createPaymentIntent(

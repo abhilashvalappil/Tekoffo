@@ -34,8 +34,6 @@ export default function PaymentForm({
   const [isCardValid, setIsCardValid] = useState(false);
   const navigate = useNavigate();
 
-  console.log('now at@@@@@@@@@@@',proposalData)
-
   const handlePayment = async () => {
     if (!stripe || !elements || !proposalData || !totalAmount || !proposalData.freelancerId._id) {
       setError('Invalid proposal data, amount, or Stripe initialization. Please try again.');
@@ -63,7 +61,6 @@ export default function PaymentForm({
         clientId: clientId._id,
         jobId: jobId._id,
       }
-      console.log('worlddddddddddddddddd')
       const { clientSecret, transactionId } = await createPaymentIntent(paymentIntentData)
       console.log('console from paymentform',clientSecret, transactionId)
 

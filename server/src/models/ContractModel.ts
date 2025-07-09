@@ -1,4 +1,4 @@
-import mongoose, { Schema, Types } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import { IContract, status } from "../interfaces";
 
 const ContractSchema : Schema<IContract>  = new Schema({
