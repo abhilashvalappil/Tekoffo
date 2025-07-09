@@ -12,6 +12,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const localStreamRef = useRef<MediaStream | null>(null);
+  const pendingCandidates = useRef<RTCIceCandidateInit[]>([]);
 
   const [isConnected, setIsConnected] = useState(false);
   const [isCallActive, setIsCallActive] = useState(false);
@@ -20,7 +21,6 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
   const [isIncomingCall, setIsIncomingCall] = useState(false);
   const [incomingOffer, setIncomingOffer] = useState<RTCSessionDescriptionInit | null>(null);
   const [callInitiated, setCallInitiated] = useState(false);
-  const pendingCandidates: RTCIceCandidateInit[] = [];
 
   //*PeerConnection
   const initializePeerConnection = useCallback(() => {
@@ -41,16 +41,11 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
 
     //* Listen for remote tracks
     pc.ontrack = (event) => {
-      console.log('📥 Remote track received:', event.track.kind);
-
       const [remoteStream] = event.streams;
-      if (remoteStream && remoteVideoRef.current) {
+      if (remoteVideoRef.current && remoteStream) {
         remoteVideoRef.current.srcObject = remoteStream;
-        console.log('✅ Remote stream set on video element');
         setIsConnected(true);
-      }else {
-    console.warn('⚠️ No remote stream or video element');
-  }
+      }
     };
 
     //* Send ICE candidates to peer
@@ -69,6 +64,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     setIsIncomingCall(false);
     setIncomingOffer(null);
     setCallInitiated(false);
+    pendingCandidates.current = [];
 
     if (localStreamRef.current) {
       localStreamRef.current.getTracks().forEach((track) => track.stop());
@@ -115,6 +111,12 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
         try {
           await pcRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
           console.log('Answer set successfully');
+
+           for (const candidate of pendingCandidates.current) {
+            await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+          }
+          pendingCandidates.current = [];
+
           setIsCallActive(true);
           setCallInitiated(false);
         } catch (error) {
@@ -123,35 +125,22 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
       }
     };
 
-    // const handleIceCandidate = async (data: { candidate: RTCIceCandidateInit; sender: string }) => {
-    //   if (pcRef.current && data.candidate) {
-    //     try {
-    //       await pcRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
-    //     } catch (err) {
-    //       console.error('Error adding received ICE candidate', err);
-    //     }
-    //   }
-    // };
     const handleIceCandidate = async (data: { candidate: RTCIceCandidateInit; sender: string }) => {
-  if (!pcRef.current || !data.candidate) return;
+      if (pcRef.current && data.candidate) {
 
-  const candidate = new RTCIceCandidate(data.candidate);
+         if (!pcRef.current.remoteDescription || !pcRef.current.remoteDescription.type) {
+          console.log('⏳ Queuing ICE candidate, remoteDescription not set yet');
+          pendingCandidates.current.push(data.candidate);
+          return;
+        }
 
-  // Queue candidate if remoteDescription not set yet
-  if (!pcRef.current.remoteDescription) {
-    console.log('⏳ Queuing ICE candidate, remoteDescription not set yet');
-    pendingCandidates.push(candidate);
-    return;
-  }
-
-  try {
-    await pcRef.current.addIceCandidate(candidate);
-    console.log('✅ ICE candidate added');
-  } catch (err) {
-    console.error('❌ Error adding ICE candidate:', err);
-  }
-};
-
+        try {
+          await pcRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+        } catch (err) {
+          console.error('Error adding received ICE candidate', err);
+        }
+      }
+    };
  
     const handleCallEnded = (data: { sender: string }) => {
       console.log('Call ended by:', data.sender);
@@ -222,9 +211,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
       socket.emit('initiate_call', { roomId });
       
       //* Start local stream  create offer
-        await startLocalStream();
-      await new Promise(res => setTimeout(res, 300));
-
+      await startLocalStream();
       if (!pcRef.current) return;
 
       const offer = await pcRef.current.createOffer();
@@ -247,21 +234,15 @@ const VideoCall: React.FC<VideoCallProps> = ({ roomId, onCallEnd }) => {
     console.log('Answering call...');
     
     try {
-       await startLocalStream();
-      await new Promise(res => setTimeout(res, 300));
-
+      await startLocalStream();
       if (!pcRef.current) return;
 
       await pcRef.current.setRemoteDescription(new RTCSessionDescription(incomingOffer));
-      for (const candidate of pendingCandidates) {
-  try {
-    await pcRef.current.addIceCandidate(candidate);
-    console.log('✅ Flushed queued ICE candidate');
-  } catch (err) {
-    console.error('❌ Error adding flushed ICE candidate', err);
-  }
-}
-pendingCandidates.length = 0;
+
+        for (const candidate of pendingCandidates.current) {
+        await pcRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+      }
+      pendingCandidates.current = [];
 
       const answer = await pcRef.current.createAnswer();
       await pcRef.current.setLocalDescription(answer);
