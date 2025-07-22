@@ -233,23 +233,13 @@ const validateForm = (): boolean => {
           </div>
         </div>
 
-        {/* <GoogleLogin
+        <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
             ux_mode="popup"
             useOneTap={false}
             width="100%" 
-          /> */}
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
-  <GoogleLogin
-    onSuccess={handleGoogleSuccess}
-    onError={handleGoogleError}
-    ux_mode="popup"
-    useOneTap={false}
-    width="100%" // Doesn't work alone without parent width
-  />
-</div>
-
+          />
 
         <div className="text-center text-sm text-gray-600">
           Don't have an account?{' '}
