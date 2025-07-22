@@ -200,7 +200,6 @@ export class PaymentController {private paymentService: IPaymentService; private
         res.status(Http_Status.BAD_REQUEST).json({ error: MESSAGES.UNAUTHORIZED });
         return;
       }
-      // console.log('console from submit reviewwwwwwwwww',req.body)
       const { reviewedUserId, reviewData, contractId } = req.body;
       const { message } = await this.paymentService.submitReviewAndRating(
         userId,

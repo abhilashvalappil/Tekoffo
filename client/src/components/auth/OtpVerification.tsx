@@ -21,10 +21,8 @@ const VerifyOtp = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { email } = location.state || {}; 
-  
-  // const storedEmail = localStorage.getItem('otpEmail');
+   
   const otpTimer = localStorage.getItem('otpTimer')
-  // console.log("console from otpveificationnnnnnnnn",otpTimer)
 
   useEffect(() => {
     if(!otpTimer){
@@ -155,6 +153,9 @@ const VerifyOtp = () => {
               <input
                 key={index}
                 // ref={(el) => (inputRefs.current[index] = el)}
+                  ref={(el) => {
+                  inputRefs.current[index] = el!;
+                }} 
                 type="text"
                 inputMode="numeric"
                 maxLength={1}

@@ -241,7 +241,17 @@ export class AuthService implements IAuthService {
           return {message:MESSAGES.PASSWORD_RESET_SUCCESS}
     }
 
-    async googleSignIn(credential: string): Promise<{ user: IUserResponse; accessToken: string }> {
+   async userExist(credential:string): Promise<{user:IUserResponse | null}>{
+      const ticket = await this.client.verifyIdToken({ idToken: credential, audience: process.env.CLIENT_ID });
+      const payload = ticket.getPayload();
+        if (!payload || !payload.email) {
+          throw new Error('Invalid Google token payload');
+        }
+        const user = await this.userRepository.findByEmail(payload.email);
+        return {user}
+    }
+
+    async googleSignIn(credential: string,role:UserRole): Promise<{ user: IUserResponse; accessToken: string }> {
           const ticket = await this.client.verifyIdToken({
             idToken: credential,
             audience: process.env.CLIENT_ID,
@@ -259,7 +269,7 @@ export class AuthService implements IAuthService {
               email,
               username: name || email.split('@')[0],
               googleId,
-              role: 'client' as UserRole,  
+              role: role,  
             });
           }else{
              if(user.isBlocked){

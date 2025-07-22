@@ -1,13 +1,46 @@
  
 import { BriefcaseIcon, UserIcon, Users2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { UserRole } from '../../constants/types';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../redux/store';
+import { setGoogleCredential } from '../../redux/slices/authSlice';
+import { signIn } from '../../redux/services/authService';
+type UserRole = 'client' | 'freelancer';
 
-const RoleSelection = () => {
+
+const RoleSelection: React.FC = () => {
     const navigate = useNavigate();
-    const handleRoleSelect = (role:UserRole | string) => {
-        navigate('/signup',{state:{role}})
+    const dispatch = useDispatch<AppDispatch>();
+
+    const googleCredential = useSelector(
+    (state: RootState) => state.auth.googleCredential
+  );
+  
+  const handleRoleSelect = async (role: UserRole) => {
+    if (googleCredential) {
+      try {
+        const result = await dispatch(
+          signIn({ googleCredential, role })
+        );
+    
+        if (signIn.fulfilled.match(result)) {
+          dispatch(setGoogleCredential(null));  
+
+          const userRole = result.payload?.user?.role;
+
+          const redirectTo = userRole === 'freelancer' ? '/freelancer' : '/client';
+          navigate(redirectTo);
+
+        } else {
+          console.error('Google sign-in failed:', result.payload);
+        }
+      } catch (error) {
+        console.error('Google sign-in error:', error);
+      }
+    } else {
+      navigate('/signup', { state: { role } });
     }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">

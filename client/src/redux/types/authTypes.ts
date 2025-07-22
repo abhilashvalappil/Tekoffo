@@ -28,6 +28,7 @@ export interface AuthState {
     error: string | null;
     isAuthenticated:boolean;
     successMessage: string | null;
+    googleCredential: string | null;
 }
 
 export interface RegisterPayload {

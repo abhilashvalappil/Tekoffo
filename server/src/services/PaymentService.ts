@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 import { IUserRepository,IJobRepository,IProposalRepository, IPaymentService, CreateContractDTO, INotification, IContract, status, CreateReviewDTO, IWallet, ITransaction, IReview, IPopulatedReview  } from "../interfaces";
 import {MESSAGES} from '../constants/messages'
-import { NotFoundError, UnauthorizedError, ValidationError } from "../errors/customErrors";
+import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from "../errors/customErrors";
 import mongoose, { Types } from "mongoose";
 import { IPaymentRepository,IContractRepository,INotificationRepository,IReviewRepository,IWalletRepository,ITransactionRepository, IPlatformRepository } from "../interfaces"; 
 import dotenv from "dotenv";
@@ -89,6 +89,10 @@ export class PaymentService implements IPaymentService {
       throw new Error(
         "Client data is incomplete. Cannot create Stripe customer."
       );
+    }
+    const isContractExistInProposal = await this.contractRepository.isContractExistsByProposalId(proposalId)
+    if (isContractExistInProposal){
+      throw new ConflictError(MESSAGES.CONTRACT_ALREADY_EXISTS)
     }
     const customer = await stripe.customers.create({
       name: client.fullName,

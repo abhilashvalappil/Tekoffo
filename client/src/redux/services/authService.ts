@@ -26,7 +26,8 @@ export const register = createAsyncThunk(
   }
 )
 
- type SignInPayload = SignInCredentials | { googleCredential: string | null };
+ type UserRole = 'client' | 'freelancer';
+ type SignInPayload = SignInCredentials | { googleCredential: string | null, role?:UserRole };
 
 export const signIn = createAsyncThunk <SignInResponse, SignInPayload>(
   "auth/signin",
@@ -37,8 +38,9 @@ export const signIn = createAsyncThunk <SignInResponse, SignInPayload>(
   ) => {
     try {
       if ("googleCredential" in credentials && credentials.googleCredential) {
+        const { googleCredential, role } = credentials;
         const response = await API.post(commonENDPOINTS.GOOGLE_SIGNIN,
-          { credential: credentials.googleCredential });
+          { credential:  googleCredential,role });
         return response.data;
       } else {
         const response = await API.post(commonENDPOINTS.LOGIN, credentials)

@@ -16,18 +16,18 @@ dotenv.config();
 
 const app = express();
 const mongoUrl = process.env.MONGO_URL;
-// const client = new OAuth2Client(process.env.CLIENT_ID);
-// const CLIENT_URL = process.env.CLIENT_URL
+const CLIENT_URL = process.env.CLIENT_URL;
+
 
 const server = http.createServer(app);
 const io = initSocket(server);  
 setupSocketEvents(io);  
 
 app.use(cors({
-  origin: process.env.CLIENT_URL,
+  origin: CLIENT_URL,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
 }));
 // app.use(express.json());
 app.use(express.json({

@@ -14,7 +14,7 @@ import {
   FileText,
   MailOpen,
 } from 'lucide-react';
-import { useAuth } from '../../../hooks/customhooks/useAuth';
+ 
 
 interface MenuItem {
   name: string;
@@ -36,13 +36,14 @@ const menuItems: MenuItem[] = [
 
 interface FreelancerSidebarProps {
   onLinkClick?: () => void;
+  onLogoutClick?: () => void;
 }
 
-const FreelancerSidebar: React.FC<FreelancerSidebarProps> = ({ onLinkClick }) => {
+const FreelancerSidebar: React.FC<FreelancerSidebarProps> = ({ onLinkClick,onLogoutClick }) => {
   const [isOpen, setIsOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-  const { handleLogout } = useAuth();
+   
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -91,13 +92,20 @@ const FreelancerSidebar: React.FC<FreelancerSidebarProps> = ({ onLinkClick }) =>
 
           {/* Logout (scrolls with menu) */}
           <div className="mt-6 pt-6 border-t border-gray-300">
-            <div
+            {/* <div
               onClick={handleLogout}
               className="flex items-center gap-3 p-3 text-lg text-red-600 font-semibold rounded-lg cursor-pointer hover:bg-red-100 transition-all"
             >
               <FiLogOut size={24} />
               <span>Logout</span>
-            </div>
+            </div> */}
+            <div
+            onClick={onLogoutClick}  
+            className="flex items-center gap-3 p-3 text-lg text-red-600 font-semibold rounded-lg cursor-pointer hover:bg-red-100 transition-all"
+          >
+            <FiLogOut size={24} />
+            <span>Logout</span>
+          </div>
           </div>
         </div>
       </aside>

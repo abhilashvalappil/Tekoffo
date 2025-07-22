@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { FcGoogle } from 'react-icons/fc';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector,useDispatch } from 'react-redux';
-// import { signUp } from '../../redux/services/authService';
 import {signUp} from '../../api/common';
 import {RootState,AppDispatch} from '../../redux/store'
 import { clearMessages } from '../../redux/slices/authSlice'
@@ -12,6 +10,9 @@ import { signupSchema, SignUpFormData } from '../../utils/validations/AuthValida
 import { handleApiError } from '../../utils/errors/errorHandler';
 import { UserRole } from '../../types/userTypes';
 import { SingUpFormData } from '../../types/auth';
+import {GoogleLogin,CredentialResponse } from '@react-oauth/google';
+import handleGoogleSuccess from '../../services/googleAuthHandler';
+import Spinner from '../shared/Spinner';
  
 
 
@@ -35,11 +36,14 @@ const SignupPage: React.FC = () => {
   });
 
   const [serverError, setServerError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   // const [otpSent, setOtpSent] = useState(false);
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { loading,error,successMessage } = useSelector((state: RootState) => state.auth);
+  console.log("Loading from Reduxxxxxxxxx:", loading);
+
 
   useEffect(() => {
     dispatch(clearMessages());
@@ -48,15 +52,10 @@ const SignupPage: React.FC = () => {
 
   const handleSignup = async (data: SignUpFormData) => {
     try {
+        setIsSubmitting(true);
         setServerError(null);
         localStorage.setItem('otpEmail',data.email)
 
-      // const { confirmPassword:_, ...userData } = data;
-
-      // const signupData: SingUpFormData = {
-      //   ...userData,
-      //   role: role,
-      // };
       const signupData: SingUpFormData = {
         username: data.username,
         email: data.email,
@@ -75,7 +74,18 @@ const SignupPage: React.FC = () => {
     } catch (err) {
       const errorMessage = handleApiError(err);
       setServerError(errorMessage);
+    }finally{
+      setIsSubmitting(false);
     }
+  };
+
+   const onGoogleSuccess = (credentialResponse: CredentialResponse) => {
+    handleGoogleSuccess({
+      credentialResponse,
+      dispatch,
+      navigate,
+      setServerError,
+    });
   };
  
 
@@ -85,9 +95,6 @@ const SignupPage: React.FC = () => {
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           Create your Tekoffo account
         </h2>
-        {/* <p className="mt-2 text-center text-sm text-gray-600">
-          Find your next freelance opportunity
-        </p> */}
         <p className="mt-2 text-center text-sm text-gray-600">
           {role === 'client' 
             ? 'Post projects and hire talented freelancers'
@@ -99,6 +106,8 @@ const SignupPage: React.FC = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {isSubmitting && <Spinner />}
+
           <form onSubmit={handleSubmit(handleSignup)} className="space-y-6">
             {/* userName Field */}
             <div>
@@ -180,12 +189,20 @@ const SignupPage: React.FC = () => {
 
             {/* Submit Button */}
             <div>
-              <input
+              {/* <input
                 type="submit"
                 value={loading ? 'Signing up...' : 'Sign up'}
                 disabled={loading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
-              />
+              /> */}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 cursor-pointer"
+              >
+                {/* {isSubmitting ? 'Signing up...' : 'Sign up'} */}
+                 Sign Up
+              </button>
             </div>
           </form>
 
@@ -200,12 +217,14 @@ const SignupPage: React.FC = () => {
             </div>
 
             <div className="mt-6">
-              <button
-                className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                <FcGoogle className="h-5 w-5 mr-2" />
-                Sign up with Google
-              </button>
+               <GoogleLogin
+                onSuccess={onGoogleSuccess}
+                onError={() => setServerError('Google Sign-In failed')}
+                ux_mode="popup"
+                  text="signup_with"
+                useOneTap={false}
+                width="100%" 
+              />
             </div>
           </div>
 

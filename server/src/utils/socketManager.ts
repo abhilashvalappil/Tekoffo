@@ -42,7 +42,6 @@ export const setupSocketEvents = (io: Server) => {
 
       // *Send to chat room
       socket.to(chatId).emit('receive_message', messageData);
-      console.log('Message sent to chat room:', content);
 
       //* Send notification to receiver if they're online (for unread count)
       if (receiverSocketId) {
@@ -108,6 +107,10 @@ export const setupSocketEvents = (io: Server) => {
     })
 
     //**************** */
+
+    socket.on('job-applied',({jobId,freelancerId}) => {
+      socket.broadcast.emit('job-applied', { jobId, freelancerId });
+    })
 
     socket.on("disconnect", () => {
       console.log(`Socket disconnected: ${socket.id}`);

@@ -8,6 +8,8 @@ import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import {GoogleLogin,CredentialResponse } from '@react-oauth/google';
 import { handleApiError } from '../../utils/errors/errorHandler';
+import API from '../../services/api';
+import { setGoogleCredential } from '../../redux/slices/authSlice';
  
 
 interface FormData {
@@ -72,9 +74,6 @@ const validateForm = (): boolean => {
         }
         }else if(signIn.rejected.match(result)){
           console.log("Rejected payload:", result.payload);
-
-          // const errorMessage = result.payload as string;
-          // setServerError(errorMessage || 'Sign in failed');
           const errorMessage =
           typeof result.payload === "string"
             ? result.payload
@@ -109,12 +108,22 @@ const validateForm = (): boolean => {
     //* google
   const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
     try {
+       const credential = credentialResponse.credential;
+       const userExist = await API.post('/auth/check-user',{credential})
+    
+      if(userExist.data.result.user){
       const result = await dispatch(signIn({ googleCredential: credentialResponse.credential }));
       if (signIn.fulfilled.match(result)) {
-        navigate('/freelancer-dashboard');
+        const userRole = result.payload?.user?.role;
+        const redirectTo = userRole === 'freelancer' ? '/freelancer' : '/client';
+        navigate(redirectTo);
       } else {
         setServerError(result.payload as string || 'Google Sign-In failed');
       }
+    }else{
+      dispatch(setGoogleCredential(credential));
+      navigate('/signup-as');
+    }
     } catch (error) {
       const errormessage = handleApiError(error)
       setServerError(errormessage);
@@ -133,8 +142,6 @@ const validateForm = (): boolean => {
           <h1 className="text-3xl font-bold tracking-wide text-gray-800">Tekoffo</h1>
         </div>
         <div className="text-center">
-          {/* <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to your account</p> */}
           <h2 className="text-2xl font-semibold text-gray-800">Welcome Back</h2>
           <p className="text-gray-500">Sign in to continue</p>
         </div>
@@ -229,8 +236,9 @@ const validateForm = (): boolean => {
         <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
-            width="100%"
-            // width="352px" 
+            ux_mode="popup"
+            useOneTap={false}
+            width="100%" 
           />
 
         <div className="text-center text-sm text-gray-600">

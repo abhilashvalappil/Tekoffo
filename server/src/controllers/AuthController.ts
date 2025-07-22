@@ -77,6 +77,16 @@ export class AuthController {
         }
     }
 
+    async userExist(req:Request, res:Response, next: NextFunction): Promise<void>{
+        try {
+            const { credential } = req.body;
+            const result = await this.authService.userExist(credential)
+            res.status(Http_Status.OK).json({result})
+        } catch (error) {
+            next(error)
+        }
+    }
+
     async signIn(req:Request, res:Response, next: NextFunction): Promise<void>{
         try {
             const {identifier, password} = req.body;
@@ -161,13 +171,13 @@ export class AuthController {
 
     async googleSignIn(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-          const { credential } = req.body;  
+          const { credential, role } = req.body;  
           if (!credential) {
             res.status(Http_Status.BAD_REQUEST).json(MESSAGES.MISSING_CREDENTIALS)
             return;
           }
 
-          const result = await this.authService.googleSignIn(credential);
+          const result = await this.authService.googleSignIn(credential,role);
           this.cookieHandlerService.setCookie(res, result.accessToken);
           res.status(200).json({
             success: true,

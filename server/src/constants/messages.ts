@@ -9,6 +9,7 @@ export const MESSAGES = {
     COMPANY_NAME_MIN_LENGTH: "Company name must be at least 3 characters",
     CONTRACT_CREATED:"Contract created and notification sent",
     CONTRACT_NOT_FOUND: "Contract not found",
+    CONTRACT_ALREADY_EXISTS: "A contract already exists for this proposal. Payment may have already been completed.",
     CONTRACT_SUBMITTED_FOR_APPROVAL:"The contract has been submitted for approval",
     CHAT_NOT_FOUND: "Chat not found",
     DESCRIPTION_REQUIRED: "Description must be at least 8 characters",

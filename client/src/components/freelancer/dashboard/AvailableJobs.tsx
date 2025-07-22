@@ -16,6 +16,9 @@ import { fetchAppliedProposalsByFreelancer } from '../../../api';
 import { AppliedProposal } from '../../../types/proposalTypes';
 import { useDebounce } from '../../../hooks/customhooks/useDebounce';
 import { Category } from '../../../types/jobTypes';
+import socket from '../../../utils/socket';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
 
 interface Client {
   id: string;
@@ -54,6 +57,7 @@ const AvailableJobs: React.FC = () => {
   const [appliedProposals, setAppliedProposals] = useState<{ data: AppliedProposal[] }>({ data: [] });
   const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
   const [filters, setFilters] = useState<JobFilters>({});
+  const userId = useSelector((state:RootState) => state.auth.user._id)
   
   const { pagination, handlePageChange, updateMeta } = usePagination({
     total: 0,
@@ -83,8 +87,27 @@ const AvailableJobs: React.FC = () => {
 
   },[])
 
+  useEffect(() => {
+  const handleJobApplied = ({ jobId, freelancerId }: { jobId: string; freelancerId: string }) => {
+    if (freelancerId === userId) {
+      setAppliedJobIds((prevIds) => {
+        if (!prevIds.includes(jobId)) {
+          return [...prevIds, jobId];
+        }
+        return prevIds;
+      });
+    }
+  };
+
+  socket.on("job-applied", handleJobApplied);
+
+  return () => {
+    socket.off("job-applied", handleJobApplied);  
+  };
+}, [userId]);
+
   const hasApplied = (jobId: string) => {
-    return appliedProposals.data.some((proposal) => proposal.jobId === jobId);
+    return appliedProposals.data.some((proposal) => proposal.jobId === jobId) ||  appliedJobIds.includes(jobId);
   };
 
    useEffect(() => {

@@ -61,6 +61,7 @@ userRouter.post('/verify-forgot-otp',authController.verifyForgotPassOtp.bind(aut
 userRouter.post('/reset-password',authController.resetPassword.bind(authController))
 userRouter.post('/logout',authController.logout.bind(authController))
 userRouter.post('/auth/refresh-token',authController.refreshAccessToken.bind(authController))
+userRouter.post('/auth/check-user',authController.userExist.bind(authController))
 
 
 

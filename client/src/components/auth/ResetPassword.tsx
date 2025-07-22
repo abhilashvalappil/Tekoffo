@@ -6,6 +6,7 @@ import {ResetPasswordSchema,ResetPasswordData} from '../../utils/validations/Aut
 import API from '../../redux/services/api/baseUrl';
 import { commonENDPOINTS } from '../../redux/services/api/endpointUrl';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { handleApiError } from '../../utils/errors/errorHandler';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
@@ -51,8 +52,9 @@ const ResetPassword = () => {
     }else{
         setServerError(response.data.message || "Failed to reset password");
     }
-    } catch (error:any) {
-        setServerError(error.response?.data?.message || "Error occured while reseting password");
+    } catch (error) {
+        const errorMessage = handleApiError(error)
+        setServerError(errorMessage || "Error occured while reseting password");
     }
     setIsSuccess(true);
     setIsLoading(false);
@@ -162,7 +164,12 @@ const ResetPassword = () => {
                 'Reset Password'
               )}
             </button>
-
+            {serverError && (
+                <p className="text-red-500 text-sm text-center mt-2">{serverError}</p>
+              )}
+              {message && (
+                <p className="text-green-600 text-sm text-center mt-2">{message}</p>
+              )}
             <div className="text-center">
               <a
                 href="#"

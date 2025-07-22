@@ -9,7 +9,6 @@ import {
   MdStorefront,
 } from 'react-icons/md';
 import { FileCheck2, FileText } from 'lucide-react';
-import { useAuth } from '../../../hooks/customhooks/useAuth';
 
 interface MenuItem {
   name: string;
@@ -29,13 +28,13 @@ const menuItems: MenuItem[] = [
 
 interface ClientSidebarProps {
   onLinkClick?: () => void;
+  onLogoutClick?: () => void;
 }
 
-const ClientSidebar: React.FC<ClientSidebarProps> = ({ onLinkClick }) => {
+const ClientSidebar: React.FC<ClientSidebarProps> = ({ onLinkClick, onLogoutClick }) => {
   const [isOpen, setIsOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-  const { handleLogout } = useAuth();
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -56,11 +55,10 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ onLinkClick }) => {
 
       {/* Sidebar */}
       <aside
-  className={`fixed top-16 left-0 h-[calc(100vh-4rem)] z-30 transition-transform duration-300 flex flex-col justify-between ${
-    isOpen ? 'translate-x-0' : '-translate-x-full'
-  } md:translate-x-0 w-60 bg-white/80 backdrop-blur-xl shadow-2xl border-r border-gray-200`}
->
-
+        className={`fixed top-16 left-0 h-[calc(100vh-4rem)] z-30 transition-transform duration-300 flex flex-col justify-between ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0 w-60 bg-white/80 backdrop-blur-xl shadow-2xl border-r border-gray-200`}
+      >
         {/* Top Section */}
         <div>
           {/* Menu Items */}
@@ -89,7 +87,8 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ onLinkClick }) => {
         {/* Logout Button */}
         <div className="p-4 border-t border-gray-300">
           <div
-            onClick={handleLogout}
+            // onClick={handleLogout}
+            onClick={onLogoutClick} 
             className="flex items-center gap-3 p-3 text-lg text-red-600 font-semibold rounded-lg cursor-pointer hover:bg-red-100 transition-all"
           >
             <FiLogOut size={24} />

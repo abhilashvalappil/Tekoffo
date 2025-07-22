@@ -3,6 +3,9 @@ import { submitProposal } from '../../../api';
 import { handleApiError } from '../../../utils/errors/errorHandler';
 import { Toaster, toast } from 'react-hot-toast';
 import { JobDataType } from '../../../hooks/customhooks/useJobs';
+import socket from '../../../utils/socket';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../redux/store';
  
 
 interface Client {
@@ -29,6 +32,7 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ isOpen, onClose, job,
   const [expectedBudget, setExpectedBudget] = useState('');
   const [duration, setDuration] = useState('');
   const [isCustomDuration, setIsCustomDuration] = useState(false);
+  const userId = useSelector((state:RootState) => state.auth.user._id)
 
   const handleCvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -65,16 +69,18 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ isOpen, onClose, job,
     proposalDetails.append('duration', duration || job.duration);
     try {
       const message =await submitProposal(proposalDetails);
+      socket.emit('job-applied',{
+        jobId:job._id,
+        freelancerId:userId
+      })
       toast.success(message)
       onSuccessfulApply(job._id);
 
-      //  onSubmitSuccess(message);
        setTimeout(() => {
         onClose();  
       }, 1000);
     } catch (error) {
       handleApiError(error)
-      // console.log(error)
     }
     onClose();
   };

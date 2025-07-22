@@ -18,6 +18,11 @@ class ContractRepository extends BaseRepository<IContract>implements IContractRe
     return await this.findById(id);
   }
 
+  async isContractExistsByProposalId(proposalId:string): Promise<boolean> {
+    const exists = await Contract.findOne({proposalId: new Types.ObjectId(proposalId)})
+    return !!exists;
+  }
+
   async findContractsByFreelancerId(userId: string,skip: number,limit: number,search?: string,status?: string): Promise<IContract[]>{
     const pipeline: PipelineStage[] = [
     {
