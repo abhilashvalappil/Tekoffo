@@ -4,7 +4,6 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import userRouter from './routes/user.router';
 import adminRouter from './routes/admin.router';
-// import { OAuth2Client } from 'google-auth-library';
 import cookieParser from 'cookie-parser'
 import morganMiddleware from './middlewares/morgan.middleware';
 import { errorHandler } from './errors/errorHandler';
@@ -29,7 +28,7 @@ app.use(cors({
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
-// app.use(express.json());
+
 app.use(express.json({
   strict: true,
   type: ['application/json', 'application/*+json']
