@@ -52,20 +52,19 @@ export class JobService implements IJobService{
         return {message:MESSAGES.JOB_CREATED_SUCCESSFULLY}
     }
 
-    async updateJobPost(clientId:string, jobData:JobUpdateData): Promise<{message:string}> {
+    async updateJob(clientId:string,jobId:string, jobData:JobUpdateData): Promise<{message:string}> {
   
         const user = await this.userRepository.findUserById(clientId)
-
         if(!user){
             throw new NotFoundError(MESSAGES.INVALID_USER)
         }
 
-        const existingJob = await this.jobRepository.findJobById(jobData._id);
+        const existingJob = await this.jobRepository.findJobById(jobId);
         if (!existingJob || existingJob.clientId.toString() !== clientId) {
             throw new NotFoundError(MESSAGES.INVALID_JOB);
         }
 
-       await this.jobRepository.updateJobPost(jobData._id!, {
+       await this.jobRepository.updateJob(jobData._id!, {
             title: jobData.title,
             category: jobData.category,
             subCategory: jobData.subCategory,
@@ -78,7 +77,7 @@ export class JobService implements IJobService{
         return {message:MESSAGES.JOB_UPDATED_SUCCESSFULLY}
     }
 
-    async deleteJobPost(clientId:string,id:string): Promise<{message:string}>{
+    async deleteJob(clientId:string,id:string): Promise<{message:string}>{
        
         const user = await this.userRepository.findUserById(clientId)
 
@@ -94,7 +93,7 @@ export class JobService implements IJobService{
         return {message:MESSAGES.JOB_DELETED_SUCCESSFULLY}
     }
 
-    async getMyJobPosts(clientId:string, page: number, limit: number,search?:string,filters?: { status?: string; category?: string; subCategory?: string }): Promise<PaginatedResponse<JobDataType>> {
+    async getClientJobs(clientId:string, page: number, limit: number,search?:string,filters?: { status?: string; category?: string; subCategory?: string }): Promise<PaginatedResponse<JobDataType>> {
      
         const user = await this.userRepository.findUserById(clientId)
         if(!user){
@@ -130,7 +129,7 @@ export class JobService implements IJobService{
     return { count, jobs,completed, activeContracts };
    }
 
-   async getAllJobs(page: number, limit: number, search?: string, filters?: { category?: string; subCategory?: string; budgetRange?: string }): Promise<{jobs:PaginatedResponse<JobDataType>}> {
+   async getJobs(page: number, limit: number, search?: string, filters?: { category?: string; subCategory?: string; budgetRange?: string }): Promise<{jobs:PaginatedResponse<JobDataType>}> {
         const skip = (page - 1) * limit;
         const [jobs,total] = await Promise.all([
              this.jobRepository.findAllJobs(skip, limit, search, filters),
@@ -192,7 +191,7 @@ export class JobService implements IJobService{
         return{message:MESSAGES.JOB_APPLIED}
     }
 
-    async getClientReceivedProposals(clientId:string, page: number, limit: number,search?:string,filters?: { status?: string; time?: string}): Promise<{proposals:PaginatedResponse<IProposal>}> {
+    async getProposalsByClient(clientId:string, page: number, limit: number,search?:string,filters?: { status?: string; time?: string}): Promise<{proposals:PaginatedResponse<IProposal>}> {
 
         const userExist = await this.userRepository.findUserById(clientId)
         if(!userExist){
@@ -214,7 +213,7 @@ export class JobService implements IJobService{
         }}
     }
 
-    async getProposal(proposalId: string, clientId: string): Promise<{proposal:IProposal | null}> {
+    async getProposalById(proposalId: string, clientId: string): Promise<{proposal:IProposal | null}> {
     
         const userExist = await this.userRepository.findUserById(clientId)
         if(!userExist){
@@ -273,7 +272,7 @@ export class JobService implements IJobService{
             return {proposal}
         }
 
-    async getFreelancerAppliedProposals(freelancerId:string,page:number,limit:number, search?: string, filter?: string): Promise<{proposals: PaginatedResponse<IAppliedProposal>}> {
+    async getProposalsByFreelancer(freelancerId:string,page:number,limit:number, search?: string, filter?: string): Promise<{proposals: PaginatedResponse<IAppliedProposal>}> {
         const userExist = await this.userRepository.findUserById(freelancerId)
          if(!userExist){
             throw new UnauthorizedError(MESSAGES.UNAUTHORIZED )
@@ -309,7 +308,7 @@ export class JobService implements IJobService{
         return{message:MESSAGES.GIG_CREATED}
     }
 
-    async getFreelancerGigs(freelancerId:string): Promise<{gigs:IGig[] | null}> {
+    async getMyGigs(freelancerId:string): Promise<{gigs:IGig[] | null}> {
         const freelancer = await this.userRepository.findUserById(freelancerId);
         if(!freelancer){
             throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
@@ -318,20 +317,20 @@ export class JobService implements IJobService{
         return {gigs}
     }
 
-    async updateFreelancerGig(freelancerId:string,gigData:UpdateGigDTO): Promise<{message:string}> {
+    async updateGig(freelancerId:string,gigId:string,gigData:UpdateGigDTO): Promise<{message:string}> {
         const freelancer = await this.userRepository.findUserById(freelancerId);
         if(!freelancer){
             throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
         }
-        const existingGig = await this.gigRepository.findGigById(gigData._id)
+        const existingGig = await this.gigRepository.findGigById(gigId)
         if(!existingGig){
             throw new NotFoundError(MESSAGES.GIG_NOT_FOUND)
         }
-        await this.gigRepository.findByIdAndUpdate(gigData._id,gigData)
+        await this.gigRepository.findByIdAndUpdate(gigId,gigData)
         return{message:MESSAGES.GIG_UPDATED}
     }
 
-    async deleteFreelancerGig(freelancerId:string, gigId:string): Promise<{message:string}> {
+    async deleteGig(freelancerId:string, gigId:string): Promise<{message:string}> {
         const freelancer = await this.userRepository.findUserById(freelancerId);
         if(!freelancer){
             throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
@@ -438,7 +437,7 @@ export class JobService implements IJobService{
         } };
     }
 
-    async getJobDetails(jobId:string): Promise<{jobData:JobDataType}>{
+    async getJob(jobId:string): Promise<{jobData:JobDataType}>{
         const jobData = await this.jobRepository.findJobById(jobId)
         if(!jobData){
             throw new NotFoundError(MESSAGES.JOB_NOT_FOUND)

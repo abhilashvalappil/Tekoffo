@@ -52,8 +52,8 @@ export interface Job {
   requirements: string[];
   status: string;
   isBlocked: boolean;
-  createdAt: string;  // ISO date string
-  updatedAt: string;  // ISO date string
+  createdAt: string;   
+  updatedAt: string;   
   __v: number;
 }
 

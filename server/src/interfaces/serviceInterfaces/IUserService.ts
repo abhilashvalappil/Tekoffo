@@ -1,9 +1,7 @@
 
-import {  FreelancerData, JobDataType, JobInputData, JobUpdateData } from "../entities/IJob"
-import { ICategory } from "../entities/ICategory"
+import {  FreelancerData } from "../entities/IJob"
 import { IUser, ProfileFormData,UserProfileResponse } from "../entities/IUser"
-import { proposalDataType } from "../../types/jobTypes"
-import { IProposal } from "../entities/IProposal"
+ 
 
 export interface IUserService {
     createUserProfile(userId:string, data: ProfileFormData): Promise<{message:string,userProfile:UserProfileResponse}>
@@ -17,5 +15,5 @@ export interface IUserService {
         clientId: string;
         freelancerId: string;
       }):Promise<{url:string | null,sessionId:string}>
-    getReceiver(receiverId:string): Promise<{receiver:IUser | null}>
+    getChatPartner(receiverId:string): Promise<{receiver:IUser | null}>
 }

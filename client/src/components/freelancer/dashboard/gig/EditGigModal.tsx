@@ -25,7 +25,7 @@ const EditGigModal: React.FC<EditGigModalProps> = ({ gig, isOpen, onClose, onSav
   const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
     try {
-        const message = await updateGig(formData)
+        const message = await updateGig(formData._id,formData)
         toast.success(message)
         onSave(formData);
     setTimeout(() => {

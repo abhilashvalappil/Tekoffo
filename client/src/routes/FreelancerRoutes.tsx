@@ -18,6 +18,7 @@ const JobInvitationsPage = lazy(() => import("../components/freelancer/dashboard
 const CompleteOnboarding = lazy(() => import("../components/freelancer/dashboard/CompleteOnboarding"));
 const OnboardingSuccess = lazy(() => import("../components/freelancer/dashboard/OnboardingSuccess"));
 const ChatBox = lazy(() => import("../components/freelancer/dashboard/Chat"));
+const Reviews = lazy(() => import("../components/freelancer/dashboard/Reviews"));
 
  
 const FreelancerRoutes = () => (
@@ -120,6 +121,15 @@ const FreelancerRoutes = () => (
         element={
           <Suspense fallback={<Loader />}>
             <JobInvitationsPage />
+          </Suspense>
+        }
+      />
+
+      <Route
+        path="reviews"
+        element={
+          <Suspense fallback={<Loader />}>
+            <Reviews />
           </Suspense>
         }
       />

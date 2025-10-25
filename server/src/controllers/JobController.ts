@@ -59,13 +59,14 @@ export class JobController {
         }
     }
 
-    async updateJobPost(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
+    async updateJob(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
         try {
             const clientId = req.userId;
             if(!clientId){
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
+            const { jobId } = req.params;
 
             const validationResult = UpdateJobInputSchema.safeParse(req.body);
             if (!validationResult.success) {
@@ -77,39 +78,34 @@ export class JobController {
                 return;
               }
               
-
-            const {_id, title, category, subCategory, requirements, description, budget, duration} = req.body;
-            if (!_id || !title || !category || !subCategory || !requirements || !description || !budget || !duration) {
-            res.status(Http_Status.BAD_REQUEST).json({ error: MESSAGES.MISSING_CREDENTIALS });
-            }
             const jobData = validationResult.data;
-            const {message} = await this.jobService.updateJobPost(clientId,jobData)
-            res.status(Http_Status.CREATED).json(message)
+            const {message} = await this.jobService.updateJob(clientId, jobId, jobData)
+            res.status(Http_Status.OK).json(message)
         } catch (error) {
             next(error)
         }
     }
 
-    async deleteJobPost(req:AuthRequest, res:Response, next: NextFunction): Promise<void>{
+    async deleteJob(req:AuthRequest, res:Response, next: NextFunction): Promise<void>{
         try {
             const clientId = req.userId;
             if(!clientId){
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            const {id} = req.body;
+            const {id} = req.params;
 
             if(!id){
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.INVALID_REQUEST_DELETION})
             }
-            const message = this.jobService.deleteJobPost(clientId,id)
+            const message = this.jobService.deleteJob(clientId,id)
             res.status(Http_Status.NO_CONTENT).json(message)
         } catch (error) {
             next(error)
         }
     }
 
-    async getMyJobPosts(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
+    async getClientJobs(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
         try {
             const clientId = req.userId;
             if(!clientId){
@@ -133,7 +129,7 @@ export class JobController {
                 res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
             }
 
-            const paginatedResponse = await this.jobService.getMyJobPosts(clientId,page, limit,search,{ status, category, subCategory });
+            const paginatedResponse = await this.jobService.getClientJobs(clientId,page, limit,search,{ status, category, subCategory });
             res.status(Http_Status.OK).json({ success: true, paginatedResponse });
         } catch (error) {
             next(error)
@@ -155,7 +151,7 @@ export class JobController {
         }
     }
 
-    async getAvailbleJobs(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
+    async getJobs(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
         try {
             const userId = req.userId;
             if(!userId){
@@ -176,7 +172,7 @@ export class JobController {
                 res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
              }
             
-             const {jobs} = await this.jobService.getAllJobs(page, limit, search, {category, subCategory, budgetRange});
+             const {jobs} = await this.jobService.getJobs(page, limit, search, {category, subCategory, budgetRange});
              res.status(Http_Status.OK).json(jobs)
         } catch (error) {
             next(error)
@@ -185,7 +181,8 @@ export class JobController {
 
     async getClientProfileByJob(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
         try {
-            const {clientId} = req.query;
+            const {clientId} = req.params;
+            console.log('checking clieniddd',clientId)
             if(typeof clientId !== 'string' || !clientId){
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.CLIENT_ID_MISSING})
                 return;
@@ -224,7 +221,7 @@ export class JobController {
         }
     }
 
-     async getReceivedProposals(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
+     async getProposalsByClient(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
             try {
                 const clientId = req.userId;
                 if(!clientId){
@@ -245,14 +242,14 @@ export class JobController {
                     res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
                 }
 
-                const { proposals } = await this.jobService.getClientReceivedProposals(clientId,page,limit,search,{status,time})
+                const { proposals } = await this.jobService.getProposalsByClient(clientId,page,limit,search,{status,time})
                 res.status(Http_Status.OK).json(proposals);
             } catch (error) {
                 next(error)
             }
     }
 
-    async getProposal(req: AuthRequest, res: Response, next: NextFunction): Promise<void>{
+    async getProposalById(req: AuthRequest, res: Response, next: NextFunction): Promise<void>{
         try {
          
             const clientId = req.userId;
@@ -260,12 +257,12 @@ export class JobController {
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            const {proposalId} = req.body;
+            const { proposalId } = req.params; 
             if(!proposalId){
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            const {proposal} = await this.jobService.getProposal(proposalId, clientId)
+            const {proposal} = await this.jobService.getProposalById(proposalId, clientId)
             res.status(Http_Status.OK).json(proposal)
         } catch (error) {
             next(error)
@@ -279,7 +276,8 @@ export class JobController {
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            const {proposalId,status} = req.body;
+            const { proposalId } = req.params;
+            const { status } = req.body;
             const {proposal} = await this.jobService.updateProposalStatus(proposalId,status, userId)
             res.status(Http_Status.OK).json(proposal)
         } catch (error) {
@@ -287,7 +285,7 @@ export class JobController {
         }
     }
 
-    async getFreelancerAppliedProposals(req:AuthRequest, res:Response, next:NextFunction): Promise<void>{
+    async getProposalsByFreelancer(req:AuthRequest, res:Response, next:NextFunction): Promise<void>{
         try {
             const freelancerId = req.userId;
             if(!freelancerId){
@@ -305,7 +303,7 @@ export class JobController {
             if (isNaN(limit) || limit < 1) {
                 res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
             }
-            const {proposals} = await this.jobService.getFreelancerAppliedProposals(freelancerId,page,limit,search,filter)
+            const {proposals} = await this.jobService.getProposalsByFreelancer(freelancerId,page,limit,search,filter)
             res.status(Http_Status.OK).json({proposals})
         } catch (error) {
             next(error)
@@ -338,35 +336,36 @@ export class JobController {
         }
     }
 
-    async getFreelancerGigs(req:AuthRequest, res:Response, next:NextFunction): Promise<void> {
+    async getMyGigs(req:AuthRequest, res:Response, next:NextFunction): Promise<void> {
         try {
             const freelancerId = req.userId;
             if(!freelancerId){
                 res.status(Http_Status.FORBIDDEN).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            const {gigs} = await this.jobService.getFreelancerGigs(freelancerId)
+            const {gigs} = await this.jobService.getMyGigs(freelancerId)
             res.status(Http_Status.OK).json({gigs})
         } catch (error) {
             next(error)
         }
     }
 
-    async updateFreelancerGig(req:AuthRequest, res:Response, next:NextFunction): Promise<void> {
+    async updateGig(req:AuthRequest, res:Response, next:NextFunction): Promise<void> {
         try {
             const freelancerId = req.userId;
             if(!freelancerId){
                 res.status(Http_Status.FORBIDDEN).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            const {message} = await this.jobService.updateFreelancerGig(freelancerId,req.body)
+            const gigId = req.params.id;
+            const {message} = await this.jobService.updateGig(freelancerId,gigId,req.body)
             res.status(Http_Status.OK).json({message})
         } catch (error) {
             next(error)
         }
     }
 
-    async deleteFreelancerGig(req:AuthRequest, res:Response, next:NextFunction): Promise<void> {
+    async deleteGig(req:AuthRequest, res:Response, next:NextFunction): Promise<void> {
         try {
             const freelancerId = req.userId;
             if(!freelancerId){
@@ -374,7 +373,7 @@ export class JobController {
                 return;
             }
             const { gigId } = req.body; 
-            const {message} = await this.jobService.deleteFreelancerGig(freelancerId,gigId)
+            const {message} = await this.jobService.deleteGig(freelancerId,gigId)
             res.status(Http_Status.OK).json({message})
         } catch (error) {
             next(error)
@@ -470,13 +469,13 @@ export class JobController {
         }
     }
 
-    async getJobDetails(req:AuthRequest, res:Response, next:NextFunction): Promise<void> {
+    async getJob(req:AuthRequest, res:Response, next:NextFunction): Promise<void> {
         try {
-            const jobId = req.query.jobId;
+            const {jobId} = req.params;
             if (typeof jobId !== 'string'){
                 throw new ValidationError(MESSAGES.INVALID_JOB_ID)
             }
-            const {jobData} = await this.jobService.getJobDetails(jobId)
+            const {jobData} = await this.jobService.getJob(jobId)
             res.status(Http_Status.OK).json({jobData})
         } catch (error) {
             next(error)
@@ -490,7 +489,7 @@ export class JobController {
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            const proposalId = req.body.proposalId;
+            const proposalId = req.params.id;
             const {message} = await this.jobService.acceptJobInvitation(freelancerId,proposalId)
             res.status(Http_Status.OK).json({message})
         } catch (error) {
@@ -505,7 +504,7 @@ export class JobController {
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            const proposalId = req.body.proposalId;
+            const proposalId = req.params.id;
             const {message} = await this.jobService.rejectInvitaion(freelancerId,proposalId)
             res.status(Http_Status.OK).json({message})
         } catch (error) {

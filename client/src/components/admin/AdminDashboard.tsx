@@ -13,7 +13,7 @@ const AdminDashboard = () => {
   const [totalJobs, setTotalJobs] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [revenueData, setRevenueData] = useState([]);
-  const { jobs } = useJobs(userENDPOINTS.GET_POSTED_JOBS, 1, 5); 
+  const { jobs } = useJobs(userENDPOINTS.GET_JOBS, 1, 5); 
    const toggleSidebar = () => {
     setIsSidebarOpen(prev => !prev);
   };

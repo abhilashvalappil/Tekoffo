@@ -12,6 +12,6 @@ export interface IJobRepository {
     findCompletedJobsCountByUserId(userId: string): Promise<number> 
     findActiveJobPostsByUserId(userId: string): Promise<JobDataType[]>
     findAllJobs(skip: number, limit: number, search?: string, filters?: { category?: string; subCategory?: string; budgetRange?: string }): Promise<JobDataType[]>
-    updateJobPost(id:string, job:Partial<JobDataType>): Promise<JobDataType | null>;
+    updateJob(id:string, job:Partial<JobDataType>): Promise<JobDataType | null>;
     findJobAndDelete(id:string): Promise<JobDataType | null>
 }

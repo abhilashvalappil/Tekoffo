@@ -27,7 +27,6 @@ export class UserController {
 
     async createProfile(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
         try {
-            console.log("console from usercontroller.tssssss",req.body)
             console.log('Uploaded file:', req.file)
 
             const userId = req.userId;
@@ -103,7 +102,8 @@ export class UserController {
                 companyName,
                 description,
                 country,
-                profilePicture: profilePicture ? profilePicture : undefined,
+                profilePicture: profilePicture ?? undefined,
+                // profilePicture: profilePicture ? profilePicture : undefined,
             });
             res.status(Http_Status.CREATED).json({
                 success:true,
@@ -263,10 +263,10 @@ export class UserController {
         }
     }
 
-    async getReceiver(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
+    async getChatPartner(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
         try {
             const {receiverId} = req.body;
-            const {receiver} = await this.userService.getReceiver(receiverId)
+            const {receiver} = await this.userService.getChatPartner(receiverId)
             res.status(Http_Status.OK).json(receiver)
         } catch (error) {
             next(error)

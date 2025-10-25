@@ -13,6 +13,7 @@ import {
   FilePlus,
   FileText,
   MailOpen,
+  MessageSquare,
 } from 'lucide-react';
  
 
@@ -32,6 +33,7 @@ const menuItems: MenuItem[] = [
   { name: 'Create Gig', icon: FilePlus, path: '/freelancer/create-gig' },
   { name: 'My Gigs', icon: ClipboardList, path: '/freelancer/gigs' },
   { name: 'Wallet', icon: CreditCard, path: '/freelancer/wallet' },
+  { name: 'Reviews', icon: MessageSquare, path: '/freelancer/reviews' },
 ];
 
 interface FreelancerSidebarProps {

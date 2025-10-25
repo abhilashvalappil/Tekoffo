@@ -86,7 +86,7 @@ class UserRepository extends BaseRepository<IUser> implements IUserRepository {
     return await this.find({$and:[{role:'freelancer'},{isBlocked:false}]})
   }
 
-   async checkStripeAccount(freelancerId: string): Promise<boolean> {
+   async getStripeAccount(freelancerId: string): Promise<boolean> {
         const freelancer = await this.findById(freelancerId);
         return !!freelancer?.stripeAccountId;
     }

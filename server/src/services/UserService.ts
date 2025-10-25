@@ -120,7 +120,10 @@ export class UserService implements IUserService {
                 linkedinUrl: updateProfileData.linkedinUrl,
                 githubUrl: updateProfileData.githubUrl,
                 portfolioUrl: updateProfileData.portfolioUrl,
-                profilePicture: updateProfileData.profilePicture ? updateProfileData.profilePicture.path : '',
+                profilePicture: updateProfileData.profilePicture
+                ? updateProfileData.profilePicture.path
+                : user.profilePicture,
+                // profilePicture: updateProfileData.profilePicture ? updateProfileData.profilePicture.path : '',
             }
              
             const saveProfile = await this.userRepository.updateUserProfile(userId,updateProfile)
@@ -226,7 +229,7 @@ export class UserService implements IUserService {
           return { url: session.url, sessionId: session.id };
     }
 
-    async getReceiver(receiverId:string): Promise<{receiver:IUser | null}> {
+    async getChatPartner(receiverId:string): Promise<{receiver:IUser | null}> {
       const receiver = await this.userRepository.findUserById(receiverId)
       return{receiver}
     }

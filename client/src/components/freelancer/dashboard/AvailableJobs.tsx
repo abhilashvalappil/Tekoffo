@@ -7,7 +7,7 @@ import JobDetailsModal from './JobApply';
 import { userENDPOINTS } from '../../../constants/endpointUrl';
 import { useClient } from '../../../hooks/customhooks/useClients';
 import ClientProfileModal from '../profile/ClientProfileModal';
-import { checkStripeAccount, fetchListedCategories } from '../../../api';
+import { getStripeAccount, fetchListedCategories } from '../../../api';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
@@ -69,7 +69,7 @@ const AvailableJobs: React.FC = () => {
   const debouncedSearchTerm = useDebounce(searchTerm,500)
 
   //* Fetch jobs and client customhooks
-  const { jobs, loading, error, meta } = useJobs(userENDPOINTS.GET_POSTED_JOBS, pagination.page, pagination.limit, debouncedSearchTerm, filters);
+  const { jobs, loading, error, meta } = useJobs(userENDPOINTS.GET_JOBS, pagination.page, pagination.limit, debouncedSearchTerm, filters);
   const {client,fetchClient} = useClient()
   
   useEffect(() => {
@@ -156,10 +156,9 @@ const AvailableJobs: React.FC = () => {
 
    
   const handleApplyNow = async(e: React.MouseEvent<HTMLButtonElement>,job: JobDataType) => {
-    console.log('console from availablejobss.tsx',job)
     e.preventDefault()
 
-    const hasStripeAccount = await checkStripeAccount();
+    const hasStripeAccount = await getStripeAccount(userId);
     if(!hasStripeAccount){
       navigate('/freelancer/complete-onboarding');
       return;

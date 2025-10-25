@@ -58,14 +58,14 @@ export class PaymentService implements IPaymentService {
     });
   }
 
-  async checkStripeAccount(freelancerId: string): Promise<boolean> {
+  async getStripeAccount(freelancerId: string): Promise<boolean> {
     const freelancerExist = await this.userRepository.findUserById(
       freelancerId
     );
     if (!freelancerExist) {
       throw new NotFoundError(MESSAGES.INVALID_USER);
     }
-    return await this.userRepository.checkStripeAccount(freelancerId);
+    return await this.userRepository.getStripeAccount(freelancerId);
   }
 
   async createStripeAccount(freelancerId: string,email: string): Promise<{ onboardingLink: string }> {
@@ -197,7 +197,7 @@ export class PaymentService implements IPaymentService {
       startedAt: new Date(),
     };
     await this.contractRepository.createContract(newContract);
-    await this.jobRepository.updateJobPost(jobId.toString(), {
+    await this.jobRepository.updateJob(jobId.toString(), {
       status: "inprogress",
     });
 
@@ -255,7 +255,7 @@ export class PaymentService implements IPaymentService {
     return { message: "All Notifications are marked as read" };
   }
 
-  async getUserContracts(userId: string,page: number,limit: number,search?: string,  status?: string): Promise<PaginatedResponse<IContract>> {
+  async getContractsByUser(userId: string,page: number,limit: number,search?: string,  status?: string): Promise<PaginatedResponse<IContract>> {
     const user = await this.userRepository.findUserById(userId);
     if (!user) {
       throw new NotFoundError(MESSAGES.UNAUTHORIZED);
@@ -306,7 +306,7 @@ export class PaymentService implements IPaymentService {
     return{activeContracts,completedContracts}
   }
 
-  async submitContractForApproval(freelancerId: string,contractId: string): Promise<{ message: string }> {
+  async submitContract(freelancerId: string,contractId: string): Promise<{ message: string }> {
     const contract = await this.contractRepository.findContractById(contractId);
     if (!contract) {
       throw new NotFoundError(MESSAGES.CONTRACT_NOT_FOUND);
@@ -384,7 +384,7 @@ export class PaymentService implements IPaymentService {
 
     await this.paymentRepository.updatePaymentStatus(transaction._id.toString(),"released");
     await this.contractRepository.updateContractStatus(contractId,status.Completed);
-    await this.jobRepository.updateJobPost(contractExist.jobId.toString(), {status: "completed",});
+    await this.jobRepository.updateJob(contractExist.jobId.toString(), {status: "completed",});
 
     const notificationData: Partial<INotification> = {
       senderId: new Types.ObjectId(clientId),
@@ -441,14 +441,24 @@ export class PaymentService implements IPaymentService {
     return{reviews}
   }
 
-  async getReviews(userId: string): Promise<{reviews:IPopulatedReview[] | null}> {
+  async getReviews(userId: string, search?: string, filter?: string): Promise<{reviews:IPopulatedReview[] | null}> {
     const user = await this.userRepository.findUserById(userId)
     if(!user){
         throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
     }
-    const reviews = await this.reviewRepository.findReviewsByUserId(userId);
+    const reviews = await this.reviewRepository.findReviewsByUserId(userId,search,filter);
     return {reviews}
   }
+
+  async getReviewStats(userId: string): Promise<{ totalReviews: number; avgRating: number; fiveStarReviews: number }> {
+  const user = await this.userRepository.findUserById(userId);
+  if (!user) {
+    throw new UnauthorizedError(MESSAGES.UNAUTHORIZED);
+  }
+
+  return this.reviewRepository.getReviewStats(userId);
+}
+
 
   async getFreelancerWallet(userId: string): Promise<IWallet | null> {
     const freelancer = await this.userRepository.findUserById(userId);
@@ -459,7 +469,7 @@ export class PaymentService implements IPaymentService {
     return wallet;
   }
 
-  async withdrawEarnings(userId: string, amount: number): Promise<boolean> {
+  async createWithdrawal(userId: string, amount: number): Promise<boolean> {
     const freelancer = await this.userRepository.findUserById(userId);
     if (!freelancer) {
       throw new UnauthorizedError(MESSAGES.FREELANCER_NOT_FOUND);

@@ -28,7 +28,6 @@ export class ChatController {
 
     async createChat(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
         try {
-            console.log('console from createChat',req.body)
             const { senderId, receiverId } = req.body;
             await this.chatService.createChat(senderId,receiverId)
         } catch (error) {
@@ -43,7 +42,6 @@ export class ChatController {
                 res.status(Http_Status.UNAUTHORIZED).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            console.log('console from createmsg controllerrrrrrrr &&^%########&&&&&',req.body)
             console.log('req.file:', req.file);
             const mediaUrl = req.file ? req.file.path : undefined;
             const messageData = {

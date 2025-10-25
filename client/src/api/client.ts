@@ -28,9 +28,9 @@ export const createJob = async(jobDetails:JobFormData): Promise<string> => {
     }
 }
 
-export const updateJobPost = async(jobData:Job) => {
+export const updateJob = async(jobData:Job) => {
     try {
-        const response = await API.put(userENDPOINTS.UPDATE_JOB_POST,jobData);
+        const response = await API.put(`${userENDPOINTS.UPDATE_JOB}/${jobData._id}`, jobData);
         return response.data;
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -39,7 +39,7 @@ export const updateJobPost = async(jobData:Job) => {
 
 export const deleteJobPost = async(id:string) => {
     try {
-         await API.delete(userENDPOINTS.DELETE_JOB_POST,{data:{id}})
+         await API.delete(`${userENDPOINTS.DELETE_JOB}/${id}`);
     } catch (error) {
         throw new Error(handleApiError(error));
     }
@@ -65,7 +65,7 @@ export const getAllFreelancers = async(): Promise<FreelancerData[]> =>{
 
 export const getReceivedProposals = async(page:number, limit:number,search?: string, filters?:ProposalFilters): Promise<PaginatedResponse<ProposalData>> => {
     try {
-        const response = await API.get(userENDPOINTS.GET_RECEIVED_PROPOSALS,{params:{page,limit,search, ...filters}})
+        const response = await API.get(userENDPOINTS.CLIENT_PROPOSALS,{params:{page,limit,search, ...filters}})
         return response.data
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -74,7 +74,7 @@ export const getReceivedProposals = async(page:number, limit:number,search?: str
 
 export const fetchAndUpdateProposal = async(proposalId:string,status:string): Promise<ProposalData> => {
     try {
-        const response = await API.put(userENDPOINTS.UPDATE_PROPOSAL,{proposalId,status})
+        const response = await API.put(`${userENDPOINTS.UPDATE_PROPOSAL}/${proposalId}/status`, {status,});
         return response.data;
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -83,7 +83,7 @@ export const fetchAndUpdateProposal = async(proposalId:string,status:string): Pr
 
 export const fetchProposal = async(proposalId:string): Promise<ProposalData> => {
     try {
-        const response = await API.post(userENDPOINTS.GET_PROPOSAL,{proposalId})
+        const response = await API.get(`${userENDPOINTS.GET_PROPOSAL}/${proposalId}`);
         return response.data;
     } catch (error) {
         throw new Error(handleApiError(error));

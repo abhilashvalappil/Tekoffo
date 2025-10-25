@@ -39,7 +39,6 @@ export default function PaymentReview() {
       setIsLoading(true);
       try {
         const data = await fetchProposal(proposalId);
-        console.log('propodaldetailsssssss555555555',data)
         setProposalData(data);
       } catch (error) {
         console.error('Error fetching proposal data:', error);

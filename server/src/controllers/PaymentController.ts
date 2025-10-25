@@ -16,14 +16,14 @@ export class PaymentController {private paymentService: IPaymentService; private
     this.paymentService = paymentService;
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {apiVersion: "2025-03-31.basil",});}
 
-  async checkStripeAccount(req: AuthRequest,res: Response,next: NextFunction): Promise<void> {
+  async getStripeAccount(req: AuthRequest,res: Response,next: NextFunction): Promise<void> {
     try {
       const freelancerId = req.userId;
       if (!freelancerId) {
         res.status(Http_Status.BAD_REQUEST).json({ error: MESSAGES.UNAUTHORIZED });
         return;
       }
-      const hasStripeAccount = await this.paymentService.checkStripeAccount(freelancerId);
+      const hasStripeAccount = await this.paymentService.getStripeAccount(freelancerId);
       res.json({ hasStripeAccount });
     } catch (error) {
       next(error);
@@ -110,7 +110,7 @@ export class PaymentController {private paymentService: IPaymentService; private
     }
   }
 
-  async getUserContracts(req: AuthRequest,res: Response,next: NextFunction): Promise<void> {
+  async getContractsByUser(req: AuthRequest,res: Response,next: NextFunction): Promise<void> {
     try {
       const userId = req.userId;
       if (!userId) {
@@ -128,7 +128,7 @@ export class PaymentController {private paymentService: IPaymentService; private
       if (isNaN(limit) || limit < 1) {
         res.status(Http_Status.BAD_REQUEST).json({ error: "Invalid limit value" });
       }
-      const paginatedResponse = await this.paymentService.getUserContracts(
+      const paginatedResponse = await this.paymentService.getContractsByUser(
         userId,
         page,
         limit,
@@ -155,16 +155,15 @@ export class PaymentController {private paymentService: IPaymentService; private
     }
   }
 
-  async submitContractForApproval(req: AuthRequest,res: Response,next: NextFunction
-  ): Promise<void> {
+  async submitContract(req: AuthRequest,res: Response,next: NextFunction): Promise<void> {
     try {
       const freelancerId = req.userId;
       if (!freelancerId) {
         res.status(Http_Status.BAD_REQUEST).json({ error: MESSAGES.UNAUTHORIZED });
         return;
       }
-      const { contractId } = req.body;
-      const { message } = await this.paymentService.submitContractForApproval(
+      const contractId = req.params.id;
+      const { message } = await this.paymentService.submitContract(
         freelancerId,
         contractId
       );
@@ -234,7 +233,9 @@ export class PaymentController {private paymentService: IPaymentService; private
         res.status(Http_Status.BAD_REQUEST).json({error: MESSAGES.INVALID_REQUEST})
         return; 
       }
-      const {reviews} = await this.paymentService.getReviews(userId)
+      const search = req.query.search as string;
+      const filter = req.query.filter as string;
+      const {reviews} = await this.paymentService.getReviews(userId,search,filter)
       if(!reviews){
         res.status(Http_Status.NOT_FOUND).json({message:MESSAGES.REVIEWS_NOT_FOUND})
         return;
@@ -244,6 +245,23 @@ export class PaymentController {private paymentService: IPaymentService; private
       next(error);
     }
   }
+
+  async getReviewStats(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+
+    const userId = req.query.userId as string;
+    if (!userId) {
+      res.status(Http_Status.BAD_REQUEST).json({ error: MESSAGES.INVALID_REQUEST });
+      return;
+    }
+
+    const stats = await this.paymentService.getReviewStats(userId);
+    res.status(Http_Status.OK).json({ stats });
+  } catch (error) {
+    next(error);
+  }
+}
+
 
   async markAllNotificationsAsRead(req: AuthRequest,res: Response,next: NextFunction): Promise<void> {
     try {
@@ -276,7 +294,7 @@ export class PaymentController {private paymentService: IPaymentService; private
     }
   }
 
-  async withdrawEarnings(req: AuthRequest,res: Response,next: NextFunction): Promise<void> {
+  async createWithdrawal(req: AuthRequest,res: Response,next: NextFunction): Promise<void> {
     try {
       const userId = req.userId;
       if (!userId) {
@@ -288,7 +306,7 @@ export class PaymentController {private paymentService: IPaymentService; private
        if (!amount || amount <= 0) {
          res.status(Http_Status.BAD_REQUEST).json({ error: MESSAGES.INVALID_AMOUNT});
        }
-      const success = await this.paymentService.withdrawEarnings(userId,amount)
+      const success = await this.paymentService.createWithdrawal(userId,amount)
       if (success) {
             res.status(Http_Status.OK).json({ message: MESSAGES.WITHDRAWAL_SUCCESS });
         } else {

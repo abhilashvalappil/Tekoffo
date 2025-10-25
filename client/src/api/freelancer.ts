@@ -17,9 +17,9 @@ interface StripeAccountResponse {
 }
 export type SortOption = 'newest' | 'oldest' | 'budget-high' | 'budget-low';
 
-export const submitProposal = async(proposalDetails:FormData): Promise<string> => {
+export const createProposal = async(proposalDetails:FormData): Promise<string> => {
     try {
-        const response = await API.post(userENDPOINTS.SUBMIT_PROPOSAL,proposalDetails,{
+        const response = await API.post(userENDPOINTS.CREATE_PROPOSAL,proposalDetails,{
             headers: {
                 'Content-Type': 'multipart/form-data',  
               }})
@@ -29,11 +29,10 @@ export const submitProposal = async(proposalDetails:FormData): Promise<string> =
     }
 }
 
-export const checkStripeAccount = async(): Promise<boolean> => {
+export const getStripeAccount = async(freelancerId:string): Promise<boolean> => {
     try {
-        const response = await API.get(userENDPOINTS.GET_STRIPE_ACCOUNT)
+        const response = await API.get(`${userENDPOINTS.GET_STRIPE_ACCOUNT}/${freelancerId}/account`)
         const { hasStripeAccount } = response.data;
-        console.log('console from commonts api checkstripe: ',hasStripeAccount)
         return  hasStripeAccount
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -52,7 +51,7 @@ export const createConnectedStripeAccount = async(email:string): Promise<StripeA
 
 export const fetchAppliedProposalsByFreelancer = async(page?:number,limit?:number,search?: string, filter?: string): Promise<PaginatedResponse<AppliedProposal>> => {
     try {
-        const response= await API.get(userENDPOINTS.FREELANCER_APPLIED_PROPOSALS,{params:{page, limit, search, filter}})
+        const response= await API.get(userENDPOINTS.FREELANCER_PROPOSALS,{params:{page, limit, search, filter}})
         return response.data.proposals;
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -61,7 +60,7 @@ export const fetchAppliedProposalsByFreelancer = async(page?:number,limit?:numbe
 
 export const submitContract = async(contractId:string): Promise<string> => {
     try {
-        const response = await API.post(userENDPOINTS.SUBMIT_CONTRACT,{contractId})
+        const response = await API.post(userENDPOINTS.SUBMIT_CONTRACT(contractId));
         return response.data;
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -86,9 +85,9 @@ export const fetchGigs = async(): Promise<Gig[]> => {
     }
 }
 
-export const updateGig = async(formData:Gig): Promise<string> => {
+export const updateGig = async(gigId: string,formData:Gig): Promise<string> => {
     try {
-        const response = await API.put(userENDPOINTS.UPDATE_GIG,formData)
+        const response = await API.put(`${userENDPOINTS.UPDATE_GIG}/${gigId}`, formData);
         return response.data.message;
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -97,7 +96,7 @@ export const updateGig = async(formData:Gig): Promise<string> => {
 
 export const deleteGig = async(gigId:string): Promise<string> => {
     try {
-        const response = await API.delete(userENDPOINTS.DELETE_GIG,{data:{gigId}})
+        const response = await API.delete(`${userENDPOINTS.DELETE_GIG}/${gigId}`)
         return response.data.message;
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -124,7 +123,7 @@ export const fetchClientProfile = async(userId:string): Promise<UserProfileRespo
 
 export const acceptInvitation = async(proposalId:string): Promise<string> => {
     try {
-        const response = await API.put(userENDPOINTS.ACCEPT_INVITATION,{proposalId})
+        const response = await API.put(userENDPOINTS.ACCEPT_INVITATION(proposalId))
         return response.data.message;
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -133,7 +132,7 @@ export const acceptInvitation = async(proposalId:string): Promise<string> => {
 
 export const fetchJobData = async(jobId:string): Promise<JobDataType> => {
     try {
-        const response = await API.get(userENDPOINTS.GET_JOB_DETAILS,{params:{jobId}})
+        const response = await API.get(`${userENDPOINTS.GET_JOB_DETAILS}/${jobId}`);
         return response.data.jobData;
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -142,7 +141,7 @@ export const fetchJobData = async(jobId:string): Promise<JobDataType> => {
 
 export const fetchAndUpdateProposalToReject = async(proposalId:string): Promise<string> => {
     try {
-        const response = await API.put(userENDPOINTS.REJECT_INVITATION,{proposalId})
+        const response = await API.put(userENDPOINTS.REJECT_INVITATION(proposalId))
         return response.data.message;
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -160,7 +159,6 @@ export const fetchChat = async(senderId:string,receiverId:string): Promise<strin
 
 export const createChat = async(senderId:string,receiverId:string): Promise<string> => {
     try {
-        console.log('console from createChat api',senderId,receiverId)
         const response = await API.post(userENDPOINTS.CREATE_CHAT,{senderId,receiverId})
         return response.data;
     } catch (error) {

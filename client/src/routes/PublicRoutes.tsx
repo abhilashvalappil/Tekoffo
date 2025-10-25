@@ -12,7 +12,6 @@ import NotFound from "../pages/NotFound";
 import AccountBlockedPage from "../pages/AccountBlockedPage";
  
 
-
 const PublicRoutes = () => (
     <>
       <Route element={<PublicLayout />}>

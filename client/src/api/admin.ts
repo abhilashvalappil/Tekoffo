@@ -90,7 +90,7 @@ export const fetchPlatformRevenue = async(): Promise<number> => {
 
 export const fetchMonthlyRevenueStats = async(): Promise<{ month: string; earnings: number }[]> => {
     try {
-        const response = await API.get('/admin/total-earnings')
+        const response = await API.get('/admin/earnings')
         return response.data.data;
     } catch (error) {
          throw new Error(handleApiError(error));

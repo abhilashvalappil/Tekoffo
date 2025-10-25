@@ -1,5 +1,3 @@
-
-  // src/constants/statusCodes.ts
 export enum Http_Status {
     OK = 200,              // General success (e.g., GET requests)
     CREATED = 201,         // Resource created (e.g., POST signup)

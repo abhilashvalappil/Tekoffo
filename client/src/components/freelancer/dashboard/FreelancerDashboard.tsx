@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '../../../redux/store';
 import { IWallet } from '../../../types/wallet';
-import { fetchActiveAndCompletedContracts, fetchAppliedProposalsByFreelancer, fetchWallet, submitProposal } from '../../../api';
+import { fetchActiveAndCompletedContracts, fetchAppliedProposalsByFreelancer, fetchWallet, createProposal } from '../../../api';
 import { handleApiError } from '../../../utils/errors/errorHandler';
 import { JobDataType, useJobs } from '../../../hooks/customhooks/useJobs';
 import { userENDPOINTS } from '../../../constants/endpointUrl';
@@ -21,7 +21,7 @@ const FreelancerHome = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const navigate = useNavigate();
 
-  const { jobs, loading, error } = useJobs(userENDPOINTS.GET_POSTED_JOBS, 1, 4);
+  const { jobs, loading, error } = useJobs(userENDPOINTS.GET_JOBS, 1, 4);
 
     const {contracts} = useFetchContracts();
   
@@ -79,7 +79,7 @@ const FreelancerHome = () => {
         proposalDetails.append('proposedBudget', job.budget.toString());
         proposalDetails.append('duration', job.duration);
 
-       await submitProposal(proposalDetails);
+       await createProposal(proposalDetails);
        await loadProposals(); 
      } catch (error) {
       handleApiError(error)

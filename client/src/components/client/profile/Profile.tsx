@@ -98,7 +98,7 @@ const DisplayProfile = () => {
       description: user?.description || '',
       country: user?.country || '',
       companyName: user?.companyName || '',
-      profilePicture: null,
+      profilePicture: user?.profilePicture || null,
     });
     setPreviewImage(user?.profilePicture || null);
     setFormErrors({});
@@ -113,10 +113,8 @@ const DisplayProfile = () => {
     setFormErrors({});
 
     try {
-      // Validate form data with Zod
       const validatedData = profileFormSchema.parse(formData);
 
-      // Prepare FormData for API
       const formDataToSend = new FormData();
       formDataToSend.append('fullName', validatedData.fullName);
       formDataToSend.append('description', validatedData.description);
@@ -124,11 +122,10 @@ const DisplayProfile = () => {
       if (validatedData.companyName) {
         formDataToSend.append('companyName', validatedData.companyName);
       }
-      if (validatedData.profilePicture) {
+      if (validatedData.profilePicture instanceof File) {
         formDataToSend.append('profilePicture', validatedData.profilePicture);
       }
-
-      // Dispatch update profile action
+      
       const result = await dispatch(updateUserProfile(formDataToSend));
       if (updateUserProfile.fulfilled.match(result)) {
         setIsModalOpen(false);

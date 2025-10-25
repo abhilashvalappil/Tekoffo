@@ -21,8 +21,8 @@ export function useClient() {
     const fetchClient = async (clientId: string) => {
       try {
         console.log('checkingg',clientId)
-        const response = await API.get(`/jobs/client?clientId=${clientId}`);
-        // Transform API response to match Client interface
+        // const response = await API.get(`/jobs/client?clientId=${clientId}`);
+        const response = await API.get(`/jobs/client/${clientId}`); 
         const clientData : Client= {
           id: response.data._id,
           fullName: response.data.fullName,

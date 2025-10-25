@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { Briefcase, Tags, DollarSign, Calendar, ChevronRight, Filter, Search, X, Trash2, CheckCircle, Clock, XCircle } from 'lucide-react';
-import { updateJobPost, deleteJobPost, fetchJobs, fetchListedCategories } from '../../../api';
+import { updateJob, deleteJobPost, fetchJobs, fetchListedCategories } from '../../../api';
 import { JobFormSchema, JobFormData } from '../../../utils/validations/JobFormValidation';
 import { handleApiError } from '../../../utils/errors/errorHandler';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
@@ -124,7 +124,7 @@ const MyJobPosts = () => {
 
   const handleSaveJob = async (updatedJob: Job) => {
     try {
-      await updateJobPost(updatedJob);
+      await updateJob(updatedJob);
       setMyJobPosts(myJobPosts.map(job => (job._id === updatedJob._id ? updatedJob : job)));
       setIsModalOpen(false);
       setSelectedJob(null);

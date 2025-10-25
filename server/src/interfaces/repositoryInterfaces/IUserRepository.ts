@@ -16,5 +16,5 @@ export interface IUserRepository {
     createUserProfile(userId: string, updateData: Partial<IUser>): Promise<IUser | null>
     updateUserProfile(userId: string, updateProfile: Partial<IUser>): Promise<IUser | null> 
     findFreelancers(): Promise<FreelancerData[]>
-    checkStripeAccount(freelancerId: string): Promise<boolean>
+    getStripeAccount(freelancerId: string): Promise<boolean>
 }

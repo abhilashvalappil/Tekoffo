@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { submitProposal } from '../../../api';  
+import { createProposal } from '../../../api';  
 import { handleApiError } from '../../../utils/errors/errorHandler';
 import { Toaster, toast } from 'react-hot-toast';
 import { JobDataType } from '../../../hooks/customhooks/useJobs';
@@ -68,7 +68,7 @@ const JobDetailsModal: React.FC<JobDetailsModalProps> = ({ isOpen, onClose, job,
     proposalDetails.append('proposedBudget', expectedBudget || job.budget.toString());
     proposalDetails.append('duration', duration || job.duration);
     try {
-      const message =await submitProposal(proposalDetails);
+      const message =await createProposal(proposalDetails);
       socket.emit('job-applied',{
         jobId:job._id,
         freelancerId:userId

@@ -91,12 +91,12 @@ export default function ReviewsModal({ isOpen, onClose, reviews = [] }: ReviewsM
               <div key={review._id} className="border-b border-gray-200 py-4">
                 <div className="flex items-center gap-4 mb-2">
                   <img
-                    src={review.reviewerId.profilePicture || "/default-avatar.png"}
-                    alt={review.reviewerId.fullName}
+                    src={review.reviewerDetails.profilePicture || "/default-avatar.png"}
+                    alt={review.reviewerDetails.fullName}
                     className="w-10 h-10 rounded-full object-cover"
                   />
                   <div>
-                    <p className="font-semibold">{review.reviewerId.fullName}</p>
+                    <p className="font-semibold">{review.reviewerDetails.fullName}</p>
                     <div className="flex">
                       {[...Array(5)].map((_, i) => (
                         <Star

@@ -17,7 +17,7 @@ class JobRepository extends BaseRepository<JobDataType> implements IJobRepositor
         return await this.create(jobData)
     }
 
-    async updateJobPost(id:string, job:Partial<JobDataType>): Promise<JobDataType | null> {
+    async updateJob(id:string, job:Partial<JobDataType>): Promise<JobDataType | null> {
         return await this.updateById(id,{...job,updated_At: new Date()})
     }
 

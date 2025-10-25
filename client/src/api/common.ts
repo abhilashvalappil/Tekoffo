@@ -37,9 +37,9 @@ export const changePassword = async(passwords:Passwords) => {
 }
 
 
-export const fetchChatPartner = async(receiverId: string): Promise<ChatPartner> => {
+export const fetchChatPartner = async(userId: string): Promise<ChatPartner> => {
     try {
-        const response = await API.post(userENDPOINTS.GET_RECEIVER,{receiverId})
+        const response = await API.post(`${userENDPOINTS.GET_USER}/${userId}`);
         return response.data;
     } catch (error) {
         throw new Error(handleApiError(error));
@@ -56,14 +56,29 @@ export const fetchSubmittedReviews = async(): Promise<IReview[]> =>{
     }
 }
 
-export const fetchReviews = async(userId:string): Promise<IFrontendPopulatedReview[]> => {
+export const fetchReviews = async(userId:string,search?:string,filter?:string): Promise<IFrontendPopulatedReview[]> => {
     try {
-        const response = await API.get(userENDPOINTS.GET_REVIEWS,{params:{userId}})
+        const response = await API.get(userENDPOINTS.GET_REVIEWS,{params:{userId,search,filter}})
         return response.data.reviews;
     } catch (error) {
         throw new Error(handleApiError(error));
     }
 }
+
+export const fetchReviewStats = async (
+  userId: string
+): Promise<{ totalReviews: number; avgRating: number; fiveStarReviews: number }> => {
+  try {
+    console.log('reqqqqqqqqqq@@@@@@@@')
+    const response = await API.get(userENDPOINTS.GET_REVIEW_STATS, {
+      params: { userId },
+    });
+    return response.data.stats;
+  } catch (error) {
+    throw new Error(handleApiError(error));
+  }
+};
+
 
 export const deleteMessageApi = async(messageId:string): Promise<SocketMessage> => {
     try {
