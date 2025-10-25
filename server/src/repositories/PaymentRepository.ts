@@ -1,9 +1,10 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import Payment from '../models/PaymentModel'
 import BaseRepository from "./BaseRepository";
 import { IPayment,IPaymentRepository } from "../interfaces";
 import Stripe from "stripe";
-import dotenv from 'dotenv';
-dotenv.config();
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-03-31.basil' });
  
  
