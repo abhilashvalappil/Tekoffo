@@ -9,7 +9,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { handleApiError } from '../../../utils/errors/errorHandler';
 
-function CreateProfile() {
+const CreateProfile = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 

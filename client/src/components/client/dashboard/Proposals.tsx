@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Calendar, Filter, Eye, Check, X, ChevronDown, User } from 'lucide-react';
+import { Calendar, Filter, Eye, Check, X, User } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import Pagination from '@mui/material/Pagination';
@@ -11,6 +11,8 @@ import { Button } from '@mui/material';
 import { FaCheckCircle } from 'react-icons/fa';
 import { useDebounce } from '../../../hooks/customhooks/useDebounce';
 import { handleApiError } from '../../../utils/errors/errorHandler';
+import SearchBar from '../../common/SearchBar';
+import SelectDropdown from '../../common/SelectDropdown';
 
 
 const Proposals = () => {
@@ -217,49 +219,41 @@ const Proposals = () => {
 
         {/* Search & Filters */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-          <div className="relative w-full sm:w-64">
-            <input
-              type="text"
-              placeholder="Search proposals..."
-              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-          </div>
-
+         <SearchBar
+            placeholder="Search proposals..."
+            value={searchQuery}
+            onChange={setSearchQuery}
+            className="w-full sm:w-64 text-sm"
+          />
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <div className="relative w-full sm:w-auto">
-              <select
-                className="w-full sm:w-auto appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            <SelectDropdown
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="all">All Status</option>
-                <option value="pending">Pending</option>
-                <option value="accepted">Accepted</option>
-                <option value="rejected">Rejected</option>
-                {activeeTab === 'sent' && <option value="invited">Invited</option>}
-              </select>
-              <Filter className="absolute left-3 top-2.5 text-gray-400" size={18} />
-              <ChevronDown className="absolute right-2 top-2.5 text-gray-400" size={18} />
-            </div>
+                onChange={setStatusFilter}
+                options={[
+                  { value: "all", label: "All Status" },
+                  { value: "pending", label: "Pending" },
+                  { value: "accepted", label: "Accepted" },
+                  { value: "rejected", label: "Rejected" },
+                  ...(activeeTab === "sent"
+                    ? [{ value: "invited", label: "Invited" }]
+                    : []),
+                ]}
+                icon={<Filter size={18} />}
+                className="w-full sm:w-auto"
+              />
 
-             <div className="relative w-full sm:w-auto">
-              <select
-                className="w-full sm:w-auto appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                value={timeFilter}
-                onChange={(e) => setTimeFilter(e.target.value)}
-              >
-                <option value="all">All Time</option>
-                <option value="today">Today</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                {/* <option value="year">This Year</option> */}
-              </select>
-              <Calendar className="absolute left-3 top-2.5 text-gray-400" size={18} />
-              <ChevronDown className="absolute right-2 top-2.5 text-gray-400" size={18} />
-            </div>
+              <SelectDropdown
+                  value={timeFilter}
+                  onChange={setTimeFilter}
+                  options={[
+                    { value: "all", label: "All Time" },
+                    { value: "today", label: "Today" },
+                    { value: "week", label: "This Week" },
+                    { value: "month", label: "This Month" },
+                  ]}
+                  icon={<Calendar size={18} />}
+                  className="w-full sm:w-auto"
+                />
           </div>
         </div>
 

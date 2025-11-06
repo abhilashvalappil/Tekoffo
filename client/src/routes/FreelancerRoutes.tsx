@@ -3,7 +3,7 @@ import { Route} from "react-router-dom";
 import FreelancerHome from "../components/freelancer/dashboard/FreelancerDashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import FreelancerLayout from "../components/freelancer/shared/Layout";
-import Loader from "../components/shared/Loader";
+import Loader from "../components/common/Loader";
 
 
 const FreelancerProfile = lazy(() => import("../components/freelancer/profile/Profile"));

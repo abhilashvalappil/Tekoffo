@@ -25,6 +25,9 @@ export * from './serviceInterfaces/IAdminService';
 export * from './serviceInterfaces/IJobService';
 export * from './serviceInterfaces/IPaymentService'
 export * from './serviceInterfaces/IChatService'
+export * from './serviceInterfaces/INotificationService'
+export * from './serviceInterfaces/IReviewService'
+export * from './serviceInterfaces/IWalletService'
 
 
 

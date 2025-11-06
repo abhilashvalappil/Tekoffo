@@ -3,6 +3,7 @@ import { Gig } from '../../../../types/gigTypes';
 import { updateGig } from '../../../../api';
 import { handleApiError } from '../../../../utils/errors/errorHandler';
 import toast from 'react-hot-toast';
+import Button from '../../../common/Button';
 
 
 interface EditGigModalProps {
@@ -157,22 +158,22 @@ const EditGigModal: React.FC<EditGigModalProps> = ({ gig, isOpen, onClose, onSav
             </div>
           </div>
           <div className="flex justify-end gap-2 mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-200 rounded-lg"
+            <Button 
+              type="button" 
+              onClick={onClose} 
+              variant="secondary"
             >
               Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className={`px-4 py-2 bg-[#0A142F] text-white rounded-lg ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#0A142F]/90'}`}
-            //   className="px-4 py-2 bg-[#0A142F] text-white rounded-lg"
-            >
-              {/* Save Changes */}
-              {isLoading ? 'Saving...' : 'Save Changes'}
-            </button>
+            </Button>
+            <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                loading={isLoading}
+                loadingText="Saving..."
+              >
+                Save Changes
+              </Button>
           </div>
         </form>
       </div>

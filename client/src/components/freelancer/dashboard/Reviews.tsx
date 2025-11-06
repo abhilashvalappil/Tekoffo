@@ -6,17 +6,17 @@ import { RootState } from "../../../redux/store";
 import { IFrontendPopulatedReview } from "../../../types/review";
 import { useDebounce } from "../../../hooks/customhooks/useDebounce";
 
-type Review = {
-  id: number;
-  name: string;
-  location: string;
-  avatar: string;
-  rating: number;
-  review: string;
-  project: string;
-  date: string;
-  featured?: boolean;
-};
+// type Review = {
+//   id: number;
+//   name: string;
+//   location: string;
+//   avatar: string;
+//   rating: number;
+//   review: string;
+//   project: string;
+//   date: string;
+//   featured?: boolean;
+// };
 
 type ReviewStats = {
   totalReviews: number;
@@ -25,42 +25,7 @@ type ReviewStats = {
 }
 
 
-const reviewsData: Review[] = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    location: "New York, USA",
-    avatar: "https://randomuser.me/api/portraits/women/10.jpg",
-    rating: 5,
-    review:
-      "Exceptional work! The website design exceeded my expectations. Very professional, responsive, and delivered on time. Would definitely hire again for future projects.",
-    project: "Website Design",
-    date: "Jan 12, 2024",
-  },
-  {
-    id: 2,
-    name: "Michael Chen",
-    location: "Toronto, Canada",
-    avatar: "https://randomuser.me/api/portraits/men/20.jpg",
-    rating: 5,
-    review:
-      "Outstanding mobile app development. Clean code, great UI/UX, and excellent communication throughout the project. Highly recommended!",
-    project: "Mobile App Development",
-    date: "Jan 5, 2024",
-    featured: true,
-  },
-  {
-    id: 3,
-    name: "Emma Rodriguez",
-    location: "Madrid, Spain",
-    avatar: "https://randomuser.me/api/portraits/women/30.jpg",
-    rating: 4,
-    review:
-      "Great work on the logo and branding materials. Very creative and professional approach. Minor revisions were handled quickly.",
-    project: "Branding & Logo",
-    date: "Dec 28, 2023",
-  },
-];
+ 
 
 const  Reviews: React.FC = () => {
   const [reviews,setReviews] = useState<IFrontendPopulatedReview[]>([])
@@ -72,8 +37,8 @@ const  Reviews: React.FC = () => {
 
   const debouncedSearchTerm = useDebounce(search,500)
 
-  const avgRating =
-    reviewsData.reduce((acc, r) => acc + r.rating, 0) / reviewsData.length;
+  // const avgRating =
+  //   reviewsData.reduce((acc, r) => acc + r.rating, 0) / reviewsData.length;
 
     const userId = useSelector((state:RootState) => state.auth.user._id)
 
@@ -107,7 +72,7 @@ const  Reviews: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center mt-3 md:mt-0">
-          {[...Array(5)].map((_, i) => (
+          {/* {[...Array(5)].map((_, i) => (
             <Star
               key={i}
               size={20}
@@ -117,7 +82,7 @@ const  Reviews: React.FC = () => {
                   : "text-gray-300"
               }`}
             />
-          ))}
+          ))} */}
           <span className="ml-2 text-lg font-semibold">{stats?.avgRating?.toFixed(1) ?? 0}</span>
         </div>
       </div>

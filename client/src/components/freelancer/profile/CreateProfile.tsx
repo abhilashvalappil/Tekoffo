@@ -9,7 +9,7 @@ import { createFreelancerProfile } from '../../../redux/services/userService';
 import { freelancerProfileSchema, FreelancerProfileFormData } from '../../../utils/validations/ProfileValidation';
 import { handleApiError } from '../../../utils/errors/errorHandler';
 
-function CreateFreelancerProfile() {
+const CreateFreelancerProfile = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import {Clock,Briefcase,Tags,DollarSign,Calendar,ChevronRight,Filter,Search,X,Building2,MapPin,User,} from 'lucide-react';
+import {Clock,Briefcase,Tags,DollarSign,Calendar,ChevronRight,Filter,X,Building2,MapPin,User,} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { JobDataType, useJobs } from '../../../hooks/customhooks/useJobs';
 import JobDetailsModal from './JobApply';
@@ -19,6 +19,7 @@ import { Category } from '../../../types/jobTypes';
 import socket from '../../../utils/socket';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
+import SearchBar from '../../common/SearchBar';
 
 interface Client {
   id: string;
@@ -207,19 +208,11 @@ const AvailableJobs: React.FC = () => {
             </div>
 
             {/* Search Bar */}
-            <div className="relative">
-              <Search
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                size={20}
-              />
-              <input
-                type="text"
+            <SearchBar
                 placeholder="Search jobs by title or description..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0A142F]/20"
+                onChange={setSearchTerm}
               />
-            </div>
 
             {/* Filters Panel */}
             {showFilters && (

@@ -4,7 +4,7 @@ import { Route} from "react-router-dom";
 import ClientDashboard from "../components/client/dashboard/ClientDashboard";
 import ProtectedRoute from "./ProtectedRoute";
 import ClientLayout from "../components/client/shared/Layout";
-import Loader from "../components/shared/Loader";
+import Loader from "../components/common/Loader";
 
 const DisplayProfile = lazy(() => import("../components/client/profile/Profile"));
 const CreateProfile = lazy(() => import("../components/client/profile/CreateProfile"));

@@ -367,12 +367,14 @@ export class JobController {
 
     async deleteGig(req:AuthRequest, res:Response, next:NextFunction): Promise<void> {
         try {
+            console.log('gigid receivxxxxxx')
             const freelancerId = req.userId;
             if(!freelancerId){
                 res.status(Http_Status.FORBIDDEN).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            const { gigId } = req.body; 
+             const { id: gigId } = req.params;
+            console.log('gigid receivinggg',gigId)
             const {message} = await this.jobService.deleteGig(freelancerId,gigId)
             res.status(Http_Status.OK).json({message})
         } catch (error) {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
-import { Briefcase, Tags, DollarSign, Calendar, ChevronRight, Filter, Search, X, Trash2, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { Briefcase, Tags, DollarSign, Calendar, ChevronRight, Filter, X, Trash2, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { updateJob, deleteJobPost, fetchJobs, fetchListedCategories } from '../../../api';
 import { JobFormSchema, JobFormData } from '../../../utils/validations/JobFormValidation';
 import { handleApiError } from '../../../utils/errors/errorHandler';
@@ -12,6 +12,7 @@ import { Category } from '../../../types/jobTypes';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
 import { useDebounce } from '../../../hooks/customhooks/useDebounce';
+import SearchBar from '../../common/SearchBar';
 
 const MyJobPosts = () => {
   const [myJobPosts, setMyJobPosts] = useState<Job[]>([]);
@@ -364,16 +365,11 @@ const MyJobPosts = () => {
                 <span className="text-[#0A142F]">Filter Jobs</span>
               </button>
             </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
+            <SearchBar
                 placeholder="Search your job posts by title or description..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0A142F]/20"
+                onChange={setSearchTerm}
               />
-            </div>
             {showFilters && (
               <div className="bg-white p-4 rounded-lg border border-gray-200 mt-4">
                 <div className="flex justify-between items-center mb-4">

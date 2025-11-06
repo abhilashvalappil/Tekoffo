@@ -1,9 +1,9 @@
 import Stripe from "stripe";
-import { IUserRepository,IJobRepository,IProposalRepository, IPaymentService, CreateContractDTO, INotification, IContract, status, CreateReviewDTO, IWallet, ITransaction, IReview, IPopulatedReview  } from "../interfaces";
+import { IUserRepository,IJobRepository, IPaymentService, CreateContractDTO, INotification, IContract, status } from "../interfaces";
 import {MESSAGES} from '../constants/messages'
-import { ConflictError, NotFoundError, UnauthorizedError, ValidationError } from "../errors/customErrors";
-import mongoose, { Types } from "mongoose";
-import { IPaymentRepository,IContractRepository,INotificationRepository,IReviewRepository,IWalletRepository,ITransactionRepository, IPlatformRepository } from "../interfaces"; 
+import { ConflictError, NotFoundError, UnauthorizedError } from "../errors/customErrors";
+import { Types } from "mongoose";
+import { IPaymentRepository,IContractRepository,INotificationRepository,IWalletRepository,ITransactionRepository, IPlatformRepository } from "../interfaces"; 
 import dotenv from "dotenv";
 dotenv.config();
 import { v4 as uuidv4 } from 'uuid';
@@ -21,11 +21,9 @@ export const TRANSACTION_TYPE = {
 export class PaymentService implements IPaymentService {
   private userRepository: IUserRepository;
   private jobRepository: IJobRepository;
-  private proposalRepository: IProposalRepository;
   private paymentRepository: IPaymentRepository;
   private contractRepository: IContractRepository;
   private notificationRepository: INotificationRepository;
-  private reviewRepository: IReviewRepository;
   private walletRepository: IWalletRepository;
   private transactionRepository: ITransactionRepository;
   private platformRepository: IPlatformRepository;
@@ -34,22 +32,18 @@ export class PaymentService implements IPaymentService {
   constructor(
     userRepository: IUserRepository,
     jobRepository: IJobRepository,
-    proposalRepository: IProposalRepository,
     paymentRepository: IPaymentRepository,
     contractRepository: IContractRepository,
     notificationRepository: INotificationRepository,
-    reviewRepository: IReviewRepository,
     walletRepository: IWalletRepository,
     transactionRepository: ITransactionRepository,
     platformRepository: IPlatformRepository
   ) {
     this.userRepository = userRepository;
     this.jobRepository = jobRepository;
-    this.proposalRepository = proposalRepository;
     this.paymentRepository = paymentRepository;
     this.contractRepository = contractRepository;
     this.notificationRepository = notificationRepository;
-    this.reviewRepository = reviewRepository;
     this.walletRepository = walletRepository;
     this.transactionRepository = transactionRepository;
     this.platformRepository = platformRepository;
@@ -231,30 +225,6 @@ export class PaymentService implements IPaymentService {
     return { message: MESSAGES.CONTRACT_CREATED };
   }
 
-  async getNotifications(userId: string): Promise<{ notifications: INotification[] }> {
-    const user  = await this.userRepository.findUserById(userId);
-     if(!user){
-      throw new NotFoundError(MESSAGES.UNAUTHORIZED);
-    }
-    const notifications = await this.notificationRepository.findNotifications(userId);
-    return { notifications };
-  }
-
-  async markNotificationAsRead(userId: string,id: string): Promise<{ message: string }> {
-    const user  = await this.userRepository.findUserById(userId);
-     if(!user){
-      throw new NotFoundError(MESSAGES.UNAUTHORIZED);
-    }
-    await this.notificationRepository.findNotificationById(id);
-    await this.notificationRepository.updateNotification(id);
-    return { message: "Notification marked as read" };
-  }
-
-  async markAllNotificationsAsRead(userId: string): Promise<{ message: string }> {
-    await this.notificationRepository.updateAllNotifications(userId);
-    return { message: "All Notifications are marked as read" };
-  }
-
   async getContractsByUser(userId: string,page: number,limit: number,search?: string,  status?: string): Promise<PaginatedResponse<IContract>> {
     const user = await this.userRepository.findUserById(userId);
     if (!user) {
@@ -400,121 +370,5 @@ export class PaymentService implements IPaymentService {
     }
     return { message: MESSAGES.PAYMENT_RELEASED };
   }
-
-  async submitReviewAndRating(
-    userId: string,
-    reviewedUserId: string,
-    reviewData: { rating: number; review: string },
-    contractId: string
-  ): Promise<{ message: string }> {
-    const reviewedUserIdExist = await this.userRepository.findUserById(
-      reviewedUserId
-    );
-    if (!reviewedUserIdExist) {
-      throw new NotFoundError(MESSAGES.INVALID_USER);
-    }
-    const contract = await this.contractRepository.findContractById(contractId);
-    if (!contract) {
-      throw new NotFoundError(MESSAGES.CONTRACT_NOT_FOUND);
-    }
-    const jobId = contract.jobId.toString();
-
-    const reviewDatas: CreateReviewDTO = {
-      reviewerId: new mongoose.Types.ObjectId(userId),
-      reviewedUserId: new mongoose.Types.ObjectId(reviewedUserId),
-      rating: reviewData.rating,
-      reviewText: reviewData.review,
-      contractId: new mongoose.Types.ObjectId(contractId),
-      jobId: new mongoose.Types.ObjectId(jobId),
-    };
-
-    await this.reviewRepository.createReviewAndRating(reviewDatas);
-    return { message: MESSAGES.REVIEW_SUBMITTED };
-  }
-
-  async getSubmittedReviews(userId: string): Promise<{reviews:IReview[] | null}> {
-    const user = await this.userRepository.findUserById(userId)
-    if(!user){
-        throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
-    }
-    const reviews = await this.reviewRepository.findReviewsByReviewerId(userId)
-    return{reviews}
-  }
-
-  async getReviews(userId: string, search?: string, filter?: string): Promise<{reviews:IPopulatedReview[] | null}> {
-    const user = await this.userRepository.findUserById(userId)
-    if(!user){
-        throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
-    }
-    const reviews = await this.reviewRepository.findReviewsByUserId(userId,search,filter);
-    return {reviews}
-  }
-
-  async getReviewStats(userId: string): Promise<{ totalReviews: number; avgRating: number; fiveStarReviews: number }> {
-  const user = await this.userRepository.findUserById(userId);
-  if (!user) {
-    throw new UnauthorizedError(MESSAGES.UNAUTHORIZED);
-  }
-
-  return this.reviewRepository.getReviewStats(userId);
-}
-
-
-  async getFreelancerWallet(userId: string): Promise<IWallet | null> {
-    const freelancer = await this.userRepository.findUserById(userId);
-    if (!freelancer) {
-      throw new UnauthorizedError(MESSAGES.FREELANCER_NOT_FOUND);
-    }
-    const wallet = await this.walletRepository.findWallet(userId);
-    return wallet;
-  }
-
-  async createWithdrawal(userId: string, amount: number): Promise<boolean> {
-    const freelancer = await this.userRepository.findUserById(userId);
-    if (!freelancer) {
-      throw new UnauthorizedError(MESSAGES.FREELANCER_NOT_FOUND);
-    }
-    const wallet = await this.walletRepository.findWallet(userId);
-    if (!wallet) {
-      throw new NotFoundError(MESSAGES.WALLET_NOT_FOUND);
-    }
-
-    if (wallet.currentBalance < amount) {
-      throw new ValidationError(MESSAGES.INSUFFICIENT_BALANCE);
-    }
-    const success = await this.walletRepository.processWithdrawal(
-      userId,
-      amount
-    );
-    const WithDrawtransactionData = {
-      userId: new Types.ObjectId(userId),
-      type: TRANSACTION_TYPE.DEBIT,
-      amount: amount,
-      description: 'Withdrawal to bank account',
-    }
-    await this.transactionRepository.createTransaction(WithDrawtransactionData)
-    return success;
-  }
-
-  async getWalletTransactions(userId:string,page: number,limit: number): Promise<PaginatedResponse<ITransaction>>{
-    const userExist = await this.userRepository.findUserById(userId);
-    if(!userExist){
-        throw new UnauthorizedError(MESSAGES.UNAUTHORIZED)
-    }
-    const skip = (page - 1) * limit;
-    const [transactions,total] = await Promise.all([
-      this.transactionRepository.findTransactions(userId,skip, limit),
-      this.transactionRepository.countTransactionsByUserId(userId)
-    ]) 
-    return {
-            data: transactions,
-            meta: {
-                total,
-                page,
-                pages: Math.ceil(total / limit),
-                limit,
-            },
-        };
-    }
-
+ 
 }

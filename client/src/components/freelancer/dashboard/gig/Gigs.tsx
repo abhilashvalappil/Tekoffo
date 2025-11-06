@@ -8,6 +8,7 @@ import { fetchGigs } from '../../../../api';
 import { useNavigate } from 'react-router-dom';
 import EditGigModal from './EditGigModal';
 import { createGigHandlers } from './handlers/gigHandlers';
+import Button from '../../../common/Button';
 
 
 const MyGigs: React.FC = () => {
@@ -154,17 +155,12 @@ const MyGigs: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEditGig(gig)}
-                        className="w-full md:w-auto px-4 py-2 bg-[#0A142F] text-white hover:bg-[#0A142F]/90 rounded-lg transition-colors"
-                      >
+                      <Button onClick={() => handleEditGig(gig)} variant="primary">
                         Edit Gig
-                      </button>
-                      <button
-                      onClick={() => openDeleteModal(gig)}
-                       className="w-full md:w-auto px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors">
+                      </Button>
+                      <Button onClick={() => openDeleteModal(gig)} variant="danger">
                         Delete
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -190,18 +186,19 @@ const MyGigs: React.FC = () => {
               cannot be undone.
             </p>
             <div className="flex justify-end gap-2">
-              <button
+              <Button
+                variant="secondary"
                 onClick={() => setIsDeleteModalOpen(false)}
-                className="px-4 py-2 bg-gray-200 rounded-lg text-[#0A142F] hover:bg-gray-300"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+
+              <Button
+                variant="danger"
                 onClick={handleDeleteGig}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
               >
                 Delete
-              </button>
+              </Button>
             </div>
           </div>
         </div>

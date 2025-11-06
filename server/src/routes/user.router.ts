@@ -23,6 +23,10 @@ import { upload, uploadChatMedia } from '../utils/cloudinary';
 import { uploadProposal } from "../utils/cloudinary";
 import { PaymentService } from "../services/PaymentService";
 import { ChatService } from "../services/ChatService";
+import { NotificationController } from "../controllers/NotificationController";
+import { NotificationService } from "../services/NotificationService";
+import { ReviewService } from "../services/ReviewService";
+import { ReviewController } from "../controllers/ReviewController";
 import NotificationRepository from "../repositories/NotificationRepository";
 import ReviewRepository from "../repositories/ReviewRepository";
 import GigRepository from "../repositories/GigRepository";
@@ -31,6 +35,8 @@ import ChatRepository from "../repositories/ChatRepository";
 import TransactionRepository from "../repositories/TransactionRepository";
 import PlatformRepository from "../repositories/PlatformRepository";
 import dotenv from 'dotenv';
+import { WalletService } from "../services/WalletService";
+import { WalletController } from "../controllers/WalletController";
 dotenv.config();
 
 const userRouter = Router();
@@ -44,10 +50,16 @@ const userService = new UserService(UserRepository,CategoryRepository,JobReposit
 const userController = new UserController(userService);
 const jobService = new JobService(CategoryRepository,UserRepository,JobRepository,ProposalRepository,GigRepository,ContractRepository, NotificationRepository)
 const jobController = new JobController(jobService)
-const paymentService = new PaymentService(UserRepository,JobRepository,ProposalRepository,PaymentRepository,ContractRepository, NotificationRepository, ReviewRepository,WalletRepository,TransactionRepository, PlatformRepository)
+const paymentService = new PaymentService(UserRepository,JobRepository,PaymentRepository,ContractRepository, NotificationRepository,WalletRepository,TransactionRepository, PlatformRepository)
 const paymentController = new PaymentController(paymentService)
 const messageService = new ChatService(ChatRepository,MessageRepository,UserRepository)
 const chatController = new ChatController(messageService)
+const notificationService = new NotificationService(UserRepository,NotificationRepository)
+const notificationController = new NotificationController(notificationService)
+const reviewService = new ReviewService(UserRepository,ContractRepository,ReviewRepository)
+const reviewController = new ReviewController(reviewService)
+const walletService = new WalletService(UserRepository,WalletRepository,TransactionRepository)
+const walletController = new WalletController(walletService)
 
 
 //*common user routes
@@ -77,15 +89,15 @@ userRouter.post('/proposals',uploadProposal.single('attachments'),authMiddleware
 userRouter.get('/proposals',authMiddleware,authorizeRole('freelancer'),jobController.getProposalsByFreelancer.bind(jobController))
 userRouter.get('/onboard-freelancer',authMiddleware,authorizeRole('freelancer'),paymentController.createConnectedAccount.bind(paymentController))
 userRouter.get('/freelancers/:freelancerId/account',authMiddleware,authorizeRole('freelancer'),paymentController.getStripeAccount.bind(paymentController))
-userRouter.get('/notifications',authMiddleware,authorizeRole(['freelancer', 'client']),paymentController.getNotifications.bind(paymentController))
-userRouter.put('/notifications/:id/read',authMiddleware,authorizeRole(['freelancer', 'client']),paymentController.markNotificationAsRead.bind(paymentController))
-userRouter.put('/notifications/read-all',authMiddleware,authorizeRole(['freelancer', 'client']),paymentController.markAllNotificationsAsRead.bind(paymentController))
+userRouter.get('/notifications',authMiddleware,authorizeRole(['freelancer', 'client']),notificationController.getNotifications.bind(notificationController))
+userRouter.put('/notifications/:id/read',authMiddleware,authorizeRole(['freelancer', 'client']),notificationController.markNotificationAsRead.bind(notificationController))
+userRouter.put('/notifications/read-all',authMiddleware,authorizeRole(['freelancer', 'client']),notificationController.markAllNotificationsAsRead.bind(notificationController))
 userRouter.get('/contracts',authMiddleware,authorizeRole(['freelancer', 'client']),paymentController.getContractsByUser.bind(paymentController))
 userRouter.post('/contracts/:id/submit',authMiddleware,authorizeRole('freelancer'),paymentController.submitContract.bind(paymentController))
 userRouter.get('/contracts/active',authMiddleware,authorizeRole('freelancer'),paymentController.getActiveAndCompletedContracts.bind(paymentController))
-userRouter.get('/wallet',authMiddleware,authorizeRole('freelancer'),paymentController.getFreelancerWallet.bind(paymentController))
-userRouter.post('/wallet/withdrawals',authMiddleware,authorizeRole('freelancer'),paymentController.createWithdrawal.bind(paymentController))
-userRouter.get('/wallet/transactions',authMiddleware,authorizeRole('freelancer'),paymentController.getWalletTransactions.bind(paymentController))
+userRouter.get('/wallet',authMiddleware,authorizeRole('freelancer'),walletController.getFreelancerWallet.bind(walletController))
+userRouter.post('/wallet/withdrawals',authMiddleware,authorizeRole('freelancer'),walletController.createWithdrawal.bind(walletController))
+userRouter.get('/wallet/transactions',authMiddleware,authorizeRole('freelancer'),walletController.getWalletTransactions.bind(walletController))
 
 
 userRouter.post('/users/:id',authMiddleware,authorizeRole('freelancer'),userController.getChatPartner.bind(userController))
@@ -134,10 +146,10 @@ userRouter.post('/payment-intent',authMiddleware,authorizeRole('client'),payment
 userRouter.post('/contracts',authMiddleware,authorizeRole('client'),paymentController.createContract.bind(paymentController))
 userRouter.post('/release-payment',authMiddleware,authorizeRole('client'),paymentController.releasePayment.bind(paymentController))
 
-userRouter.post('/reviews',authMiddleware,authorizeRole(['client','freelancer']),paymentController.submitReviewAndRating.bind(paymentController))
-userRouter.get('/reviews/submitted',authMiddleware,authorizeRole(['client','freelancer']),paymentController.getSubmittedReviews.bind(paymentController))
-userRouter.get('/reviews',authMiddleware,authorizeRole(['client','freelancer']),paymentController.getReviews.bind(paymentController))
-userRouter.get('/review-stats',authMiddleware,authorizeRole(['client','freelancer']),paymentController.getReviewStats.bind(paymentController))
+userRouter.post('/reviews',authMiddleware,authorizeRole(['client','freelancer']),reviewController.submitReviewAndRating.bind(reviewController))
+userRouter.get('/reviews/submitted',authMiddleware,authorizeRole(['client','freelancer']),reviewController.getSubmittedReviews.bind(reviewController))
+userRouter.get('/reviews',authMiddleware,authorizeRole(['client','freelancer']),reviewController.getReviews.bind(reviewController))
+userRouter.get('/review-stats',authMiddleware,authorizeRole(['client','freelancer']),reviewController.getReviewStats.bind(reviewController))
 
  
 

@@ -12,7 +12,7 @@ import { UserRole } from '../../types/userTypes';
 import { SingUpFormData } from '../../types/auth';
 import {GoogleLogin,CredentialResponse } from '@react-oauth/google';
 import handleGoogleSuccess from '../../services/googleAuthHandler';
-import Spinner from '../shared/Spinner';
+import Spinner from '../common/Spinner';
  
 
 

@@ -1,6 +1,6 @@
  
 import { useEffect, useState } from 'react';
-import { Search, Filter, ChevronDown} from 'lucide-react';
+import { Filter } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useFetchContracts } from '../../../hooks/customhooks/useFetchContracts';
 import { approveContract, fetchSubmittedReviews, submitReview } from '../../../api';
@@ -8,12 +8,14 @@ import { handleApiError } from '../../../utils/errors/errorHandler';
 import { useDebounce } from '../../../hooks/customhooks/useDebounce';
 import Pagination from '@mui/material/Pagination';
 import Stack from '@mui/material/Stack';
-import ReviewModal from '../../shared/Rating';
+import ReviewModal from '../../common/Rating';
 import { usePagination } from '../../../hooks/customhooks/usePagination';
 import { IReview } from '../../../types/review';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../redux/store';
 import ChatButton from '../../freelancer/shared/ChatButton';
+import SearchBar from '../../common/SearchBar';
+import SelectDropdown from '../../common/SelectDropdown';
 
 const Contracts = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -79,30 +81,29 @@ const Contracts = () => {
       {/* Search & Filters */}
       <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
         <div className="relative w-full md:w-1/3">
-          <input
-            type="text"
-            placeholder="Search contracts..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
+           <SearchBar
+      placeholder="Search contracts..."
+      value={searchQuery}
+      onChange={setSearchQuery}
+      className="w-full"
+      iconSize={18} // optional
+    />
         </div>
 
         <div className="flex flex-wrap gap-3">
           <div className="relative w-full md:w-auto">
-            <select
-              className="appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-8 py-2 w-full md:w-auto focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="submitted">Submitted</option>
-              <option value="completed">Completed</option>
-            </select>
-            <Filter className="absolute left-3 top-2.5 text-gray-400" size={18} />
-            <ChevronDown className="absolute right-2 top-2.5 text-gray-400" size={18} />
+            <SelectDropdown
+        value={statusFilter}
+        onChange={setStatusFilter}
+        options={[
+          { value: 'all', label: 'All Status' },
+          { value: 'active', label: 'Active' },
+          { value: 'submitted', label: 'Submitted' },
+          { value: 'completed', label: 'Completed' },
+        ]}
+        icon={<Filter size={18} />}
+        className="w-full md:w-auto"
+      />
           </div>
         </div>
       </div>
