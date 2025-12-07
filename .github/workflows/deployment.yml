@@ -48,13 +48,24 @@ jobs:
             # Install dependencies
             npm install
 
-            # Restart app using PM2
-            pm2 stop tekoffo || true
-            pm2 delete tekoffo || true
-            pm2 start index.js --name tekoffo
-            pm2 save
+            # Ensure screen is installed
+            if ! command -v screen >/dev/null 2>&1; then
+              echo "screen not found — installing..."
+              sudo apt-get update -y
+              sudo apt-get install -y screen
+            fi
 
-            echo "✅ Tekoffo deployed successfully"
+            # If a screen session named 'project' exists, stop it
+            if screen -list | grep -q "\.project"; then
+              echo "Existing 'project' screen session found — stopping it..."
+              screen -S project -X quit || true
+            fi
+
+            # Start a fresh screen session named 'project' with npm run dev
+            echo "Starting new 'project' screen session with 'npm run dev'..."
+            screen -dmS project bash -c 'npm run dev'
+
+            echo "✅ Tekoffo deployed successfully (running in screen session 'project')"
           EOF
 
       - name: Remove SSH key
