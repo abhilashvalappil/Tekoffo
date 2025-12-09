@@ -7,60 +7,51 @@ on:
 
 jobs:
   deploy:
+    name: Deploy to VM
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create SSH key
+      - name: Create SSH private key from secret
         run: |
           printf '%s\n' "${{ secrets.SSH_ACCESS }}" > ssh_key
           chmod 600 ssh_key
-
-      - name: SSH Deploy
+      - name: SSH and Deploy Server
         env:
           SSH_KEY: ssh_key
         run: |
           ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no sudheerkumarv117@35.184.218.24 << 'EOF'
-set -euo pipefail
-
-cd ~
-
-if [ -d "tekoffo" ]; then
-  cd tekoffo && git pull
-else
-  git clone https://github.com/abhilashvalappil/Tekoffo.git tekoffo
-  cd tekoffo
-fi
-
-cd server
-
-pkill -9 -f "SCREEN -dmS project" || true
-pkill -9 -f "npm run dev" || true
-pkill -9 -f "bash -c while true" || true
-
-screen -wipe >/dev/null 2>&1 || true
-sudo rm -rf /run/screen/S-$USER >/dev/null 2>&1 || true
-
-ACTIVE_SCREENS=$(screen -ls 2>&1 | grep -E "Detached|Attached" | wc -l)
-
-if [ "$ACTIVE_SCREENS" -ne 0 ]; then
-  echo 'Screen cleanup failed.'
-  exit 1
-fi
-
-screen -dmS project bash -c '
-  while true; do
-    npm run dev
-    sleep 2
-  done
-'
-
-echo 'Deployment complete.'
-EOF
-
-      - name: Cleanup SSH key
+            set -euo pipefail
+            cd ~
+            # Clone or pull repo
+            if [ -d "tekoffo" ]; then
+              echo "Repository exists — pulling latest changes..."
+              cd tekoffo
+              git pull
+            else
+              echo "Cloning repository..."
+              git clone https://github.com/abhilashvalappil/Tekoffo.git tekoffo
+              cd tekoffo
+            fi
+            # Go to server directory
+            cd server
+            # 🔥 Kill ALL existing screen sessions
+            echo "Killing all existing screen sessions..."
+            screen -ls | awk '/\t/ {print $1}' | xargs -r screen -S quit || true
+            # 🚀 Start a new persistent screen session
+            echo "Starting persistent screen session 'project'..."
+            screen -dmS project bash -c '
+              while true; do
+                npm run dev
+                echo "Process exited — restarting in 2 seconds..."
+                sleep 2
+              done
+            '
+            echo "🚀 Tekoffo deployed successfully. Persistent screen session 'project' is running."
+          EOF
+      - name: Remove SSH key
         if: always()
         run: |
           shred -u ssh_key || rm -f ssh_key || true
