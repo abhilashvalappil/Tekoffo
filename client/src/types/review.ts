@@ -59,4 +59,5 @@ export interface IFrontendPopulatedReview{
   createdAt: string;
   reviewerDetails: ReviewerDetails;
   projectDetails: ProjectDetails;
+  helpful?: number;
 }
