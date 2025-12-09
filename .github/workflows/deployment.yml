@@ -23,47 +23,44 @@ jobs:
           SSH_KEY: ssh_key
         run: |
           ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no sudheerkumarv117@35.184.218.24 << 'EOF'
-            set -euo pipefail
+set -euo pipefail
 
-            cd ~
+cd ~
 
-            if [ -d "tekoffo" ]; then
-              cd tekoffo && git pull
-            else
-              git clone https://github.com/abhilashvalappil/Tekoffo.git tekoffo
-              cd tekoffo
-            fi
+if [ -d "tekoffo" ]; then
+  cd tekoffo && git pull
+else
+  git clone https://github.com/abhilashvalappil/Tekoffo.git tekoffo
+  cd tekoffo
+fi
 
-            cd server
+cd server
 
-            # Deep kill of everything related to screen + loop + npm
-            pkill -9 -f "SCREEN -dmS project" || true
-            pkill -9 -f "npm run dev" || true
-            pkill -9 -f "bash -c while true" || true
+pkill -9 -f "SCREEN -dmS project" || true
+pkill -9 -f "npm run dev" || true
+pkill -9 -f "bash -c while true" || true
 
-            # Silent socket cleanup (prevents heredoc break)
-            screen -wipe >/dev/null 2>&1 || true
-            sudo rm -rf /run/screen/S-\$USER >/dev/null 2>&1 || true
+screen -wipe >/dev/null 2>&1 || true
+sudo rm -rf /run/screen/S-$USER >/dev/null 2>&1 || true
 
-            # Verify clean state (no screen output printed)
-            ACTIVE_SCREENS=\$(screen -ls 2>/dev/null | awk '/Detached|Attached/ {print \$1}' | wc -l)
+ACTIVE_SCREENS=$(screen -ls 2>&1 | grep -E "Detached|Attached" | wc -l)
 
-            if [ "\$ACTIVE_SCREENS" -ne 0 ]; then
-              echo "Screen cleanup failed."
-              exit 1
-            fi
+if [ "$ACTIVE_SCREENS" -ne 0 ]; then
+  echo 'Screen cleanup failed.'
+  exit 1
+fi
 
-            # Start new persistent session
-            screen -dmS project bash -c '
-              while true; do
-                npm run dev
-                sleep 2
-              done
-            '
+screen -dmS project bash -c '
+  while true; do
+    npm run dev
+    sleep 2
+  done
+'
 
-            echo "Deployment complete."
-          EOF
+echo 'Deployment complete.'
+EOF
 
       - name: Cleanup SSH key
         if: always()
-        run: shred -u ssh_key || rm -f ssh_key || true
+        run: |
+          shred -u ssh_key || rm -f ssh_key || true
