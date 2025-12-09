@@ -42,30 +42,21 @@ jobs:
             # Go to server directory
             cd server
 
-            # Write env file
-            echo "${{ secrets.APPLICATION_ENV }}" > .env
+            # 🔥 Kill ALL existing screen sessions
+            echo "Killing all existing screen sessions..."
+            screen -ls | awk '/\t/ {print $1}' | xargs -r screen -S quit || true
 
-            # Install dependencies
-            npm install
+            # 🚀 Start a new persistent screen session
+            echo "Starting persistent screen session 'project'..."
+            screen -dmS project bash -c '
+              while true; do
+                npm run dev
+                echo "Process exited — restarting in 2 seconds..."
+                sleep 2
+              done
+            '
 
-            # Ensure screen is installed
-            if ! command -v screen >/dev/null 2>&1; then
-              echo "screen not found — installing..."
-              sudo apt-get update -y
-              sudo apt-get install -y screen
-            fi
-
-            # If a screen session named 'project' exists, stop it
-            if screen -list | grep -q "\.project"; then
-              echo "Existing 'project' screen session found — stopping it..."
-              screen -S project -X quit || true
-            fi
-
-            # Start a fresh screen session named 'project' with npm run dev
-            echo "Starting new 'project' screen session with 'npm run dev'..."
-            screen -dmS project bash -c 'npm run dev'
-
-            echo "✅ Tekoffo deployed successfully (running in screen session 'project')"
+            echo "🚀 Tekoffo deployed successfully. Persistent screen session 'project' is running."
           EOF
 
       - name: Remove SSH key
