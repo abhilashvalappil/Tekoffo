@@ -36,23 +36,24 @@ jobs:
 
             cd server
 
-            # Deep kill — ensures ALL previous sessions and loops die
+            # Deep kill of everything related to screen + loop + npm
             pkill -9 -f "SCREEN -dmS project" || true
             pkill -9 -f "npm run dev" || true
             pkill -9 -f "bash -c while true" || true
 
-            screen -wipe || true
-            sudo rm -rf /run/screen/S-\$USER || true
+            # Silent socket cleanup (prevents heredoc break)
+            screen -wipe >/dev/null 2>&1 || true
+            sudo rm -rf /run/screen/S-\$USER >/dev/null 2>&1 || true
 
-            # Verify nothing is running
-            ACTIVE_SCREENS=\$(screen -ls | awk '/Detached|Attached/ {print \$1}' | wc -l)
+            # Verify clean state (no screen output printed)
+            ACTIVE_SCREENS=\$(screen -ls 2>/dev/null | awk '/Detached|Attached/ {print \$1}' | wc -l)
 
             if [ "\$ACTIVE_SCREENS" -ne 0 ]; then
               echo "Screen cleanup failed."
               exit 1
             fi
 
-            # Start fresh persistent session
+            # Start new persistent session
             screen -dmS project bash -c '
               while true; do
                 npm run dev
