@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from "react-router-dom";
-import { Briefcase, Users, Trophy, ChevronRight, Code, PenTool, Calculator, GraduationCap, Scale, Menu, X } from 'lucide-react';
+import { Link, useNavigate } from "react-router-dom";
+import { Briefcase, Users, Trophy, Code, PenTool, Calculator, GraduationCap, Scale, Menu, X } from 'lucide-react';
 
 function Landing() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-white">
@@ -17,19 +18,19 @@ function Landing() {
                 <span className="ml-2 text-xl font-bold">Tekoffo</span>
               </a>
               <div className="hidden md:flex items-center ml-10 space-x-8">
-                <a href="#" className="text-gray-700 hover:text-[#0A142F]">Find Freelancers</a>
-                <a href="#" className="text-gray-700 hover:text-[#0A142F]">Find Jobs</a>
-                <a href="#" className="text-gray-700 hover:text-[#0A142F]">About</a>
+                <a href="/signin" className="text-gray-700 hover:text-[#0A142F]">Find Freelancers</a>
+                <a href="/signin" className="text-gray-700 hover:text-[#0A142F]">Find Jobs</a>
+                {/* <a href="#" className="text-gray-700 hover:text-[#0A142F]">About</a> */}
                 <div className="relative group">
-                  <button className="text-gray-700 hover:text-[#0A142F] flex items-center">
+                  {/* <button className="text-gray-700 hover:text-[#0A142F] flex items-center">
                     Solutions
                     <ChevronRight className="w-4 h-4 ml-1 transform group-hover:rotate-90 transition-transform" />
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>
             <div className="hidden md:flex items-center space-x-4">
-              <button className="bg-[#0A142F] text-white px-6 py-2 rounded-lg hover:bg-[#0A142F]/90 font-medium">
+              <button onClick={() => navigate('/signin')} className="bg-[#0A142F] text-white px-6 py-2 rounded-lg hover:bg-[#0A142F]/90 font-medium">
                 Post a Job
               </button>
               <button className="text-gray-700 hover:text-[#0A142F] font-medium">
