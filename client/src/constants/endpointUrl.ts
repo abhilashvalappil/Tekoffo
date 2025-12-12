@@ -64,6 +64,7 @@ export const commonENDPOINTS = {
     GET_STRIPE_ACCOUNT: "/freelancers",
     CREATE_STRIPE_CONNECT: "/onboard-freelancer",
     CREATE_PAYMENT_INTENT:'/payment-intent',
+    Get_PAYMENTS: '/payments',
     
     //* contract
     CREATE_CONTRACT:'/contracts',

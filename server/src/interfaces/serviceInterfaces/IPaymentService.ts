@@ -1,4 +1,5 @@
 import { PaginatedResponse } from "../../types/commonTypes";
+import { TransactionResult } from "../../types/payment";
 import { IContract } from "../entities/IContract";
 
 export interface IPaymentService {
@@ -10,5 +11,5 @@ export interface IPaymentService {
     releasePayment(userId: string,contractId:string,paymentIntentId:string,transactionId:string): Promise<{message:string}>
     getContractsByUser(userId:string, page: number, limit: number, search?: string, status?: string): Promise<PaginatedResponse<IContract>>
     getActiveAndCompletedContracts(userId:string): Promise<{activeContracts:number,completedContracts:number}>
-    
+    getPayments(userId: string, page: number, limit: number, search?: string): Promise<PaginatedResponse<TransactionResult>>
 }

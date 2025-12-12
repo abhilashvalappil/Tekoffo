@@ -163,5 +163,25 @@ export class PaymentController {private paymentService: IPaymentService; private
       next(error);
     }
   }
+
+  async getPayments(req: AuthRequest,res: Response,next: NextFunction): Promise<void> {
+    try {
+      
+      const userId = req.userId;
+      if (!userId) {
+        res.status(Http_Status.BAD_REQUEST).json({ error: MESSAGES.UNAUTHORIZED });
+        return;
+      }
+
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = req.query.search as string;
+
+      const paginatedResponse = await this.paymentService.getPayments(userId, page, limit, search)
+      res.status(Http_Status.OK).json(paginatedResponse);
+    } catch (error) {
+      next(error);
+    }
+  }
  
 }

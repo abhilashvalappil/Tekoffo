@@ -1,4 +1,4 @@
-import mongoose, { Document,Types } from "mongoose";
+import mongoose, { Document } from "mongoose";
 
 export interface IPayment extends Document {
     _id: mongoose.Schema.Types.ObjectId;

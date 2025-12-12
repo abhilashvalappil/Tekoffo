@@ -11,6 +11,7 @@ import { getIO } from '../config/socket';
 import { PaginatedResponse } from "../types/commonTypes";
 import { NotificationTypes } from "../types/notificationTypes";
 import { onlineUsers } from "../utils/socketManager";
+import { TransactionResult } from "../types/payment";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-03-31.basil' });
 export const TRANSACTION_TYPE = {
   CREDIT: 'credit',
@@ -369,6 +370,29 @@ export class PaymentService implements IPaymentService {
       io.to(recipientSocketId).emit('notification',notification)
     }
     return { message: MESSAGES.PAYMENT_RELEASED };
+  }
+
+  async getPayments(userId: string, page: number, limit: number, search?: string): Promise<PaginatedResponse<TransactionResult>> {
+    const user = await this.userRepository.findUserById(userId)
+    if (!user) {
+      throw new UnauthorizedError(MESSAGES.UNAUTHORIZED);
+    }
+
+    const skip = (page - 1) * limit;
+    const [transactions, total] = await Promise.all([
+      this.paymentRepository.findUserTransactions(userId, skip, limit, search),
+      this.paymentRepository.countUserTransactions(userId, search),
+    ]);
+   
+    return {
+    data: transactions,
+    meta: {
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      limit,
+    },
+  };
   }
  
 }

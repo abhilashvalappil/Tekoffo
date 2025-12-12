@@ -13,6 +13,7 @@ const MyJobPosts = lazy(() => import("../components/client/dashboard/MyJobs"));
 const FreelancerGigsList = lazy(() => import("../components/client/dashboard/GigPosts"));
 const Proposals = lazy(() => import("../components/client/dashboard/Proposals"));
 const Contracts = lazy(() => import("../components/client/dashboard/Contracts"));
+const Transactions = lazy(() => import("../components/client/dashboard/Transactions"));
 const PaymentReview = lazy(() => import("../components/client/payment/PaymentReview"));
 const ChatBox = lazy(() => import("../components/freelancer/dashboard/Chat"));
 const PaymentSuccess = lazy(() => import("../pages/PaymentSuccess"));
@@ -93,6 +94,15 @@ const ClientRoutes = () => (
       element={
         <Suspense fallback={<Loader />}>
           <Contracts />
+        </Suspense>
+      }
+    />
+
+    <Route
+      path="transactions"
+      element={
+        <Suspense fallback={<Loader />}>
+          <Transactions />
         </Suspense>
       }
     />

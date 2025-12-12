@@ -8,7 +8,7 @@ import {
   MdPostAdd,
   MdStorefront,
 } from 'react-icons/md';
-import { FileCheck2, FileText } from 'lucide-react';
+import { CreditCard, FileCheck2, FileText } from 'lucide-react';
 
 interface MenuItem {
   name: string;
@@ -21,8 +21,9 @@ const menuItems: MenuItem[] = [
   { name: 'Post Job', icon: MdPostAdd, path: '/client/post-job' },
   { name: 'My Jobs', icon: MdWorkOutline, path: '/client/myjobs' },
   { name: 'Proposals', icon: FileCheck2, path: '/client/proposals' },
-  {name: 'Contracts', icon: FileText, path: '/client/contracts' },
+  { name: 'Contracts', icon: FileText, path: '/client/contracts' },
   { name: 'Freelancer Gigs', icon: MdStorefront, path: '/client/freelancer-gigs' },
+  { name: 'Transactions', icon: CreditCard, path: '/client/transactions' },
   { name: 'Messages', icon: MdMessage, path: '/messages' },
 ];
 

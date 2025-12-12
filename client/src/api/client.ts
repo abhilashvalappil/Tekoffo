@@ -8,6 +8,7 @@ import { PaymentIntentPayload } from '../types/paymentTypes'
 import { PaginatedResponse } from '../types/commonTypes'
 import { FreelancerGigListDTO } from '../types/gigTypes'
 import { JobDataType } from '../types/invitationTypes'
+import { TransactionResult } from '../types/transaction'
 
 
 export const fetchListedCategories = async(): Promise<fetchedCategories[]> => {
@@ -148,6 +149,15 @@ export const fetchInvitationsSent = async(search?: string, filters?:ProposalFilt
         const response = await API.get(userENDPOINTS.GET_INVITATIONS_SENT,{params:{search, ...filters}})
         return response.data.invitations;
     } catch (error) {
+        throw new Error(handleApiError(error));
+    }
+}
+
+export const fetchPayments = async(page?:number, limit?:number, search?: string): Promise<PaginatedResponse<TransactionResult>> => {
+    try{
+        const response = await API.get(userENDPOINTS.Get_PAYMENTS, {params: { page, limit, search },})
+        return response.data;
+    } catch (error){
         throw new Error(handleApiError(error));
     }
 }

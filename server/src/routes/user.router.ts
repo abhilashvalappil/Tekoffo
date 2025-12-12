@@ -145,6 +145,7 @@ userRouter.post('/checkout-session',authMiddleware,authorizeRole('client'),userC
 userRouter.post('/payment-intent',authMiddleware,authorizeRole('client'),paymentController.createPaymentIntend.bind(paymentController))
 userRouter.post('/contracts',authMiddleware,authorizeRole('client'),paymentController.createContract.bind(paymentController))
 userRouter.post('/release-payment',authMiddleware,authorizeRole('client'),paymentController.releasePayment.bind(paymentController))
+userRouter.get('/payments',authMiddleware,authorizeRole('client'),paymentController.getPayments.bind(paymentController))
 
 userRouter.post('/reviews',authMiddleware,authorizeRole(['client','freelancer']),reviewController.submitReviewAndRating.bind(reviewController))
 userRouter.get('/reviews/submitted',authMiddleware,authorizeRole(['client','freelancer']),reviewController.getSubmittedReviews.bind(reviewController))
