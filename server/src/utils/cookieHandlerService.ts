@@ -9,7 +9,7 @@ export class CookieHandlerService {
             httpOnly: true,
             secure: true,
             // sameSite: "strict",
-            sameSite: 'lax',
+            sameSite: 'none',
             maxAge: 59 * 60 * 1000
         });
     }
@@ -21,7 +21,7 @@ export class CookieHandlerService {
             httpOnly: true,
             secure: true,
             // sameSite: "strict",
-            sameSite: 'lax',
+            sameSite: 'none',
             path: "/"
         });
     }
