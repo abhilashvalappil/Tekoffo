@@ -19,7 +19,7 @@ const CLIENT_URL = process.env.CLIENT_URL;
   
 
 app.use(cors({
-  origin: CLIENT_URL?.split(","),
+  origin: CLIENT_URL,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
