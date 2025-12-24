@@ -16,18 +16,18 @@ dotenv.config();
 const app = express();
 const mongoUrl = process.env.MONGO_URL;
 const CLIENT_URL = process.env.CLIENT_URL;
-
-
-const server = http.createServer(app);
-const io = initSocket(server);  
-setupSocketEvents(io);  
+  
 
 app.use(cors({
-  origin: CLIENT_URL,
+  origin: CLIENT_URL?.split(","),
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+const server = http.createServer(app);
+const io = initSocket(server);  
+setupSocketEvents(io);
 
 app.use(express.json({
   strict: true,

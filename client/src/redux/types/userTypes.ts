@@ -13,11 +13,4 @@ export interface UserState {
     error: string | null;
     totalCount: number;
 }
-
-// export interface ProfileFormData {
-//   fullName: string;
-//   companyName: string;
-//   bio: string;
-//   country: string;
-//   profilePicture: string;
-// }
+ 

@@ -131,10 +131,8 @@ export class AuthService implements IAuthService {
               throw new UnauthorizedError(MESSAGES.ACCOUNT_BLOCKED);
             }
 
-            console.log('User found, checking password...');
             const isValidPassword = await bcrypt.compare(password, user.password);
             if(!isValidPassword){
-              console.log('Invalid password');
                 throw new UnauthorizedError(MESSAGES.INVALID_PASSWORD)
             }
 

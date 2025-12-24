@@ -18,7 +18,6 @@ import {store} from '../redux/store'
         originalRequest._retry = true;
         try{
           const userId = store.getState().auth.user?._id;
-          console.log('console from services/api.tsssss',userId)
 
           if (!userId && window.location.pathname !== '/signin') {
             window.location.href = "/signin";

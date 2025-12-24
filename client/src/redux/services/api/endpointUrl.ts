@@ -1,4 +1,4 @@
-// D:\Tekoffo\frontend\src\redux\services\api\endpointUrl.ts
+ 
 export const commonENDPOINTS = {
     SIGNUP: '/signup',
     LOGIN: '/signin',
