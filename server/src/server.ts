@@ -15,7 +15,7 @@ dotenv.config();
 
 const app = express();
 const mongoUrl = process.env.MONGO_URL;
-const CLIENT_URL =process.env.CLIENT_URL;
+const CLIENT_URL = process.env.CLIENT_URL;
 
 
 const server = http.createServer(app);
