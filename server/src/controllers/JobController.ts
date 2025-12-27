@@ -374,7 +374,6 @@ export class JobController {
                 return;
             }
              const { id: gigId } = req.params;
-            console.log('gigid receivinggg',gigId)
             const {message} = await this.jobService.deleteGig(freelancerId,gigId)
             res.status(Http_Status.OK).json({message})
         } catch (error) {

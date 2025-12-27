@@ -4,16 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import API from '../../redux/services/api/baseUrl';
 import { commonENDPOINTS } from '../../redux/services/api/endpointUrl';
 import { handleApiError } from '../../utils/errors/errorHandler';
+import { resetPassword } from '../../api';
 
 const ForgotPasswordOtp =()=> {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(''));
   const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  // const location = useLocation();
   const navigate = useNavigate();
-  // const email = location.state?.email;
 
   const otpTimer = localStorage.getItem('otpTimer');
   const email = localStorage.getItem('forgotEmail');
@@ -44,14 +44,7 @@ const ForgotPasswordOtp =()=> {
     }
   };
 
-  // useEffect(() => {
-  //   if (email) {
-  //     setValue("email", email);
-  //   }
-  // }, [email, setValue]);
-
-  
-  const initialTimer = parseInt(otpTimer);
+  const initialTimer = parseInt(otpTimer || "0");
   const [timer, setTimer] = useState(initialTimer);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
  
@@ -79,12 +72,13 @@ const ForgotPasswordOtp =()=> {
 
 
   const handleResendOtp = async() => {
-    setIsLoading(true);
+    setIsResending(true);
     setServerError(null);
     try {
-    const response = await API.post(commonENDPOINTS.RESEND_OTP,{email})
-    if (response.data.success) {
-      setTimer(initialTimer); 
+    const response = await resetPassword((email))
+    if (response.success) { 
+      setTimer(response.expiresIn);
+      localStorage.setItem("otpTimer", response.expiresIn.toString());
     }else {
       setServerError(response.data.message || "Failed to resend OTP");
     }
@@ -92,7 +86,7 @@ const ForgotPasswordOtp =()=> {
     const errormessage = handleApiError(error)
     setServerError(errormessage);
   } finally {
-    setIsLoading(false);
+    setIsResending(false);
   }
 };
 
@@ -139,10 +133,13 @@ const ForgotPasswordOtp =()=> {
           We've sent a verification code to {email}
         </p>
 
-        <form onSubmit={handleSubmit}>
+        <form >
           <div className="flex gap-2 mb-8 justify-center">
             {Array(6).fill(null).map((_, index) => (
               <input
+                ref={(el) => {
+                    inputRefs.current[index] = el;
+                  }}
                 key={index}
                 // ref={(el) => (inputRefs.current[index] = el)}
                 type="text"
@@ -168,17 +165,17 @@ const ForgotPasswordOtp =()=> {
           </>
         ) : (
           <button
-            type="submit"
+            type="button"
             onClick={handleResendOtp}
-            disabled={isLoading}
+            disabled={isResending}
             className="text-blue-600 hover:underline mb-2"
           >
-            Resend OTP
+            {isResending ? 'Resending...' :'Resend OTP'}
           </button>
         )}
       </div>
-          <button
-            type="submit"
+          <button onClick={handleSubmit}
+            type="button"
             disabled={isLoading}
             className="w-full bg-indigo-600 text-white rounded-lg py-3 font-semibold hover:bg-indigo-700 transition-colors disabled:bg-indigo-300"
           >

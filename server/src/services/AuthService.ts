@@ -53,7 +53,6 @@ export class AuthService implements IAuthService {
             text: `Your OTP is: ${otp}`, 
           };
           await transporter.sendMail(mailOptions)
-          console.log("OTP sent successfully");
           await redisClient.set(`otp:${data.email}`, otp, { EX: expiresIn });
           await redisClient.set(`signup:${data.email}`, JSON.stringify(data), { EX: 300 });
 
@@ -112,7 +111,6 @@ export class AuthService implements IAuthService {
           };
         
           await transporter.sendMail(mailOptions)
-          console.log("OTP resent successfully");
 
           await redisClient.set(`otp:${email}`, otp, { EX: 30 });
           await redisClient.expire(`signup:${email}`, 300);
@@ -196,7 +194,7 @@ export class AuthService implements IAuthService {
         }
 
         const otp = otpGenerator();
-        const expiresIn = 30;
+        const expiresIn = 60;
         console.log("Fogot password OTP:", otp);
 
         const mailOptions = {
@@ -207,7 +205,6 @@ export class AuthService implements IAuthService {
           };
         
           await transporter.sendMail(mailOptions)
-          console.log("Fogot password OTP sent successfully");
 
           await redisClient.set(`otp:${email}`, otp, { EX: expiresIn });
           await redisClient.set(`forgot:${email}`,JSON.stringify(email), {EX:300});
