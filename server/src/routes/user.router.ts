@@ -37,6 +37,8 @@ import PlatformRepository from "../repositories/PlatformRepository";
 import dotenv from 'dotenv';
 import { WalletService } from "../services/WalletService";
 import { WalletController } from "../controllers/WalletController";
+import { commonENDPOINTS, userENDPOINTS } from "../constants/endpoints";
+
 dotenv.config();
 
 const userRouter = Router();
@@ -63,94 +65,94 @@ const walletController = new WalletController(walletService)
 
 
 //*common user routes
-userRouter.post('/signup',authController.signUp.bind(authController));
-userRouter.post('/verify-otp',authController.verifyOtp.bind(authController));
-userRouter.post('/signin',authController.signIn.bind(authController))
-userRouter.post('/google-auth',authController.googleSignIn.bind(authController))
-userRouter.post('/resend-otp',authController.resendOtp.bind(authController))
-userRouter.post('/forgot-password',authController.forgotPassword.bind(authController))
-userRouter.post('/verify-forgot-otp',authController.verifyForgotPassOtp.bind(authController))
-userRouter.post('/reset-password',authController.resetPassword.bind(authController))
-userRouter.post('/logout',authController.logout.bind(authController))
+userRouter.post(commonENDPOINTS.SIGNUP,authController.signUp.bind(authController));
+userRouter.post(commonENDPOINTS.VERIFY_OTP,authController.verifyOtp.bind(authController));
+userRouter.post(commonENDPOINTS.LOGIN,authController.signIn.bind(authController))
+userRouter.post(commonENDPOINTS.GOOGLE_SIGNIN,authController.googleSignIn.bind(authController))
+userRouter.post(commonENDPOINTS.RESEND_OTP,authController.resendOtp.bind(authController))
+userRouter.post(commonENDPOINTS.FORGOT_PASS,authController.forgotPassword.bind(authController))
+userRouter.post(commonENDPOINTS.VERIFY_FORGOT_OTP,authController.verifyForgotPassOtp.bind(authController))
+userRouter.post(commonENDPOINTS.RESET_PASS,authController.resetPassword.bind(authController))
+userRouter.post(commonENDPOINTS.LOGOUT,authController.logout.bind(authController))
 userRouter.post('/auth/refresh-token',authController.refreshAccessToken.bind(authController))
 userRouter.post('/auth/check-user',authController.userExist.bind(authController))
 
 
 
 //* freelancer routes
-userRouter.post('/freelancer/profile',upload.single('profilePicture'),authMiddleware,authorizeRole('freelancer'),userController.createFreelancerProfile.bind(userController))
-userRouter.put('/freelancer/profile',upload.single('profilePicture'),authMiddleware,authorizeRole('freelancer'),userController.updateFreelancerProfile.bind(userController))
-userRouter.get('/profile',authMiddleware,authorizeRole(['freelancer', 'client']),userController.getUserProfile.bind(userController))
+userRouter.post(userENDPOINTS.CREATE_FREELANCERPROFILE,upload.single('profilePicture'),authMiddleware,authorizeRole('freelancer'),userController.createFreelancerProfile.bind(userController))
+userRouter.put(userENDPOINTS.UPDATE_FREELANCERPROFILE,upload.single('profilePicture'),authMiddleware,authorizeRole('freelancer'),userController.updateFreelancerProfile.bind(userController))
+userRouter.get(commonENDPOINTS.PROFILE,authMiddleware,authorizeRole(['freelancer', 'client']),userController.getUserProfile.bind(userController))
 
-userRouter.get('/jobs/available',authMiddleware,authorizeRole(['freelancer','admin']),jobController.getJobs.bind(jobController))
-userRouter.get('/jobs/:jobId',authMiddleware,authorizeRole('freelancer'),jobController.getJob.bind(jobController))
+userRouter.get(userENDPOINTS.GET_JOBS,authMiddleware,authorizeRole(['freelancer','admin']),jobController.getJobs.bind(jobController))
+userRouter.get(userENDPOINTS.GET_JOB_DETAILS,authMiddleware,authorizeRole('freelancer'),jobController.getJob.bind(jobController))
 userRouter.get('/jobs/client/:clientId',authMiddleware,authorizeRole('freelancer'),jobController.getClientProfileByJob.bind(jobController))
-userRouter.post('/proposals',uploadProposal.single('attachments'),authMiddleware,authorizeRole('freelancer'),jobController.createProposal.bind(jobController))
-userRouter.get('/proposals',authMiddleware,authorizeRole('freelancer'),jobController.getProposalsByFreelancer.bind(jobController))
-userRouter.get('/onboard-freelancer',authMiddleware,authorizeRole('freelancer'),paymentController.createConnectedAccount.bind(paymentController))
+userRouter.post(userENDPOINTS.CREATE_PROPOSAL,uploadProposal.single('attachments'),authMiddleware,authorizeRole('freelancer'),jobController.createProposal.bind(jobController))
+userRouter.get(userENDPOINTS.FREELANCER_PROPOSALS,authMiddleware,authorizeRole('freelancer'),jobController.getProposalsByFreelancer.bind(jobController))
+userRouter.get(userENDPOINTS.CREATE_STRIPE_CONNECT,authMiddleware,authorizeRole('freelancer'),paymentController.createConnectedAccount.bind(paymentController))
 userRouter.get('/freelancers/:freelancerId/account',authMiddleware,authorizeRole('freelancer'),paymentController.getStripeAccount.bind(paymentController))
-userRouter.get('/notifications',authMiddleware,authorizeRole(['freelancer', 'client']),notificationController.getNotifications.bind(notificationController))
-userRouter.put('/notifications/:id/read',authMiddleware,authorizeRole(['freelancer', 'client']),notificationController.markNotificationAsRead.bind(notificationController))
-userRouter.put('/notifications/read-all',authMiddleware,authorizeRole(['freelancer', 'client']),notificationController.markAllNotificationsAsRead.bind(notificationController))
-userRouter.get('/contracts',authMiddleware,authorizeRole(['freelancer', 'client']),paymentController.getContractsByUser.bind(paymentController))
-userRouter.post('/contracts/:id/submit',authMiddleware,authorizeRole('freelancer'),paymentController.submitContract.bind(paymentController))
-userRouter.get('/contracts/active',authMiddleware,authorizeRole('freelancer'),paymentController.getActiveAndCompletedContracts.bind(paymentController))
-userRouter.get('/wallet',authMiddleware,authorizeRole('freelancer'),walletController.getFreelancerWallet.bind(walletController))
-userRouter.post('/wallet/withdrawals',authMiddleware,authorizeRole('freelancer'),walletController.createWithdrawal.bind(walletController))
-userRouter.get('/wallet/transactions',authMiddleware,authorizeRole('freelancer'),walletController.getWalletTransactions.bind(walletController))
+userRouter.get(userENDPOINTS.GET_NOTIFICATIONS,authMiddleware,authorizeRole(['freelancer', 'client']),notificationController.getNotifications.bind(notificationController))
+userRouter.put(userENDPOINTS.MARK_AS_READ,authMiddleware,authorizeRole(['freelancer', 'client']),notificationController.markNotificationAsRead.bind(notificationController))
+userRouter.put(userENDPOINTS.MARK_ALL_NOTIFICATIONS_AS_READ,authMiddleware,authorizeRole(['freelancer', 'client']),notificationController.markAllNotificationsAsRead.bind(notificationController))
+userRouter.get(userENDPOINTS.GET_CONTRACTS,authMiddleware,authorizeRole(['freelancer', 'client']),paymentController.getContractsByUser.bind(paymentController))
+userRouter.post(userENDPOINTS.SUBMIT_CONTRACT,authMiddleware,authorizeRole('freelancer'),paymentController.submitContract.bind(paymentController))
+userRouter.get(userENDPOINTS.GET_ACTIVE_CONTRACTS,authMiddleware,authorizeRole('freelancer'),paymentController.getActiveAndCompletedContracts.bind(paymentController))
+userRouter.get(userENDPOINTS.GET_WALLET,authMiddleware,authorizeRole('freelancer'),walletController.getFreelancerWallet.bind(walletController))
+userRouter.post(userENDPOINTS.WITHDRAW,authMiddleware,authorizeRole('freelancer'),walletController.createWithdrawal.bind(walletController))
+userRouter.get(userENDPOINTS.GET_TRANSACTIONS,authMiddleware,authorizeRole('freelancer'),walletController.getWalletTransactions.bind(walletController))
 
 
 userRouter.post('/users/:id',authMiddleware,authorizeRole('freelancer'),userController.getChatPartner.bind(userController))
-userRouter.post('/gigs',authMiddleware,authorizeRole('freelancer'),jobController.createGig.bind(jobController))
-userRouter.put('/gigs/:id',authMiddleware,authorizeRole('freelancer'),jobController.updateGig.bind(jobController))
-userRouter.get('/gigs',authMiddleware,authorizeRole('freelancer'),jobController.getMyGigs.bind(jobController))
-userRouter.delete('/gigs/:id',authMiddleware,authorizeRole('freelancer'),jobController.deleteGig.bind(jobController))
-userRouter.get('/invitations',authMiddleware,authorizeRole('freelancer'),jobController.getJobInvitations.bind(jobController))
-userRouter.put('/invitations/:id/reject',authMiddleware,authorizeRole('freelancer'),jobController.rejectInvitaion.bind(jobController))
-userRouter.put('/invitations/:id/accept',authMiddleware,authorizeRole('freelancer'),jobController.acceptInvitaion.bind(jobController))
+userRouter.post(userENDPOINTS.CREATE_GIG,authMiddleware,authorizeRole('freelancer'),jobController.createGig.bind(jobController))
+userRouter.put(userENDPOINTS.UPDATE_GIG,authMiddleware,authorizeRole('freelancer'),jobController.updateGig.bind(jobController))
+userRouter.get(userENDPOINTS.GET_FREELANCER_GIGS,authMiddleware,authorizeRole('freelancer'),jobController.getMyGigs.bind(jobController))
+userRouter.delete(userENDPOINTS.DELETE_GIG,authMiddleware,authorizeRole('freelancer'),jobController.deleteGig.bind(jobController))
+userRouter.get(userENDPOINTS.GET_JOB_INVITATIONS,authMiddleware,authorizeRole('freelancer'),jobController.getJobInvitations.bind(jobController))
+userRouter.put(userENDPOINTS.ACCEPT_INVITATION,authMiddleware,authorizeRole('freelancer'),jobController.acceptInvitaion.bind(jobController))
+userRouter.put(userENDPOINTS.REJECT_INVITATION,authMiddleware,authorizeRole('freelancer'),jobController.rejectInvitaion.bind(jobController))
 
 
-userRouter.post('/message',uploadChatMedia.single('media'),authMiddleware,authorizeRole(['freelancer', 'client']),chatController.createMessage.bind(chatController))
-userRouter.post('/chats/chat',authMiddleware,authorizeRole(['freelancer', 'client']),chatController.getChat.bind(chatController))
-userRouter.post('/chat',authMiddleware,authorizeRole('freelancer'),chatController.createChat.bind(chatController))
-userRouter.get('/chats',authMiddleware,authorizeRole(['freelancer', 'client']),chatController.getChatContacts.bind(chatController))
-userRouter.get('/messages',authMiddleware,authorizeRole(['freelancer', 'client']),chatController.getMessagesByChat.bind(chatController))
-userRouter.put('/messages/mark-read',authMiddleware,authorizeRole(['freelancer', 'client']),chatController.markMessagesAsRead.bind(chatController))
-userRouter.put('/messages/delete-message',authMiddleware,authorizeRole(['freelancer', 'client']),chatController.deleteMessage.bind(chatController))
-userRouter.get('/messages/unread',authMiddleware,authorizeRole(['freelancer', 'client']),chatController.getUserUnreadChatsCount.bind(chatController))
+userRouter.post(userENDPOINTS.SEND_MESSAGE,uploadChatMedia.single('media'),authMiddleware,authorizeRole(['freelancer', 'client']),chatController.createMessage.bind(chatController))
+userRouter.post(userENDPOINTS.GET_CHATID,authMiddleware,authorizeRole(['freelancer', 'client']),chatController.getChat.bind(chatController))
+userRouter.post(userENDPOINTS.CREATE_CHAT,authMiddleware,authorizeRole('freelancer'),chatController.createChat.bind(chatController))
+userRouter.get(userENDPOINTS.GET_CHATS,authMiddleware,authorizeRole(['freelancer', 'client']),chatController.getChatContacts.bind(chatController))
+userRouter.get(userENDPOINTS.GET_MESSAGES,authMiddleware,authorizeRole(['freelancer', 'client']),chatController.getMessagesByChat.bind(chatController))
+userRouter.put(userENDPOINTS.MARK_MESSAGES_AS_READ,authMiddleware,authorizeRole(['freelancer', 'client']),chatController.markMessagesAsRead.bind(chatController))
+userRouter.put(userENDPOINTS.DELETE_MSG,authMiddleware,authorizeRole(['freelancer', 'client']),chatController.deleteMessage.bind(chatController))
+userRouter.get(userENDPOINTS.GET_UNREAD_MESSAGES,authMiddleware,authorizeRole(['freelancer', 'client']),chatController.getUserUnreadChatsCount.bind(chatController))
 
 
 //* client routes
 
-userRouter.post('/client/profile',upload.single('profilePicture'),authMiddleware,authorizeRole('client'),userController.createProfile.bind(userController))
-userRouter.put('/client/profile',upload.single('profilePicture'),authMiddleware,authorizeRole('client'),userController.updateProfile.bind(userController))
-userRouter.put('/change-password',authMiddleware,userController.changePassword.bind(userController))
+userRouter.post(userENDPOINTS.CREATE_PROFILE,upload.single('profilePicture'),authMiddleware,authorizeRole('client'),userController.createProfile.bind(userController))
+userRouter.put(userENDPOINTS.UPDATE_PROFILE,upload.single('profilePicture'),authMiddleware,authorizeRole('client'),userController.updateProfile.bind(userController))
+userRouter.put(userENDPOINTS.CHANGE_PASSWORD,authMiddleware,userController.changePassword.bind(userController))
 
-userRouter.get('/categories/all',authMiddleware,authorizeRole(['client','freelancer']),jobController.getCategories.bind(jobController))
-userRouter.post('/jobs',authMiddleware,authorizeRole('client'),jobController.createJob.bind(jobController))
-userRouter.put('/jobs/:jobId',authMiddleware,authorizeRole('client'),jobController.updateJob.bind(jobController))
-userRouter.delete('/jobs/:jobId',authMiddleware,authorizeRole('client'),jobController.deleteJob.bind(jobController))
-userRouter.get('/jobs',authMiddleware,authorizeRole('client'),jobController.getClientJobs.bind(jobController))
-userRouter.get('/jobs/active',authMiddleware,authorizeRole('client'),jobController.getActiveJobPosts.bind(jobController))
+userRouter.get(userENDPOINTS.GET_LISTED_CATEGORIES,authMiddleware,authorizeRole(['client','freelancer']),jobController.getCategories.bind(jobController))
+userRouter.post(userENDPOINTS.CREATE_JOB,authMiddleware,authorizeRole('client'),jobController.createJob.bind(jobController))
+userRouter.put(userENDPOINTS.UPDATE_JOB,authMiddleware,authorizeRole('client'),jobController.updateJob.bind(jobController))
+userRouter.delete(userENDPOINTS.DELETE_JOB,authMiddleware,authorizeRole('client'),jobController.deleteJob.bind(jobController))
+userRouter.get(userENDPOINTS.GET_MY_JOBS,authMiddleware,authorizeRole('client'),jobController.getClientJobs.bind(jobController))
+userRouter.get(userENDPOINTS.GET_ACTIVE_JOBS,authMiddleware,authorizeRole('client'),jobController.getActiveJobPosts.bind(jobController))
 
-userRouter.get('/freelancers',authMiddleware,authorizeRole('client'),userController.getAllFreelancers.bind(userController))
-userRouter.get('/clients/me/proposals',authMiddleware,authorizeRole('client'),jobController.getProposalsByClient.bind(jobController))
-userRouter.get('/invitations/sent',authMiddleware,authorizeRole('client'),jobController.getSentInvitations.bind(jobController))
-userRouter.get('/proposals/:proposalId',authMiddleware,authorizeRole('client'),jobController.getProposalById.bind(jobController))
+userRouter.get(userENDPOINTS.GET_Freelancers,authMiddleware,authorizeRole('client'),userController.getAllFreelancers.bind(userController))
+userRouter.get(userENDPOINTS.CLIENT_PROPOSALS,authMiddleware,authorizeRole('client'),jobController.getProposalsByClient.bind(jobController))
+userRouter.get(userENDPOINTS.GET_INVITATIONS_SENT,authMiddleware,authorizeRole('client'),jobController.getSentInvitations.bind(jobController))
+userRouter.get(userENDPOINTS.GET_PROPOSAL,authMiddleware,authorizeRole('client'),jobController.getProposalById.bind(jobController))
 userRouter.put('/proposals/:proposalId/status',authMiddleware,authorizeRole(['client','freelancer']),jobController.updateProposalStatus.bind(jobController))
-userRouter.get('/gigs/all',authMiddleware,authorizeRole('client'),jobController.getFreelancersGigs.bind(jobController))
-userRouter.post('/invitations',authMiddleware,authorizeRole('client'),jobController.createFreelancerJobInvitation.bind(jobController))
-userRouter.post('/checkout-session',authMiddleware,authorizeRole('client'),userController.createCheckout.bind(userController))
+userRouter.get(userENDPOINTS.GET_GIGS,authMiddleware,authorizeRole('client'),jobController.getFreelancersGigs.bind(jobController))
+userRouter.post(userENDPOINTS.CREATE_JOB_INVITE,authMiddleware,authorizeRole('client'),jobController.createFreelancerJobInvitation.bind(jobController))
+userRouter.post(userENDPOINTS.CREATE_CHECKOUT,authMiddleware,authorizeRole('client'),userController.createCheckout.bind(userController))
 
-userRouter.post('/payment-intent',authMiddleware,authorizeRole('client'),paymentController.createPaymentIntend.bind(paymentController))
-userRouter.post('/contracts',authMiddleware,authorizeRole('client'),paymentController.createContract.bind(paymentController))
-userRouter.post('/release-payment',authMiddleware,authorizeRole('client'),paymentController.releasePayment.bind(paymentController))
-userRouter.get('/payments',authMiddleware,authorizeRole('client'),paymentController.getPayments.bind(paymentController))
+userRouter.post(userENDPOINTS.CREATE_PAYMENT_INTENT,authMiddleware,authorizeRole('client'),paymentController.createPaymentIntend.bind(paymentController))
+userRouter.post(userENDPOINTS.CREATE_CONTRACT,authMiddleware,authorizeRole('client'),paymentController.createContract.bind(paymentController))
+userRouter.post(userENDPOINTS.APPROVE_CONTRACT,authMiddleware,authorizeRole('client'),paymentController.releasePayment.bind(paymentController))
+userRouter.get(userENDPOINTS.Get_PAYMENTS,authMiddleware,authorizeRole('client'),paymentController.getPayments.bind(paymentController))
 
-userRouter.post('/reviews',authMiddleware,authorizeRole(['client','freelancer']),reviewController.submitReviewAndRating.bind(reviewController))
-userRouter.get('/reviews/submitted',authMiddleware,authorizeRole(['client','freelancer']),reviewController.getSubmittedReviews.bind(reviewController))
-userRouter.get('/reviews',authMiddleware,authorizeRole(['client','freelancer']),reviewController.getReviews.bind(reviewController))
-userRouter.get('/review-stats',authMiddleware,authorizeRole(['client','freelancer']),reviewController.getReviewStats.bind(reviewController))
+userRouter.post(userENDPOINTS.CREATE_REVIEW,authMiddleware,authorizeRole(['client','freelancer']),reviewController.submitReviewAndRating.bind(reviewController))
+userRouter.get(userENDPOINTS.GET_SUBMITTED_REVIEWS,authMiddleware,authorizeRole(['client','freelancer']),reviewController.getSubmittedReviews.bind(reviewController))
+userRouter.get(userENDPOINTS.GET_REVIEWS,authMiddleware,authorizeRole(['client','freelancer']),reviewController.getReviews.bind(reviewController))
+userRouter.get(userENDPOINTS.GET_REVIEW_STATS,authMiddleware,authorizeRole(['client','freelancer']),reviewController.getReviewStats.bind(reviewController))
 
  
 

@@ -43,9 +43,11 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen, onClo
       });
 
       if (result.success) {
+        console.log('toast caling.......')
         toast.success('Password updated successfully');
         reset();
-        onClose(); // Close modal on success
+        setTimeout(onClose, 1000);
+        // onClose();  
       }
     } catch (err) {
       const errorMessage = handleApiError(err);

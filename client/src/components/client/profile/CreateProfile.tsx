@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Camera, Building2, MapPin, Settings, Upload } from 'lucide-react';
+import { Camera, Building2, MapPin, Upload } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '../../../redux/store';
 import { createUserProfile } from '../../../redux/services/userService';
@@ -77,7 +77,7 @@ const CreateProfile = () => {
 
       const result = await dispatch(createUserProfile(formDataToSend));
       if (createUserProfile.fulfilled.match(result)) {
-        navigate('/client-dashboard');
+        navigate('/client/profile');
       } else {
         throw new Error(result.error.message || 'Failed to create profile');
       }
@@ -89,7 +89,7 @@ const CreateProfile = () => {
 
   return (
     <div className="min-h-screen bg-[#0A142F]/5">
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-16">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-[#0A142F]">Create Your Profile</h1>
           <p className="text-[#0A142F]/60 mt-2">Complete your profile to start finding the best freelancers on Tekoffo</p>
@@ -211,15 +211,7 @@ const CreateProfile = () => {
           <div className="border-t border-[#0A142F]/10 pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Settings className="h-5 w-5 text-[#0A142F]/60" />
-                <span className="text-sm font-medium text-[#0A142F]">Profile Settings</span>
               </div>
-              <button
-                type="button"
-                className="text-sm text-[#0A142F] hover:text-[#0A142F]/80 font-medium"
-              >
-                Configure
-              </button>
             </div>
           </div>
 

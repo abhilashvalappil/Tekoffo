@@ -93,12 +93,13 @@ export class JobController {
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.UNAUTHORIZED})
                 return;
             }
-            const {id} = req.params;
+            const {jobId} = req.params;
 
-            if(!id){
+            if(!jobId){
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.INVALID_REQUEST_DELETION})
+                return;
             }
-            const message = this.jobService.deleteJob(clientId,id)
+            const message = await this.jobService.deleteJob(clientId,jobId)
             res.status(Http_Status.NO_CONTENT).json(message)
         } catch (error) {
             next(error)
@@ -182,7 +183,6 @@ export class JobController {
     async getClientProfileByJob(req:AuthRequest, res:Response, next: NextFunction): Promise<void> {
         try {
             const {clientId} = req.params;
-            console.log('checking clieniddd',clientId)
             if(typeof clientId !== 'string' || !clientId){
                 res.status(Http_Status.BAD_REQUEST).json({error:MESSAGES.CLIENT_ID_MISSING})
                 return;

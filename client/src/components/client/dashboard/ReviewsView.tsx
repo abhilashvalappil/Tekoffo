@@ -16,7 +16,7 @@ type ReviewStats = {
 
  
 
-const  Reviews: React.FC = () => {
+const ReviewsView: React.FC = () => {
   const [reviews,setReviews] = useState<IFrontendPopulatedReview[]>([])
   const [search, setSearch] = useState("");
   const [filterRating, setFilterRating] = useState("All");
@@ -55,9 +55,9 @@ const  Reviews: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold">Client Reviews</h2>
+          <h2 className="text-2xl font-bold">Reviews</h2>
           <p className="text-gray-600">
-            Feedback from your satisfied clients
+            Feedback from Freelancers
           </p>
         </div>
         <div className="flex items-center mt-3 md:mt-0">
@@ -182,4 +182,4 @@ const  Reviews: React.FC = () => {
   );
 };
 
-export default Reviews;
+export default ReviewsView;

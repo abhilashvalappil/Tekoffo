@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {Briefcase,LogOut,User,Settings,Bell,} from 'lucide-react';
+import {Briefcase,LogOut,User,Bell,} from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../../redux/services/authService';
@@ -128,10 +128,10 @@ const ClientNavbar: React.FC<NavbarProps> = ({ onSidebarToggle }) => {
                     <User className="h-4 w-4 mr-2" />
                     Profile
                   </button>
-                  <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  {/* <button className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                     <Settings className="h-4 w-4 mr-2" />
                     Settings
-                  </button>
+                  </button> */}
                   <hr className="my-1" />
                   <button
                     onClick={handleLogout}

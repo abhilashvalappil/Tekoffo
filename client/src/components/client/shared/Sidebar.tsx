@@ -8,7 +8,7 @@ import {
   MdPostAdd,
   MdStorefront,
 } from 'react-icons/md';
-import { CreditCard, FileCheck2, FileText } from 'lucide-react';
+import { CreditCard, FileCheck2, FileText, MessageSquare } from 'lucide-react';
 
 interface MenuItem {
   name: string;
@@ -25,6 +25,7 @@ const menuItems: MenuItem[] = [
   { name: 'Freelancer Gigs', icon: MdStorefront, path: '/client/freelancer-gigs' },
   { name: 'Transactions', icon: CreditCard, path: '/client/transactions' },
   { name: 'Messages', icon: MdMessage, path: '/messages' },
+  { name: 'Reviews', icon: MessageSquare, path: '/client/reviews' },
 ];
 
 interface ClientSidebarProps {
@@ -61,9 +62,10 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ onLinkClick, onLogoutClic
         } md:translate-x-0 w-60 bg-white/80 backdrop-blur-xl shadow-2xl border-r border-gray-200`}
       >
         {/* Top Section */}
-        <div>
+        {/* <div> */}
           {/* Menu Items */}
-          <nav className="mt-6 px-4 space-y-3">
+          {/* <nav className="mt-6 px-4 space-y-3"> */}
+          <div className="overflow-y-auto flex-1 px-4 py-6 space-y-3">
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
               const Icon = item.icon;
@@ -82,13 +84,13 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ onLinkClick, onLogoutClic
                 </div>
               );
             })}
-          </nav>
-        </div>
+           
+          {/* </nav> */}
+        {/* </div> */}
 
         {/* Logout Button */}
         <div className="p-4 border-t border-gray-300">
           <div
-            // onClick={handleLogout}
             onClick={onLogoutClick} 
             className="flex items-center gap-3 p-3 text-lg text-red-600 font-semibold rounded-lg cursor-pointer hover:bg-red-100 transition-all"
           >
@@ -96,6 +98,7 @@ const ClientSidebar: React.FC<ClientSidebarProps> = ({ onLinkClick, onLogoutClic
             <span>Logout</span>
           </div>
         </div>
+         </div>
       </aside>
 
       {/* Overlay (Mobile) */}

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Camera, MapPin, Settings, Upload } from 'lucide-react';
+import { Camera, MapPin, Upload } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -71,7 +71,7 @@ const CreateFreelancerProfile = () => {
 
       const result = await dispatch(createFreelancerProfile(formDataToSend));
       if (createFreelancerProfile.fulfilled.match(result)) {
-        navigate('/freelancer');
+        navigate('/freelancer/profile');
       } else {
         throw new Error(result.error.message || 'Failed to create profile');
       }
@@ -83,7 +83,7 @@ const CreateFreelancerProfile = () => {
 
   return (
     <div className="min-h-screen bg-[#0A142F]/5">
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-16">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-[#0A142F]">Create Your Freelancer Profile</h1>
           <p className="text-[#0A142F]/60 mt-2">
@@ -266,16 +266,16 @@ const CreateFreelancerProfile = () => {
           {/* Profile Settings */}
           <div className="border-t border-[#0A142F]/10 pt-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
+              {/* <div className="flex items-center space-x-2">
                 <Settings className="h-5 w-5 text-[#0A142F]/60" />
                 <span className="text-sm font-medium text-[#0A142F]">Profile Settings</span>
-              </div>
-              <button
+              </div> */}
+              {/* <button
                 type="button"
                 className="text-sm text-[#0A142F] hover:text-[#0A142F]/80 font-medium"
               >
                 Configure
-              </button>
+              </button> */}
             </div>
           </div>
 

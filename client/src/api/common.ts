@@ -69,7 +69,6 @@ export const fetchReviewStats = async (
   userId: string
 ): Promise<{ totalReviews: number; avgRating: number; fiveStarReviews: number }> => {
   try {
-    console.log('reqqqqqqqqqq@@@@@@@@')
     const response = await API.get(userENDPOINTS.GET_REVIEW_STATS, {
       params: { userId },
     });

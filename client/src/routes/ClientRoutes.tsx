@@ -15,6 +15,7 @@ const Proposals = lazy(() => import("../components/client/dashboard/Proposals"))
 const Contracts = lazy(() => import("../components/client/dashboard/Contracts"));
 const Transactions = lazy(() => import("../components/client/dashboard/Transactions"));
 const PaymentReview = lazy(() => import("../components/client/payment/PaymentReview"));
+const Reviews = lazy(() => import("../components/client/dashboard/ReviewsView"));
 const ChatBox = lazy(() => import("../components/freelancer/dashboard/Chat"));
 const PaymentSuccess = lazy(() => import("../pages/PaymentSuccess"));
  
@@ -122,6 +123,15 @@ const ClientRoutes = () => (
       element={
         <Suspense fallback={<Loader />}>
           <ChatBox />
+        </Suspense>
+      }
+    />
+
+     <Route
+      path="reviews"
+      element={
+        <Suspense fallback={<Loader />}>
+          <Reviews />
         </Suspense>
       }
     />
