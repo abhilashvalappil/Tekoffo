@@ -41,7 +41,7 @@ export const commonENDPOINTS = {
     UPDATE_JOB: "/jobs",
     DELETE_JOB: "/jobs",
     GET_MY_JOBS: "/jobs",
-    GET_ACTIVE_JOBS: "/jobs/active",
+    GET_ACTIVE_JOBS: "/client/jobs/active",
     GET_JOBS: "/jobs/available",
     GET_JOB_DETAILS: "/jobs",
     
