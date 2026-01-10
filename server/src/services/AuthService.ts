@@ -44,7 +44,7 @@ export class AuthService implements IAuthService {
 
         const otp = otpGenerator();
         const expiresIn = 60;
-        console.log("the ottttttttppppppppppp",otp)
+        console.log("the otp",otp)
 
         const mailOptions = {
             from: process.env.USER_EMAIL,
@@ -101,7 +101,7 @@ export class AuthService implements IAuthService {
       }
         JSON.parse(storedUserData);
         const otp = otpGenerator();
-        console.log("Resentttttttttttt OTP:", otp);
+        console.log("Resent OTP:", otp);
 
         const mailOptions = {
             from: process.env.USER_EMAIL,
@@ -127,6 +127,10 @@ export class AuthService implements IAuthService {
              
             if(user.isBlocked){
               throw new UnauthorizedError(MESSAGES.ACCOUNT_BLOCKED);
+            }
+
+            if (!user.password) {
+              throw new UnauthorizedError("You signed up using Google. Please continue with Google to log in.");
             }
 
             const isValidPassword = await bcrypt.compare(password, user.password);
